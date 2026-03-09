@@ -1,6 +1,6 @@
 -- ==========================================   
--- V57.2 FULL SCRIPT - MIDNIGHT CHASERS EDITION
--- FIX: SPECIFIC NPC TRAFFIC PURGE
+-- V57.3 FULL SCRIPT - MIDNIGHT CHASERS EDITION
+-- RESTORED: ORIGINAL PURGE TRAFFIC LOGIC
 -- ==========================================   
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -33,7 +33,7 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- FUNGSI CLAIM REWARDS (Midnight Chasers)
+-- FUNGSI CLAIM REWARDS
 local function claimEverything()
     status.Text = "SCANNING REMOTES..."
     local foundCount = 0
@@ -60,7 +60,7 @@ local function claimEverything()
     end
     status.Text = foundCount == 0 and "NO REMOTE FOUND!" or "CLAIMED ("..foundCount.." REMOTES)"
     task.wait(2)
-    status.Text = running and "RUNNING..." or "READY (V57.2)"
+    status.Text = running and "RUNNING..." or "READY (V57.3)"
 end
 
 -- KONFIGURASI JALUR TP
@@ -120,63 +120,17 @@ header.BackgroundTransparency = 1
 status = Instance.new("TextLabel", header)   
 status.Size = UDim2.new(1, -50, 1, 0)   
 status.Position = UDim2.new(0, 15, 0, 0)   
-status.Text = "READY (V57.2)"   
+status.Text = "READY (V57.3)"   
 status.TextColor3 = Color3.fromRGB(0, 255, 150)
 status.BackgroundTransparency = 1   
 status.Font = Enum.Font.GothamBold   
 status.TextSize = 12   
 status.TextXAlignment = Enum.TextXAlignment.Left   
 
-local toggleBtn = Instance.new("TextButton", header)   
-toggleBtn.Size = UDim2.new(0, 30, 0, 30)   
-toggleBtn.Position = UDim2.new(1, -35, 0, 2)   
-toggleBtn.BackgroundTransparency = 1   
-toggleBtn.Text = "-"   
-toggleBtn.TextColor3 = COLOR_WHITE   
-toggleBtn.TextSize = 30   
-toggleBtn.Font = Enum.Font.GothamBold   
-
 local content = Instance.new("Frame", frame)   
 content.Size = UDim2.new(1, 0, 1, -40)   
 content.Position = UDim2.new(0, 0, 0, 40)   
 content.BackgroundTransparency = 1   
-
--- MINIMIZE
-toggleBtn.MouseButton1Click:Connect(function()   
-    isMinimized = not isMinimized   
-    frame:TweenSize(isMinimized and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 260), "Out", "Quad", 0.3, true)   
-    content.Visible = not isMinimized   
-    toggleBtn.Text = isMinimized and "+" or "-"   
-end)   
-
--- HUD MONEY
-local moneyHud = Instance.new("Frame", sg)
-moneyHud.Size = UDim2.new(0, 160, 0, 65)
-moneyHud.Position = UDim2.new(0, 20, 0.4, 0)
-moneyHud.BackgroundColor3 = COLOR_BLACK
-moneyHud.Active = true
-moneyHud.Draggable = true
-Instance.new("UICorner", moneyHud)
-local hudStroke = Instance.new("UIStroke", moneyHud)
-hudStroke.Color = COLOR_YELLOW
-hudStroke.Thickness = 2
-
-local moneyLabel = Instance.new("TextLabel", moneyHud)
-moneyLabel.Size = UDim2.new(1, 0, 0.5, 0)
-moneyLabel.Text = "Profit: $0"
-moneyLabel.TextColor3 = COLOR_YELLOW
-moneyLabel.Font = Enum.Font.GothamBold
-moneyLabel.TextSize = 14
-moneyLabel.BackgroundTransparency = 1
-
-local raceLabel = Instance.new("TextLabel", moneyHud)
-raceLabel.Size = UDim2.new(1, 0, 0.5, 0)
-raceLabel.Position = UDim2.new(0, 0, 0.5, 0)
-raceLabel.Text = "Races: 0"
-raceLabel.TextColor3 = COLOR_WHITE
-raceLabel.Font = Enum.Font.GothamBold
-raceLabel.TextSize = 12
-raceLabel.BackgroundTransparency = 1
 
 -- FUNGSI BUTTONS
 local function createBtn(text, pos, color)
@@ -193,10 +147,10 @@ local function createBtn(text, pos, color)
 end
 
 local farmBtn = createBtn("START AUTO FARM", UDim2.new(0.5, -140, 0, 5), COLOR_BLUE)
-local boostBtn = createBtn("BOOST FPS (LOW GRAPHIC)", UDim2.new(0.5, -140, 0, 45), COLOR_BLUE)
-local purgeBtn = createBtn("PURGE NPC TRAFFIC ONLY", UDim2.new(0.5, -140, 0, 85), COLOR_BLUE)
+local boostBtn = createBtn("BOOST FPS", UDim2.new(0.5, -140, 0, 45), COLOR_BLUE)
+local purgeBtn = createBtn("PURGE TRAFFIC", UDim2.new(0.5, -140, 0, 85), COLOR_BLUE)
 
--- CLAIM CHECKBOX
+-- CLAIM BOX
 local claimFrame = Instance.new("Frame", content)
 claimFrame.Size = UDim2.new(0, 280, 0, 35)
 claimFrame.Position = UDim2.new(0.5, -140, 0, 125)
@@ -204,7 +158,7 @@ claimFrame.BackgroundTransparency = 1
 
 local cLabel = Instance.new("TextLabel", claimFrame)
 cLabel.Size = UDim2.new(1, -40, 1, 0)
-cLabel.Text = "AUTO CLAIM (CLICK BOX)"
+cLabel.Text = "AUTO CLAIM REWARDS"
 cLabel.TextColor3 = COLOR_WHITE
 cLabel.Font = Enum.Font.GothamBold
 cLabel.TextSize = 11
@@ -232,46 +186,38 @@ checkBG.MouseButton1Click:Connect(function()
     checkMark.Visible = false
 end)
 
--- LOGIC PURGE NPC (KEMBALI KE SEMULA)
+-- KODINGAN PURGE TRAFFIC ORIGINAL
 purgeBtn.MouseButton1Click:Connect(function()
     local count = 0
-    for _, v in pairs(Workspace:GetDescendants()) do
-        -- Hanya menghapus objek yang memiliki nama Traffic atau NPC
-        if v:IsA("Model") or v:IsA("BasePart") then
-            local n = v.Name:lower()
-            if n:find("traffic") or n:find("npc") then
-                if not v:IsDescendantOf(LP.Character) then
-                    v:Destroy()
-                    count = count + 1
-                end
-            end
-        end
+    for _, o in pairs(Workspace:GetDescendants()) do   
+        if (o.Name:lower():find("traffic") or o.Name:lower():find("npc")) and not o:IsDescendantOf(LP.Character) then 
+            o:Destroy() 
+            count = count + 1
+        end   
     end
-    status.Text = "PURGED "..count.." NPC VEHICLES"
+    status.Text = "PURGED "..count.." TRAFFIC CARS"
 end)
 
--- LOGIC BOOST FPS
+-- BOOST FPS
 boostBtn.MouseButton1Click:Connect(function()
     settings().Rendering.QualityLevel = 1
     Lighting.GlobalShadows = false
     for _, v in pairs(Workspace:GetDescendants()) do
         if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
             v.Material = Enum.Material.SmoothPlastic
-        elseif v:IsA("Decal") or v:IsA("Texture") then
-            v:Destroy()
-        end
+        elseif v:IsA("Decal") then v:Destroy() end
     end
-    status.Text = "FPS BOOST APPLIED"
+    status.Text = "BOOST FPS ACTIVE"
 end)
 
--- LOGIC START FARM
+-- START AUTO FARM
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
     farmBtn.Text = running and "STOP" or "START AUTO FARM"
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(200, 0, 0) or COLOR_BLUE
 end)
 
--- MAIN THREAD AUTO FARM
+-- LOOP UTAMA (Sama seperti V56.8)
 task.spawn(function()   
     while true do   
         task.wait(0.5)   
@@ -283,6 +229,7 @@ task.spawn(function()
                 while car and not car:IsA("Model") do car = car.Parent end   
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)   
+                
                 status.Text = "WAITING FOR RIVAL..."   
                 while running and (function()
                     local c = 0
@@ -293,6 +240,7 @@ task.spawn(function()
                     end
                     return c
                 end)() == 0 do task.wait(1) end   
+
                 if running then   
                     moneyBeforeRace = getPlayerMoney()   
                     for i = 25, 1, -1 do 
@@ -310,13 +258,6 @@ task.spawn(function()
                         end   
                         status.Text = "FINISH! SYNCING..."   
                         task.wait(3)   
-                        local gain = getPlayerMoney() - moneyBeforeRace   
-                        if gain > 0 then   
-                            totalMoneyEarned = totalMoneyEarned + gain   
-                            sessionRaces = sessionRaces + 1   
-                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned   
-                            raceLabel.Text = "Races: " .. sessionRaces   
-                        end   
                         status.Text = "RESTARTING..."   
                         task.wait(2)   
                     end   
