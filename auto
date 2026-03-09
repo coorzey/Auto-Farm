@@ -1,5 +1,5 @@
 -- ==========================================  
--- V56.8 AUTO FARM - OPTIMIZED UI EDITION
+-- V56.8 AUTO FARM - CLEAN UI EDITION
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -64,7 +64,7 @@ sg.Name = "DeltaAutoFarm"
 sg.ResetOnSpawn = false   
 
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 320, 0, 190) -- Ukuran dioptimalkan
+frame.Size = UDim2.new(0, 320, 0, 145) -- Ukuran lebih ramping (Hanya tombol utama)
 frame.Position = UDim2.new(0.5, -160, 0.4, 0)   
 frame.BackgroundColor3 = COLOR_BLACK
 frame.Active = true   
@@ -79,15 +79,15 @@ local header = Instance.new("Frame", frame)
 header.Size = UDim2.new(1, 0, 0, 35)   
 header.BackgroundTransparency = 1   
 
-local statusLabel = Instance.new("TextLabel", header)   
-statusLabel.Size = UDim2.new(1, -50, 1, 0)   
-statusLabel.Position = UDim2.new(0, 15, 0, 0)   
-statusLabel.Text = "READY (V56.8)"   
-statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
-statusLabel.BackgroundTransparency = 1   
-statusLabel.Font = Enum.Font.GothamBold   
-statusLabel.TextSize = 14   
-statusLabel.TextXAlignment = Enum.TextXAlignment.Left   
+local status = Instance.new("TextLabel", header)   
+status.Size = UDim2.new(1, -50, 1, 0)   
+status.Position = UDim2.new(0, 15, 0, 0)   
+status.Text = "READY (V56.8)"   
+status.TextColor3 = Color3.fromRGB(0, 255, 150)
+status.BackgroundTransparency = 1   
+status.Font = Enum.Font.GothamBold   
+status.TextSize = 14   
+status.TextXAlignment = Enum.TextXAlignment.Left   
 
 local toggleBtn = Instance.new("TextButton", header)   
 toggleBtn.Size = UDim2.new(0, 30, 0, 30)   
@@ -106,7 +106,7 @@ content.BackgroundTransparency = 1
 -- MINIMIZE
 toggleBtn.MouseButton1Click:Connect(function()   
     isMinimized = not isMinimized   
-    frame:TweenSize(isMinimized and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 190), "Out", "Quad", 0.3, true)   
+    frame:TweenSize(isMinimized and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 145), "Out", "Quad", 0.3, true)   
     content.Visible = not isMinimized   
     toggleBtn.Text = isMinimized and "+" or "-"   
 end)   
@@ -142,7 +142,7 @@ raceLabel.BackgroundTransparency = 1
 
 -- BUTTONS
 local btn = Instance.new("TextButton", content)   
-btn.Size = UDim2.new(0, 280, 0, 40)   
+btn.Size = UDim2.new(0, 280, 0, 30)   
 btn.Position = UDim2.new(0.5, -140, 0, 5)   
 btn.BackgroundColor3 = COLOR_BLUE
 btn.Text = "START AUTO FARM"   
@@ -151,8 +151,8 @@ btn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", btn)   
 
 local boostBtn = Instance.new("TextButton", content)   
-boostBtn.Size = UDim2.new(0, 280, 0, 40)   
-boostBtn.Position = UDim2.new(0.5, -140, 0, 50)   
+boostBtn.Size = UDim2.new(0, 280, 0, 30)   
+boostBtn.Position = UDim2.new(0.5, -140, 0, 40)   
 boostBtn.BackgroundColor3 = COLOR_BLUE
 boostBtn.Text = "BOOST FPS (TOTAL PURGE)"   
 boostBtn.TextColor3 = COLOR_WHITE   
@@ -160,8 +160,8 @@ boostBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", boostBtn)   
 
 local clearBtn = Instance.new("TextButton", content)   
-clearBtn.Size = UDim2.new(0, 280, 0, 40)   
-clearBtn.Position = UDim2.new(0.5, -140, 0, 95)   
+clearBtn.Size = UDim2.new(0, 280, 0, 30)   
+clearBtn.Position = UDim2.new(0.5, -140, 0, 75)   
 clearBtn.BackgroundColor3 = COLOR_BLUE
 clearBtn.Text = "PURGE NPC TRAFFIC"   
 clearBtn.TextColor3 = COLOR_WHITE   
@@ -205,7 +205,7 @@ task.spawn(function()
                 while car and not car:IsA("Model") do car = car.Parent end   
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)   
-                statusLabel.Text = "WAITING FOR RIVAL..."   
+                status.Text = "WAITING FOR RIVAL..."   
                 while running and (function()
                     local count = 0
                     for _, p in pairs(Players:GetPlayers()) do
@@ -221,7 +221,7 @@ task.spawn(function()
                     moneyBeforeRace = getPlayerMoney()   
                     for i = 25, 1, -1 do   
                         if not running then break end   
-                        statusLabel.Text = "STARTING IN: "..i.."s"   
+                        status.Text = "STARTING IN: "..i.."s"   
                         task.wait(1)   
                     end   
                     if running then   
@@ -232,7 +232,7 @@ task.spawn(function()
                             seat.AssemblyLinearVelocity = cf.LookVector * 150   
                             task.wait(math.random(20, 25) / 10)   
                         end   
-                        statusLabel.Text = "FINISH! SYNCING..."   
+                        status.Text = "FINISH! SYNCING..."   
                         task.wait(3)   
                         local moneyAfter = getPlayerMoney()   
                         local gain = moneyAfter - moneyBeforeRace   
@@ -242,12 +242,12 @@ task.spawn(function()
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned   
                             raceLabel.Text = "Races: " .. sessionRaces   
                         end   
-                        statusLabel.Text = "RESTARTING..."   
+                        status.Text = "RESTARTING..."   
                         task.wait(2)   
                     end   
                 end   
             else   
-                statusLabel.Text = "PLEASE SIT IN CAR!"   
+                status.Text = "PLEASE SIT IN CAR!"   
             end   
         end   
     end   
