@@ -1,12 +1,33 @@
 -- ==========================================   
 -- V56.8 AUTO FARM - AGGRESSIVE CLAIM SYSTEM
+-- WITH DYNAMIC TELEPORT STATUS
 -- ==========================================   
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
 local Workspace = game:GetService("Workspace")   
 local Lighting = game:GetService("Lighting")   
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
+
+-- ==========================================   
+-- SISTEM ANTI-AFK (STABLE V2)
+-- ==========================================   
+LP.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(60) 
+        pcall(function()
+            VirtualUser:Button1Down(Vector2.new(0, 0), Workspace.CurrentCamera.CFrame)
+            task.wait(0.2)
+            VirtualUser:Button1Up(Vector2.new(0, 0), Workspace.CurrentCamera.CFrame)
+        end)
+    end
+end)
 
 -- VARIABEL STATISTIK
 local totalMoneyEarned = 0   
@@ -25,45 +46,31 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- FUNGSI CLAIM AGGRESIF (DIPERBARUI)
+-- FUNGSI CLAIM AGGRESIF
 local function claimEverything()
     status.Text = "SCANNING REMOTES..."
     local foundCount = 0
-    
-    -- Mencari di seluruh ReplicatedStorage
     for _, v in pairs(ReplicatedStorage:GetDescendants()) do
         if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
             local name = v.Name:lower()
-            -- Daftar kata kunci yang sering dipakai game balap/simulator
             if name:find("claim") or name:find("reward") or name:find("daily") or name:find("quest") or name:find("gift") or name:find("collect") then
                 foundCount = foundCount + 1
                 task.spawn(function()
-                    for i = 1, 20 do -- Mencoba slot 1 sampai 20
+                    for i = 1, 20 do 
                         pcall(function()
-                            if v:IsA("RemoteEvent") then
-                                v:FireServer(i)
-                                v:FireServer(tostring(i)) -- Beberapa game pakai string
-                            else
-                                v:InvokeServer(i)
-                            end
+                            if v:IsA("RemoteEvent") then v:FireServer(i) v:FireServer(tostring(i)) else v:InvokeServer(i) end
                         end)
                     end
                 end)
             end
         end
     end
-    
-    if foundCount == 0 then
-        status.Text = "NO REMOTE FOUND!"
-    else
-        status.Text = "CLAIMED ("..foundCount.." REMOTES)"
-    end
-    
+    status.Text = foundCount == 0 and "NO REMOTE FOUND!" or "CLAIMED ("..foundCount.." REMOTES)"
     task.wait(2)
     status.Text = running and "RUNNING..." or "READY (V56.8)"
 end
 
--- KONFIGURASI TELEPORT (Jalur Anda)
+-- KONFIGURASI TELEPORT
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -90,7 +97,7 @@ local path = {
     {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }   
 
--- UI THEME (YELLOW/BLACK/BLUE)
+-- UI THEME
 local COLOR_BLACK = Color3.fromRGB(0, 0, 0)
 local COLOR_YELLOW = Color3.fromRGB(255, 255, 0)
 local COLOR_BLUE = Color3.fromRGB(0, 102, 255)
@@ -124,7 +131,7 @@ status.Text = "READY (V56.8)"
 status.TextColor3 = Color3.fromRGB(0, 255, 150)
 status.BackgroundTransparency = 1   
 status.Font = Enum.Font.GothamBold   
-status.TextSize = 14   
+status.TextSize = 12   -- Perkecil sedikit agar teks panjang muat
 status.TextXAlignment = Enum.TextXAlignment.Left   
 
 local toggleBtn = Instance.new("TextButton", header)   
@@ -149,7 +156,7 @@ toggleBtn.MouseButton1Click:Connect(function()
     toggleBtn.Text = isMinimized and "+" or "-"   
 end)   
 
--- HUD MONEY TRACKER (Kiri)
+-- HUD MONEY TRACKER
 local moneyHud = Instance.new("Frame", sg)
 moneyHud.Size = UDim2.new(0, 160, 0, 65)
 moneyHud.Position = UDim2.new(0, 20, 0.4, 0)
@@ -268,7 +275,7 @@ boostBtn.MouseButton1Click:Connect(function()
     end   
 end)   
 
--- MAIN THREAD
+-- MAIN THREAD (DIPERBARUI DENGAN STATUS TELEPORT)
 task.spawn(function()   
     while true do   
         task.wait(0.5)   
@@ -280,6 +287,7 @@ task.spawn(function()
                 while car and not car:IsA("Model") do car = car.Parent end   
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)   
+                
                 status.Text = "WAITING FOR RIVAL..."   
                 while running and (function()
                     local count = 0
@@ -299,14 +307,25 @@ task.spawn(function()
                         status.Text = "STARTING IN: "..i.."s"   
                         task.wait(1)   
                     end   
+                    
                     if running then   
+                        -- PERUBAHAN STATUS DISINI
+                        status.TextColor3 = COLOR_YELLOW
+                        status.Text = "TELEPORTING..." 
+                        
                         for i, d in ipairs(path) do   
                             if not running or not seat.Parent then break end   
+                            
+                            -- STATUS DYNAMIC TELEPORT
+                            status.Text = "DYNAMIC TP: ["..i.."/"..#path.."]"
+                            
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)   
                             car:PivotTo(cf)   
                             seat.AssemblyLinearVelocity = cf.LookVector * 150   
                             task.wait(math.random(20, 25) / 10)   
                         end   
+                        
+                        status.TextColor3 = Color3.fromRGB(0, 255, 150)
                         status.Text = "FINISH! SYNCING..."   
                         task.wait(3)   
                         local moneyAfter = getPlayerMoney()   
