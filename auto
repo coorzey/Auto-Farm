@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
--- UPDATE: PURGE TRAFFIC + ULTIMATE LOW GRAPHIC
+-- UPDATE: INTEGRATED PURGE + AUTO CLOSE POPUP
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -10,7 +10,7 @@ local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
 
--- ANTI-AFK
+-- ANTI-AFK ORIGINAL
 LP.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
@@ -19,40 +19,42 @@ end)
 local totalMoneyEarned, sessionRaces = 0, 0
 local running, isMinimized = false, false
 
--- FUNGSI PURGE TRAFFIC (Menghapus mobil NPC/Traffic agar tidak lag)
+-- ==========================================
+-- FUNGSI TAMBAHAN (PURGE & LOW GRAPHIC)
+-- ==========================================
+
+-- FUNGSI PURGE TRAFFIC (Menghapus NPC/Mobil Traffic)
 local function purgeTraffic()
     pcall(function()
-        -- Mencari folder yang biasanya berisi Traffic/NPC di game racing
+        local count = 0
         for _, v in pairs(Workspace:GetDescendants()) do
+            -- Mencari objek dengan nama traffic, npc, atau car_ (biasanya digunakan di game racing)
             if v.Name:lower():find("traffic") or v.Name:lower():find("npc") or v.Name:lower():find("car_") then
                 if v:IsA("Model") or v:IsA("BasePart") then
                     v:Destroy()
+                    count = count + 1
                 end
             end
         end
+        return count
     end)
 end
 
--- FUNGSI LOW GRAPHIC (Source code lama yang lebih agresif)
+-- FUNGSI LOW GRAPHIC
 local function applyLowGraphic()
     pcall(function()
         settings().Rendering.QualityLevel = 1
         Lighting.GlobalShadows = false
-        Lighting.FogEnd = 9e9
-        Lighting.Brightness = 1
-        
         for _, v in pairs(Workspace:GetDescendants()) do
             if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
-                v.Material = Enum.Material.SmoothPlastic
-                v.Reflectance = 0
+                if v.Material ~= Enum.Material.SmoothPlastic then
+                    v.Material = Enum.Material.SmoothPlastic
+                    v.Reflectance = 0
+                end
             elseif v:IsA("Decal") or v:IsA("Texture") then 
                 v:Destroy() 
             elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
                 v.Enabled = false
-            elseif v:IsA("Explosion") then
-                v.Visible = false
-            elseif v:IsA("MeshPart") then
-                v.MeshId = ""
             end
         end
     end)
@@ -114,7 +116,7 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- UI SETUP
+-- UI SETUP (DeltaAutoFarm)
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 local frame = Instance.new("Frame", sg)   
@@ -135,22 +137,23 @@ toggleBtn.MouseButton1Click:Connect(function()
     content.Visible = not isMinimized; toggleBtn.Text = isMinimized and "+" or "-"
 end)
 
-purgeBtn.MouseButton1Click:Connect(function()
-    purgeTraffic()
-    status.Text = "TRAFFIC PURGED!"
-    task.wait(1)
-    status.Text = running and "FARMING..." or "READY"
-end)
-
 local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 45); moneyHud.Position = UDim2.new(0, 10, 0.45, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.5, 0); moneyLabel.Text = "$0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 12; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.5, 0); raceLabel.Position = UDim2.new(0, 0, 0.5, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
 
+-- BUTTON PURGE ACTION
+purgeBtn.MouseButton1Click:Connect(function()
+    local pCount = purgeTraffic()
+    status.Text = "PURGED: " .. (pCount or 0)
+    task.wait(1)
+    status.Text = running and "FARMING..." or "READY"
+end)
+
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
     if running then 
-        applyLowGraphic()
-        purgeTraffic()
+        applyLowGraphic() 
+        purgeTraffic() -- Jalankan purge saat start
     end
     farmBtn.Text = running and "STOP" or "START FARM"
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
@@ -166,8 +169,9 @@ task.spawn(function()
             if seat and seat:IsA("VehicleSeat") then
                 local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                 
+                -- RESET KE POSISI START & PAKSA DIAM
                 applyLowGraphic()
-                closePrizePopup()
+                closePrizePopup() 
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                 seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
@@ -188,6 +192,7 @@ task.spawn(function()
                 
                 if running then
                     local moneyBefore = getPlayerMoney()
+                    
                     for i = 25, 1, -1 do 
                         if not running then break end; 
                         status.Text = "START: "..i.."s"; 
@@ -196,18 +201,25 @@ task.spawn(function()
                     end
                     
                     if running then
+                        -- TP SEQUENCE
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
                             status.Text = "TP: " .. i .. "/" .. #path
+                            
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             car:PivotTo(cf); 
+                            
                             task.wait(0.1)
                             seat.AssemblyLinearVelocity = cf.LookVector * 155;
                             task.wait(2.2)
                         end
                         
+                        -- FINISHING
                         status.Text = "FINISHING..."
+                        applyLowGraphic()
+                        purgeTraffic() -- Purge ulang saat finish untuk jaga performa
+                        
                         task.wait(1.5) 
                         closePrizePopup() 
                         
