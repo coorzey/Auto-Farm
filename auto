@@ -1,6 +1,6 @@
 -- ==========================================  
--- V57.2 AUTO FARM - SMART RIVAL DETECTION
--- WAIT RIVAL -> COUNTDOWN -> DYNAMIC TELEPORT
+-- V57.3 ULTRA-LOW GRAPHIC + PROGRESS TRACKER
+-- CONTINUOUS PURGE DURING TELEPORT
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -15,38 +15,32 @@ local sessionRaces = 0
 local running = false   
 local isMinimized = false   
 
--- FUNGSI OPTIMASI TOTAL
+-- FUNGSI SUPER LOW GRAPHIC + PURGE (DIPANGGIL BERULANG)
 local function applyDeepClean()
+    -- Optimasi Global
     settings().Rendering.QualityLevel = 1
-    Lighting.GlobalShadows = false
+     Lighting.GlobalShadows = false
     Lighting.FogEnd = 9e9
-    for _, v in pairs(Lighting:GetChildren()) do v:Destroy() end
-
+    
     for _, v in pairs(Workspace:GetDescendants()) do
         local name = v.Name:lower()
+        -- Hapus NPC/Traffic
         if name:find("traffic") or name:find("npc") or name:find("bot") then
             if not v:IsDescendantOf(LP.Character) then v:Destroy() end
+        -- Hapus Objek Berat & Ganti Material
         elseif v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
             v.Material = Enum.Material.SmoothPlastic
             v.CastShadow = false
-            if name:find("tree") or name:find("grass") or name:find("bush") then v:Destroy() end
-        elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            if name:find("tree") or name:find("grass") or name:find("bush") or name:find("leaf") then
+                v:Destroy()
+            end
+        elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Sky") then
             v:Destroy()
         end
     end
 end
 
--- FUNGSI AMBIL UANG
-local function getPlayerMoney()   
-    local leaderstats = LP:FindFirstChild("leaderstats")   
-    if leaderstats then   
-        local moneyObj = leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash")   
-        if moneyObj then return moneyObj.Value end   
-    end   
-    return 0   
-end   
-
--- JALUR TELEPORT (41 TITIK)
+-- DATA JALUR TELEPORT (41 TITIK)
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -73,43 +67,30 @@ local path = {
     {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }   
 
--- UI THEME
+-- UI SETUP (SAMA SEPERTI SEBELUMNYA)
 local COLOR_BLACK, COLOR_YELLOW, COLOR_BLUE, COLOR_WHITE = Color3.fromRGB(0,0,0), Color3.fromRGB(255,255,0), Color3.fromRGB(0,102,255), Color3.fromRGB(255,255,255)
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
-
-local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 320, 0, 85); frame.Position = UDim2.new(0.5, -160, 0.4, 0); frame.BackgroundColor3 = COLOR_BLACK; frame.Active = true; frame.Draggable = true; frame.ClipsDescendants = true   
+local frame = Instance.new("Frame", sg); frame.Size = UDim2.new(0, 320, 0, 85); frame.Position = UDim2.new(0.5, -160, 0.4, 0); frame.BackgroundColor3 = COLOR_BLACK; frame.Active = true; frame.Draggable = true; frame.ClipsDescendants = true   
 Instance.new("UICorner", frame); local stroke = Instance.new("UIStroke", frame); stroke.Color = COLOR_YELLOW; stroke.Thickness = 2
-
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1   
-local status = Instance.new("TextLabel", header)   
-status.Size = UDim2.new(1, -50, 1, 0); status.Position = UDim2.new(0, 15, 0, 0); status.Text = "READY (V57.2)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 13; status.TextXAlignment = Enum.TextXAlignment.Left   
-
-local toggleBtn = Instance.new("TextButton", header)   
-toggleBtn.Size = UDim2.new(0, 30, 0, 30); toggleBtn.Position = UDim2.new(1, -35, 0, 2); toggleBtn.BackgroundTransparency = 1; toggleBtn.Text = "-"; toggleBtn.TextColor3 = COLOR_WHITE; toggleBtn.TextSize = 30; toggleBtn.Font = Enum.Font.GothamBold   
-
+local status = Instance.new("TextLabel", header); status.Size = UDim2.new(1, -50, 1, 0); status.Position = UDim2.new(0, 15, 0, 0); status.Text = "READY (V57.3)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 13; status.TextXAlignment = Enum.TextXAlignment.Left   
+local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 30, 0, 30); toggleBtn.Position = UDim2.new(1, -35, 0, 2); toggleBtn.BackgroundTransparency = 1; toggleBtn.Text = "-"; toggleBtn.TextColor3 = COLOR_WHITE; toggleBtn.TextSize = 30; toggleBtn.Font = Enum.Font.GothamBold   
 local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, 0, 1, -40); content.Position = UDim2.new(0, 0, 0, 40); content.BackgroundTransparency = 1   
-local btn = Instance.new("TextButton", content)   
-btn.Size = UDim2.new(0, 280, 0, 35); btn.Position = UDim2.new(0.5, -140, 0, 0); btn.BackgroundColor3 = COLOR_BLUE; btn.Text = "START AUTO FARM"; btn.TextColor3 = COLOR_WHITE; btn.Font = Enum.Font.GothamBold; Instance.new("UICorner", btn)   
-
-toggleBtn.MouseButton1Click:Connect(function()   
-    isMinimized = not isMinimized   
-    frame:TweenSize(isMinimized and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 85), "Out", "Quad", 0.3, true)   
-    content.Visible = not isMinimized; toggleBtn.Text = isMinimized and "+" or "-"   
-end)   
+local btn = Instance.new("TextButton", content); btn.Size = UDim2.new(0, 280, 0, 35); btn.Position = UDim2.new(0.5, -140, 0, 0); btn.BackgroundColor3 = COLOR_BLUE; btn.Text = "START AUTO FARM"; btn.TextColor3 = COLOR_WHITE; btn.Font = Enum.Font.GothamBold; Instance.new("UICorner", btn)   
 
 local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 160, 0, 65); moneyHud.Position = UDim2.new(0, 20, 0.4, 0); moneyHud.BackgroundColor3 = COLOR_BLACK; moneyHud.Active = true; moneyHud.Draggable = true
 Instance.new("UICorner", moneyHud); local hudStroke = Instance.new("UIStroke", moneyHud); hudStroke.Color = COLOR_YELLOW; hudStroke.Thickness = 2
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.5, 0); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = COLOR_YELLOW; moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 14; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.5, 0); raceLabel.Position = UDim2.new(0, 0, 0.5, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = COLOR_WHITE; raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 12; raceLabel.BackgroundTransparency = 1
 
+-- BUTTON LOGIC
 btn.MouseButton1Click:Connect(function()   
     running = not running   
-    if running then
-        task.spawn(applyDeepClean)
+    if running then 
         btn.Text = "STOP FARM"; btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-    else
+        task.spawn(applyDeepClean) -- Pembersihan awal
+    else 
         btn.Text = "START AUTO FARM"; btn.BackgroundColor3 = COLOR_BLUE
     end
 end)   
@@ -119,45 +100,47 @@ task.spawn(function()
     while true do   
         task.wait(0.5)   
         if running then   
+            local leaderstats = LP:FindFirstChild("leaderstats")
+            local moneyObj = leaderstats and (leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash"))
             local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")   
             local seat = hum and hum.SeatPart   
+
             if seat and seat:IsA("VehicleSeat") then   
                 local car = seat.Parent   
                 while car and not car:IsA("Model") do car = car.Parent end   
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
                 seat.AssemblyLinearVelocity = Vector3.zero
                 
-                -- LOGIKA MENUNGGU LAWAN
-                status.Text = "WAITING RIVAL..."
-                status.TextColor3 = Color3.fromRGB(0, 255, 150)
+                status.Text = "WAITING RIVAL..."; status.TextColor3 = Color3.fromRGB(0, 255, 150)
                 
-                local rivalInCircle = false
+                local rivalFound = false
                 repeat
                     for _, p in pairs(Players:GetPlayers()) do
                         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                            local dist = (p.Character.HumanoidRootPart.Position - startPos).Magnitude
-                            if dist < 50 then rivalInCircle = true break end
+                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 then rivalFound = true break end
                         end
                     end
                     task.wait(0.5)
-                until rivalInCircle or not running
+                until rivalFound or not running
 
-                if running and rivalInCircle then   
-                    moneyBeforeRace = getPlayerMoney()   
-                    
-                    -- HITUNG MUNDUR HANYA SETELAH ADA LAWAN
+                if running and rivalFound then   
+                    moneyBeforeRace = moneyObj and moneyObj.Value or 0   
                     for i = 25, 0, -1 do
                         if not running then break end
                         status.Text = "RIVAL FOUND! START IN: "..i.."s"
-                        status.TextColor3 = Color3.fromRGB(255, 165, 0) -- Orange
-                        task.wait(1)
+                        status.TextColor3 = Color3.fromRGB(255, 165, 0); task.wait(1)
                     end
                     
                     if running then   
+                        -- MULAI TELEPORT DENGAN CONTINUOUS LOW GRAPHIC
                         for i, d in ipairs(path) do   
                             if not running or not seat.Parent then break end   
+                            
                             status.Text = "DYNAMIC TELEPORT ("..i.."/41)"
                             status.TextColor3 = COLOR_YELLOW
+                            
+                            -- FORCE LOW GRAPHIC DI SETIAP TITIK (Mencegah lag saat pindah area)
+                            applyDeepClean() 
                             
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)   
                             car:PivotTo(cf)   
@@ -165,8 +148,8 @@ task.spawn(function()
                             task.wait(math.random(20, 25) / 10)   
                         end   
                         
-                        status.Text = "SYNCING..."; status.TextColor3 = Color3.fromRGB(0, 255, 150); task.wait(3)   
-                        local gain = getPlayerMoney() - moneyBeforeRace   
+                        status.Text = "SYNCING..."; task.wait(3)   
+                        local gain = (moneyObj and moneyObj.Value or 0) - moneyBeforeRace   
                         if gain > 0 then   
                             totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1   
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces   
