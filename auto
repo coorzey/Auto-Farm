@@ -1,7 +1,6 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
--- FIX: COORDINATE 17 VOID + HEIGHT OPTIMIZED (+5)
--- UPDATE: PERFECT STANDSTILL AT START (NO SLIDING)
+-- UPDATE: AUTO CLOSE PRIZE POPUP + LOW GRAPHIC
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -11,15 +10,38 @@ local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
 
--- ANTI-AFK ORIGINAL (UNTOUCHED)
+-- ANTI-AFK
 LP.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
--- VARIABEL TRACKER
 local totalMoneyEarned, sessionRaces = 0, 0
 local running, isMinimized = false, false
+
+-- FUNGSI CLOSE PRIZE POPUP (Mencari tombol X secara otomatis)
+local function closePrizePopup()
+    pcall(function()
+        -- Mencari di PlayerGui (sesuaikan nama jika kamu tahu nama pastinya)
+        for _, gui in pairs(PlayerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Enabled then
+                -- Mencari tombol yang biasanya bernama 'Close', 'Exit', atau 'X'
+                for _, btn in pairs(gui:GetDescendants()) do
+                    if btn:IsA("TextButton") or btn:IsA("ImageButton") then
+                        if btn.Name:lower():find("close") or btn.Name == "X" or btn.Text == "X" then
+                            -- Simulasi klik
+                            local pos = btn.AbsolutePosition
+                            local size = btn.AbsoluteSize
+                            VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2)))
+                            -- Atau cara langsung jika diizinkan:
+                            -- btn:Activate() 
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
 
 -- FUNGSI LOW GRAPHIC
 local function applyLowGraphic()
@@ -50,7 +72,7 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- SOURCE CODE KOORDINAT (FIXED INDEX 17)
+-- KOORDINAT (PATH 1-41)
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -78,22 +100,17 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- UI SETUP
+-- UI SETUP (DeltaAutoFarm)
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
-
 local frame = Instance.new("Frame", sg)   
 frame.Size = UDim2.new(0, 260, 0, 95); frame.Position = UDim2.new(0.5, -130, 0.4, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
 Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Color3.new(1,1,0); frameStroke.Thickness = 1.5
-
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 30); header.BackgroundTransparency = 1
 local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.5, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.3)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
-
 local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 100, 1, 0); rgbLabel.Position = UDim2.new(1, -135, 0, 0); rgbLabel.Text = "CORRZEY HUB"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
 task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.03) end end end)
-
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -28, 0, 3); toggleBtn.Text = "-"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40); Instance.new("UICorner", toggleBtn)
-
 local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 40); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
 local farmBtn = Instance.new("TextButton", content); farmBtn.Size = UDim2.new(0.6, -4, 1, 0); farmBtn.BackgroundColor3 = Color3.fromRGB(0, 110, 255); farmBtn.Text = "START FARM"; farmBtn.TextColor3 = Color3.new(1,1,1); farmBtn.Font = Enum.Font.GothamBold; farmBtn.TextSize = 11; Instance.new("UICorner", farmBtn)
 local purgeBtn = Instance.new("TextButton", content); purgeBtn.Position = UDim2.new(0.6, 4, 0, 0); purgeBtn.Size = UDim2.new(0.4, -4, 1, 0); purgeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50); purgeBtn.Text = "PURGE"; purgeBtn.TextColor3 = Color3.new(1,1,1); purgeBtn.Font = Enum.Font.GothamBold; purgeBtn.TextSize = 10; Instance.new("UICorner", purgeBtn)
@@ -108,11 +125,6 @@ local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0,
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.5, 0); moneyLabel.Text = "$0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 12; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.5, 0); raceLabel.Position = UDim2.new(0, 0, 0.5, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
 
-purgeBtn.MouseButton1Click:Connect(function()
-    local count = 0; for _, o in pairs(Workspace:GetDescendants()) do if (o.Name:lower():find("traffic") or o.Name:lower():find("npc")) then o:Destroy(); count = count + 1 end end
-    status.Text = "PURGED: "..count
-end)
-
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
     if running then applyLowGraphic() end
@@ -120,7 +132,7 @@ farmBtn.MouseButton1Click:Connect(function()
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
 end)
 
--- MAIN LOOP (OPTIMIZED TP + STANDSTILL START)
+-- MAIN LOOP
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -130,15 +142,15 @@ task.spawn(function()
             if seat and seat:IsA("VehicleSeat") then
                 local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                 
-                -- RESET KE POSISI AWAL (HEIGHT +5) & PAKSA DIAM
+                -- RESET KE POSISI START & PAKSA DIAM
                 applyLowGraphic()
+                closePrizePopup() -- Memastikan UI tertutup saat baru balik ke start
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                 seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
                 
                 status.Text = "WAITING RIVAL..."
                 
-                -- LOOP MENUNGGU RIVAL (DENGAN LOCK VELOCITY)
                 repeat 
                     task.wait(1) 
                     if seat then seat.AssemblyLinearVelocity = Vector3.new(0,0,0) end
@@ -154,7 +166,6 @@ task.spawn(function()
                 if running then
                     local moneyBefore = getPlayerMoney()
                     
-                    -- HITUNGAN MUNDUR 25 DETIK (MOBIL TETAP DIAM)
                     for i = 25, 1, -1 do 
                         if not running then break end; 
                         status.Text = "START: "..i.."s"; 
@@ -163,35 +174,41 @@ task.spawn(function()
                     end
                     
                     if running then
-                        -- TP SEQUENCE (TITIK 1 - 41)
+                        -- TP SEQUENCE
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
                             status.Text = "TP: " .. i .. "/" .. #path
-                            applyLowGraphic()
                             
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             car:PivotTo(cf); 
                             
-                            task.wait(0.1) -- Stabilizer
-                            seat.AssemblyLinearVelocity = cf.LookVector * 155; -- Speed racing
+                            task.wait(0.1)
+                            seat.AssemblyLinearVelocity = cf.LookVector * 155;
                             task.wait(2.2)
                         end
                         
-                        -- SELESAI BALAPAN
-                        task.wait(3)
+                        -- SETELAH TP TERAKHIR (FINISH)
+                        status.Text = "FINISHING..."
+                        applyLowGraphic()
+                        
+                        -- TUNGGU HADIAH MUNCUL LALU TUTUP
+                        task.wait(1.5) 
+                        closePrizePopup() 
+                        
+                        task.wait(1.5)
                         local gain = getPlayerMoney() - moneyBefore
                         if gain > 0 then 
                             totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
                             moneyLabel.Text = "$" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
                         end
+                        
+                        closePrizePopup() -- Penutupan kedua untuk memastikan
                         status.Text = "LOOP RESTARTING..."
                         task.wait(2)
                     end
                 end
-            else 
-                status.Text = "SIT IN CAR!" 
-            end
+            else status.Text = "SIT IN CAR!" end
         end
     end
 end)
