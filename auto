@@ -1,6 +1,6 @@
 -- ==========================================   
--- V56.8 AUTO FARM - AGGRESSIVE CLAIM SYSTEM
--- WITH DYNAMIC TP & AUTO LOW GRAPHIC
+-- V57.2 FULL SCRIPT - MIDNIGHT CHASERS EDITION
+-- FIX: SPECIFIC NPC TRAFFIC PURGE
 -- ==========================================   
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -10,23 +10,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 
--- ==========================================   
--- SISTEM ANTI-AFK (STABLE V2)
--- ==========================================   
+-- SISTEM ANTI-AFK
 LP.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(60) 
-        pcall(function()
-            VirtualUser:Button1Down(Vector2.new(0, 0), Workspace.CurrentCamera.CFrame)
-            task.wait(0.2)
-            VirtualUser:Button1Up(Vector2.new(0, 0), Workspace.CurrentCamera.CFrame)
-        end)
-    end
 end)
 
 -- VARIABEL STATISTIK
@@ -35,23 +22,6 @@ local moneyBeforeRace = 0
 local sessionRaces = 0   
 local running = false   
 local isMinimized = false   
-
--- FUNGSI OPTIMASI GRAFIK (LOWEST SETTINGS)
-local function applyLowGraphic()
-    settings().Rendering.QualityLevel = 1
-    Lighting.GlobalShadows = false
-    Lighting.Outlines = false
-    for _, v in pairs(Workspace:GetDescendants()) do
-        if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
-            v.Material = Enum.Material.SmoothPlastic
-            v.CastShadow = false
-        elseif v:IsA("Decal") or v:IsA("Texture") then
-            v:Destroy()
-        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
-            v.Enabled = false
-        end
-    end
-end
 
 -- FUNGSI AMBIL UANG
 local function getPlayerMoney()   
@@ -63,19 +33,25 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- FUNGSI CLAIM AGGRESIF
+-- FUNGSI CLAIM REWARDS (Midnight Chasers)
 local function claimEverything()
     status.Text = "SCANNING REMOTES..."
     local foundCount = 0
     for _, v in pairs(ReplicatedStorage:GetDescendants()) do
         if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
             local name = v.Name:lower()
-            if name:find("claim") or name:find("reward") or name:find("daily") or name:find("quest") or name:find("gift") or name:find("collect") then
+            if name:find("claim") or name:find("reward") or name:find("daily") or name:find("quest") or name:find("gift") then
                 foundCount = foundCount + 1
                 task.spawn(function()
-                    for i = 1, 20 do 
+                    for i = 1, 15 do 
                         pcall(function()
-                            if v:IsA("RemoteEvent") then v:FireServer(i) v:FireServer(tostring(i)) else v:InvokeServer(i) end
+                            if v:IsA("RemoteEvent") then 
+                                v:FireServer(i) 
+                                v:FireServer("Day"..i)
+                                v:FireServer(tostring(i)) 
+                            else 
+                                v:InvokeServer(i) 
+                            end
                         end)
                     end
                 end)
@@ -84,10 +60,10 @@ local function claimEverything()
     end
     status.Text = foundCount == 0 and "NO REMOTE FOUND!" or "CLAIMED ("..foundCount.." REMOTES)"
     task.wait(2)
-    status.Text = running and "RUNNING..." or "READY (V56.8)"
+    status.Text = running and "RUNNING..." or "READY (V57.2)"
 end
 
--- KONFIGURASI TELEPORT (Jalur Anda)
+-- KONFIGURASI JALUR TP
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -144,7 +120,7 @@ header.BackgroundTransparency = 1
 status = Instance.new("TextLabel", header)   
 status.Size = UDim2.new(1, -50, 1, 0)   
 status.Position = UDim2.new(0, 15, 0, 0)   
-status.Text = "READY (V56.8)"   
+status.Text = "READY (V57.2)"   
 status.TextColor3 = Color3.fromRGB(0, 255, 150)
 status.BackgroundTransparency = 1   
 status.Font = Enum.Font.GothamBold   
@@ -202,23 +178,100 @@ raceLabel.Font = Enum.Font.GothamBold
 raceLabel.TextSize = 12
 raceLabel.BackgroundTransparency = 1
 
--- BUTTON LOGIC
-local btn = Instance.new("TextButton", content)   
-btn.Size = UDim2.new(0, 280, 0, 40)   
-btn.Position = UDim2.new(0.5, -140, 0, 5)   
-btn.BackgroundColor3 = COLOR_BLUE
-btn.Text = "START AUTO FARM"   
-btn.TextColor3 = COLOR_WHITE   
-btn.Font = Enum.Font.GothamBold   
-Instance.new("UICorner", btn)   
+-- FUNGSI BUTTONS
+local function createBtn(text, pos, color)
+    local b = Instance.new("TextButton", content)
+    b.Size = UDim2.new(0, 280, 0, 35)
+    b.Position = pos
+    b.BackgroundColor3 = color
+    b.Text = text
+    b.TextColor3 = COLOR_WHITE
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 12
+    Instance.new("UICorner", b)
+    return b
+end
 
-btn.MouseButton1Click:Connect(function()   
-    running = not running   
-    btn.Text = running and "STOP" or "START AUTO FARM"   
-    btn.BackgroundColor3 = running and Color3.fromRGB(200, 0, 0) or COLOR_BLUE
-end)   
+local farmBtn = createBtn("START AUTO FARM", UDim2.new(0.5, -140, 0, 5), COLOR_BLUE)
+local boostBtn = createBtn("BOOST FPS (LOW GRAPHIC)", UDim2.new(0.5, -140, 0, 45), COLOR_BLUE)
+local purgeBtn = createBtn("PURGE NPC TRAFFIC ONLY", UDim2.new(0.5, -140, 0, 85), COLOR_BLUE)
 
--- MAIN THREAD
+-- CLAIM CHECKBOX
+local claimFrame = Instance.new("Frame", content)
+claimFrame.Size = UDim2.new(0, 280, 0, 35)
+claimFrame.Position = UDim2.new(0.5, -140, 0, 125)
+claimFrame.BackgroundTransparency = 1
+
+local cLabel = Instance.new("TextLabel", claimFrame)
+cLabel.Size = UDim2.new(1, -40, 1, 0)
+cLabel.Text = "AUTO CLAIM (CLICK BOX)"
+cLabel.TextColor3 = COLOR_WHITE
+cLabel.Font = Enum.Font.GothamBold
+cLabel.TextSize = 11
+cLabel.TextXAlignment = Enum.TextXAlignment.Left
+cLabel.BackgroundTransparency = 1
+
+local checkBG = Instance.new("TextButton", claimFrame)
+checkBG.Size = UDim2.new(0, 25, 0, 25)
+checkBG.Position = UDim2.new(1, -30, 0.5, -12)
+checkBG.BackgroundColor3 = Color3.fromRGB(40,40,40)
+checkBG.Text = ""
+Instance.new("UICorner", checkBG)
+
+local checkMark = Instance.new("Frame", checkBG)
+checkMark.Size = UDim2.new(0.6,0,0.6,0)
+checkMark.Position = UDim2.new(0.2,0,0.2,0)
+checkMark.BackgroundColor3 = COLOR_YELLOW
+checkMark.Visible = false
+Instance.new("UICorner", checkMark)
+
+checkBG.MouseButton1Click:Connect(function()
+    checkMark.Visible = true
+    claimEverything()
+    task.wait(1)
+    checkMark.Visible = false
+end)
+
+-- LOGIC PURGE NPC (KEMBALI KE SEMULA)
+purgeBtn.MouseButton1Click:Connect(function()
+    local count = 0
+    for _, v in pairs(Workspace:GetDescendants()) do
+        -- Hanya menghapus objek yang memiliki nama Traffic atau NPC
+        if v:IsA("Model") or v:IsA("BasePart") then
+            local n = v.Name:lower()
+            if n:find("traffic") or n:find("npc") then
+                if not v:IsDescendantOf(LP.Character) then
+                    v:Destroy()
+                    count = count + 1
+                end
+            end
+        end
+    end
+    status.Text = "PURGED "..count.." NPC VEHICLES"
+end)
+
+-- LOGIC BOOST FPS
+boostBtn.MouseButton1Click:Connect(function()
+    settings().Rendering.QualityLevel = 1
+    Lighting.GlobalShadows = false
+    for _, v in pairs(Workspace:GetDescendants()) do
+        if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
+            v.Material = Enum.Material.SmoothPlastic
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v:Destroy()
+        end
+    end
+    status.Text = "FPS BOOST APPLIED"
+end)
+
+-- LOGIC START FARM
+farmBtn.MouseButton1Click:Connect(function()
+    running = not running
+    farmBtn.Text = running and "STOP" or "START AUTO FARM"
+    farmBtn.BackgroundColor3 = running and Color3.fromRGB(200, 0, 0) or COLOR_BLUE
+end)
+
+-- MAIN THREAD AUTO FARM
 task.spawn(function()   
     while true do   
         task.wait(0.5)   
@@ -230,48 +283,34 @@ task.spawn(function()
                 while car and not car:IsA("Model") do car = car.Parent end   
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)   
-                
                 status.Text = "WAITING FOR RIVAL..."   
                 while running and (function()
-                    local count = 0
+                    local c = 0
                     for _, p in pairs(Players:GetPlayers()) do
                         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                            local d = (p.Character.HumanoidRootPart.Position - startPos).Magnitude
-                            if d < 50 then count = count + 1 end
+                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 then c = c + 1 end
                         end
                     end
-                    return count
+                    return c
                 end)() == 0 do task.wait(1) end   
-                   
                 if running then   
                     moneyBeforeRace = getPlayerMoney()   
-                    for i = 25, 1, -1 do   
-                        if not running then break end   
-                        status.Text = "STARTING IN: "..i.."s"   
-                        task.wait(1)   
+                    for i = 25, 1, -1 do 
+                        if not running then break end
+                        status.Text = "STARTING IN: "..i.."s"
+                        task.wait(1)
                     end   
-                    
                     if running then   
-                        status.TextColor3 = COLOR_YELLOW
                         for i, d in ipairs(path) do   
                             if not running or not seat.Parent then break end   
-                            
-                            -- AUTO LOW GRAPHIC TIAP TELEPORT
-                            applyLowGraphic()
-                            
-                            status.Text = "DYNAMIC TP: ["..i.."/"..#path.."]"
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)   
                             car:PivotTo(cf)   
                             seat.AssemblyLinearVelocity = cf.LookVector * 150   
                             task.wait(math.random(20, 25) / 10)   
                         end   
-                        
-                        status.TextColor3 = Color3.fromRGB(0, 255, 150)
                         status.Text = "FINISH! SYNCING..."   
                         task.wait(3)   
-                        
-                        local moneyAfter = getPlayerMoney()   
-                        local gain = moneyAfter - moneyBeforeRace   
+                        local gain = getPlayerMoney() - moneyBeforeRace   
                         if gain > 0 then   
                             totalMoneyEarned = totalMoneyEarned + gain   
                             sessionRaces = sessionRaces + 1   
