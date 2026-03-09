@@ -1,6 +1,6 @@
 -- ==========================================  
--- V57.1 AUTO FARM - PROGRESS TRACKER EDITION
--- AUTO CLEAN + DYNAMIC STATUS 1/41
+-- V57.2 AUTO FARM - SMART RIVAL DETECTION
+-- WAIT RIVAL -> COUNTDOWN -> DYNAMIC TELEPORT
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -84,7 +84,7 @@ Instance.new("UICorner", frame); local stroke = Instance.new("UIStroke", frame);
 
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1   
 local status = Instance.new("TextLabel", header)   
-status.Size = UDim2.new(1, -50, 1, 0); status.Position = UDim2.new(0, 15, 0, 0); status.Text = "READY (V57.1)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 13; status.TextXAlignment = Enum.TextXAlignment.Left   
+status.Size = UDim2.new(1, -50, 1, 0); status.Position = UDim2.new(0, 15, 0, 0); status.Text = "READY (V57.2)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 13; status.TextXAlignment = Enum.TextXAlignment.Left   
 
 local toggleBtn = Instance.new("TextButton", header)   
 toggleBtn.Size = UDim2.new(0, 30, 0, 30); toggleBtn.Position = UDim2.new(1, -35, 0, 2); toggleBtn.BackgroundTransparency = 1; toggleBtn.Text = "-"; toggleBtn.TextColor3 = COLOR_WHITE; toggleBtn.TextSize = 30; toggleBtn.Font = Enum.Font.GothamBold   
@@ -125,30 +125,37 @@ task.spawn(function()
                 local car = seat.Parent   
                 while car and not car:IsA("Model") do car = car.Parent end   
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
-                seat.AssemblyLinearVelocity = Vector3.zero; status.Text = "WAITING RIVAL..."   
+                seat.AssemblyLinearVelocity = Vector3.zero
                 
-                local rivalFound = false
+                -- LOGIKA MENUNGGU LAWAN
+                status.Text = "WAITING RIVAL..."
+                status.TextColor3 = Color3.fromRGB(0, 255, 150)
+                
+                local rivalInCircle = false
                 repeat
                     for _, p in pairs(Players:GetPlayers()) do
                         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 then rivalFound = true end
+                            local dist = (p.Character.HumanoidRootPart.Position - startPos).Magnitude
+                            if dist < 50 then rivalInCircle = true break end
                         end
                     end
-                    task.wait(1)
-                until rivalFound or not running
+                    task.wait(0.5)
+                until rivalInCircle or not running
 
-                if running then   
+                if running and rivalInCircle then   
                     moneyBeforeRace = getPlayerMoney()   
-                    for i = 25, 0, -1 do -- Hitung mundur sampai 0
+                    
+                    -- HITUNG MUNDUR HANYA SETELAH ADA LAWAN
+                    for i = 25, 0, -1 do
                         if not running then break end
-                        status.Text = "START IN: "..i.."s"; task.wait(1)
+                        status.Text = "RIVAL FOUND! START IN: "..i.."s"
+                        status.TextColor3 = Color3.fromRGB(255, 165, 0) -- Orange
+                        task.wait(1)
                     end
                     
                     if running then   
                         for i, d in ipairs(path) do   
                             if not running or not seat.Parent then break end   
-                            
-                            -- UPDATE STATUS DYNAMIC (x/41)
                             status.Text = "DYNAMIC TELEPORT ("..i.."/41)"
                             status.TextColor3 = COLOR_YELLOW
                             
