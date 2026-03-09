@@ -1,0 +1,329 @@
+-- ==========================================   
+-- V56.8 AUTO FARM - AGGRESSIVE CLAIM SYSTEM
+-- ==========================================   
+local Players = game:GetService("Players")   
+local LP = Players.LocalPlayer   
+local Workspace = game:GetService("Workspace")   
+local Lighting = game:GetService("Lighting")   
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PlayerGui = LP:WaitForChild("PlayerGui")   
+
+-- VARIABEL STATISTIK
+local totalMoneyEarned = 0   
+local moneyBeforeRace = 0   
+local sessionRaces = 0   
+local running = false   
+local isMinimized = false   
+
+-- FUNGSI AMBIL UANG
+local function getPlayerMoney()   
+    local leaderstats = LP:FindFirstChild("leaderstats")   
+    if leaderstats then   
+        local moneyObj = leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash")   
+        if moneyObj then return moneyObj.Value end   
+    end   
+    return 0   
+end   
+
+-- FUNGSI CLAIM AGGRESIF (DIPERBARUI)
+local function claimEverything()
+    status.Text = "SCANNING REMOTES..."
+    local foundCount = 0
+    
+    -- Mencari di seluruh ReplicatedStorage
+    for _, v in pairs(ReplicatedStorage:GetDescendants()) do
+        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+            local name = v.Name:lower()
+            -- Daftar kata kunci yang sering dipakai game balap/simulator
+            if name:find("claim") or name:find("reward") or name:find("daily") or name:find("quest") or name:find("gift") or name:find("collect") then
+                foundCount = foundCount + 1
+                task.spawn(function()
+                    for i = 1, 20 do -- Mencoba slot 1 sampai 20
+                        pcall(function()
+                            if v:IsA("RemoteEvent") then
+                                v:FireServer(i)
+                                v:FireServer(tostring(i)) -- Beberapa game pakai string
+                            else
+                                v:InvokeServer(i)
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    end
+    
+    if foundCount == 0 then
+        status.Text = "NO REMOTE FOUND!"
+    else
+        status.Text = "CLAIMED ("..foundCount.." REMOTES)"
+    end
+    
+    task.wait(2)
+    status.Text = running and "RUNNING..." or "READY (V56.8)"
+end
+
+-- KONFIGURASI TELEPORT (Jalur Anda)
+local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
+local startRot = -95.3   
+local path = {   
+    {pos = {3353.99, -15.28, 883.01}, rot = 68.97}, {pos = {3048.26, -15.26, 680.38}, rot = 68.89},
+    {pos = {2739.67, -15.11, 570.12}, rot = 70.95}, {pos = {2271.23, -1.68, 411.61}, rot = 73.02},
+    {pos = {1946.53, 14.22, 306.79}, rot = 71.72}, {pos = {1570.71, 20.61, 186.11}, rot = 74.46},
+    {pos = {1033.94, 20.61, 92.19}, rot = 87.54}, {pos = {688.36, 20.60, 85.04}, rot = 92.30},
+    {pos = {-24.31, 20.63, 84.78}, rot = 90.45}, {pos = {-583.41, 20.61, 88.00}, rot = 90.43},
+    {pos = {-1247.06, 16.11, 121.99}, rot = 101.03}, {pos = {-1910.41, -11.95, 276.76}, rot = 103.87},
+    {pos = {-2580.79, -8.75, 417.36}, rot = 101.97}, {pos = {-3175.10, 18.31, 542.23}, rot = 101.76},
+    {pos = {-3916.48, 23.47, 701.48}, rot = 101.44}, {pos = {-4630.57, 31.07, 839.62}, rot = 102.08},
+    {pos = {-5534.23, 19.75, 1038.44}, rot = 102.18}, {pos = {-6557.41, 9.80, 1251.38}, rot = 101.13},
+    {pos = {-7277.41, 9.80, 1406.79}, rot = 106.41}, {pos = {-7794.60, 9.80, 1579.01}, rot = 111.81},
+    {pos = {-8263.78, 9.56, 1777.35}, rot = 112.83}, {pos = {-8805.38, -8.88, 2007.14}, rot = 117.64},
+    {pos = {-9503.49, -69.46, 2303.26}, rot = 113.14}, {pos = {-10147.54, -111.81, 2578.72}, rot = 112.52},
+    {pos = {-10895.69, -105.88, 2903.48}, rot = 115.66}, {pos = {-11552.18, -54.42, 3172.93}, rot = 112.78},
+    {pos = {-12169.96, -17.11, 3435.86}, rot = 112.92}, {pos = {-12767.61, -1.50, 3748.61}, rot = 124.95},
+    {pos = {-13135.41, -0.86, 4062.97}, rot = 135.41}, {pos = {-13366.22, -0.84, 4319.31}, rot = 146.03},
+    {pos = {-13670.72, -2.93, 4750.70}, rot = 143.42}, {pos = {-14030.56, -13.39, 5288.52}, rot = 146.34},
+    {pos = {-14500.27, 3.01, 5985.70}, rot = 145.91}, {pos = {-14892.54, 6.83, 6582.37}, rot = 151.69},
+    {pos = {-15236.35, 6.83, 7290.60}, rot = 160.16}, {pos = {-15482.54, 3.89, 8031.16}, rot = 165.65},
+    {pos = {-15675.67, -7.72, 8668.23}, rot = 162.54}, {pos = {-15927.57, -20.54, 9489.28}, rot = 162.16},
+    {pos = {-16199.67, -2.75, 10369.70}, rot = 162.77}, {pos = {-16348.46, 8.41, 11025.66}, rot = 171.59},
+    {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
+}   
+
+-- UI THEME (YELLOW/BLACK/BLUE)
+local COLOR_BLACK = Color3.fromRGB(0, 0, 0)
+local COLOR_YELLOW = Color3.fromRGB(255, 255, 0)
+local COLOR_BLUE = Color3.fromRGB(0, 102, 255)
+local COLOR_WHITE = Color3.fromRGB(255, 255, 255)
+
+if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
+local sg = Instance.new("ScreenGui", PlayerGui)   
+sg.Name = "DeltaAutoFarm"   
+sg.ResetOnSpawn = false   
+
+local frame = Instance.new("Frame", sg)   
+frame.Size = UDim2.new(0, 320, 0, 260) 
+frame.Position = UDim2.new(0.5, -160, 0.4, 0)   
+frame.BackgroundColor3 = COLOR_BLACK
+frame.Active = true   
+frame.Draggable = true   
+frame.ClipsDescendants = true   
+Instance.new("UICorner", frame)   
+local frameStroke = Instance.new("UIStroke", frame)
+frameStroke.Color = COLOR_YELLOW
+frameStroke.Thickness = 2
+
+local header = Instance.new("Frame", frame)   
+header.Size = UDim2.new(1, 0, 0, 35)   
+header.BackgroundTransparency = 1   
+
+status = Instance.new("TextLabel", header)   
+status.Size = UDim2.new(1, -50, 1, 0)   
+status.Position = UDim2.new(0, 15, 0, 0)   
+status.Text = "READY (V56.8)"   
+status.TextColor3 = Color3.fromRGB(0, 255, 150)
+status.BackgroundTransparency = 1   
+status.Font = Enum.Font.GothamBold   
+status.TextSize = 14   
+status.TextXAlignment = Enum.TextXAlignment.Left   
+
+local toggleBtn = Instance.new("TextButton", header)   
+toggleBtn.Size = UDim2.new(0, 30, 0, 30)   
+toggleBtn.Position = UDim2.new(1, -35, 0, 2)   
+toggleBtn.BackgroundTransparency = 1   
+toggleBtn.Text = "-"   
+toggleBtn.TextColor3 = COLOR_WHITE   
+toggleBtn.TextSize = 30   
+toggleBtn.Font = Enum.Font.GothamBold   
+
+local content = Instance.new("Frame", frame)   
+content.Size = UDim2.new(1, 0, 1, -40)   
+content.Position = UDim2.new(0, 0, 0, 40)   
+content.BackgroundTransparency = 1   
+
+-- MINIMIZE
+toggleBtn.MouseButton1Click:Connect(function()   
+    isMinimized = not isMinimized   
+    frame:TweenSize(isMinimized and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 260), "Out", "Quad", 0.3, true)   
+    content.Visible = not isMinimized   
+    toggleBtn.Text = isMinimized and "+" or "-"   
+end)   
+
+-- HUD MONEY TRACKER (Kiri)
+local moneyHud = Instance.new("Frame", sg)
+moneyHud.Size = UDim2.new(0, 160, 0, 65)
+moneyHud.Position = UDim2.new(0, 20, 0.4, 0)
+moneyHud.BackgroundColor3 = COLOR_BLACK
+moneyHud.Active = true
+moneyHud.Draggable = true
+Instance.new("UICorner", moneyHud)
+local hudStroke = Instance.new("UIStroke", moneyHud)
+hudStroke.Color = COLOR_YELLOW
+hudStroke.Thickness = 2
+
+local moneyLabel = Instance.new("TextLabel", moneyHud)
+moneyLabel.Size = UDim2.new(1, 0, 0.5, 0)
+moneyLabel.Text = "Profit: $0"
+moneyLabel.TextColor3 = COLOR_YELLOW
+moneyLabel.Font = Enum.Font.GothamBold
+moneyLabel.TextSize = 14
+moneyLabel.BackgroundTransparency = 1
+
+local raceLabel = Instance.new("TextLabel", moneyHud)
+raceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+raceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+raceLabel.Text = "Races: 0"
+raceLabel.TextColor3 = COLOR_WHITE
+raceLabel.Font = Enum.Font.GothamBold
+raceLabel.TextSize = 12
+raceLabel.BackgroundTransparency = 1
+
+-- BUTTONS
+local btn = Instance.new("TextButton", content)   
+btn.Size = UDim2.new(0, 280, 0, 40)   
+btn.Position = UDim2.new(0.5, -140, 0, 5)   
+btn.BackgroundColor3 = COLOR_BLUE
+btn.Text = "START AUTO FARM"   
+btn.TextColor3 = COLOR_WHITE   
+btn.Font = Enum.Font.GothamBold   
+Instance.new("UICorner", btn)   
+
+local boostBtn = Instance.new("TextButton", content)   
+boostBtn.Size = UDim2.new(0, 280, 0, 40)   
+boostBtn.Position = UDim2.new(0.5, -140, 0, 50)   
+boostBtn.BackgroundColor3 = COLOR_BLUE
+boostBtn.Text = "BOOST FPS (TOTAL PURGE)"   
+boostBtn.TextColor3 = COLOR_WHITE   
+boostBtn.Font = Enum.Font.GothamBold   
+Instance.new("UICorner", boostBtn)   
+
+local clearBtn = Instance.new("TextButton", content)   
+clearBtn.Size = UDim2.new(0, 280, 0, 40)   
+clearBtn.Position = UDim2.new(0.5, -140, 0, 95)   
+clearBtn.BackgroundColor3 = COLOR_BLUE
+clearBtn.Text = "PURGE NPC TRAFFIC"   
+clearBtn.TextColor3 = COLOR_WHITE   
+clearBtn.Font = Enum.Font.GothamBold   
+Instance.new("UICorner", clearBtn)   
+
+-- CHECKBOX AREA
+local claimFrame = Instance.new("Frame", content)
+claimFrame.Size = UDim2.new(0, 280, 0, 40)
+claimFrame.Position = UDim2.new(0.5, -140, 0, 140)
+claimFrame.BackgroundTransparency = 1
+
+local claimLabel = Instance.new("TextLabel", claimFrame)
+claimLabel.Size = UDim2.new(1, -40, 1, 0)
+claimLabel.Text = "CLICK TO CLAIM REWARDS"
+claimLabel.TextColor3 = COLOR_WHITE
+claimLabel.Font = Enum.Font.GothamBold
+claimLabel.TextSize = 12
+claimLabel.TextXAlignment = Enum.TextXAlignment.Left
+claimLabel.BackgroundTransparency = 1
+
+local checkBG = Instance.new("TextButton", claimFrame)
+checkBG.Size = UDim2.new(0, 30, 0, 30)
+checkBG.Position = UDim2.new(1, -35, 0.5, -15)
+checkBG.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+checkBG.Text = ""
+Instance.new("UICorner", checkBG)
+local checkStroke = Instance.new("UIStroke", checkBG)
+checkStroke.Color = COLOR_YELLOW
+
+local checkMark = Instance.new("Frame", checkBG)
+checkMark.Size = UDim2.new(0.6, 0, 0.6, 0)
+checkMark.Position = UDim2.new(0.2, 0, 0.2, 0)
+checkMark.BackgroundColor3 = COLOR_YELLOW
+checkMark.Visible = false
+Instance.new("UICorner", checkMark)
+
+checkBG.MouseButton1Click:Connect(function()
+    checkMark.Visible = true
+    claimEverything()
+    checkMark.Visible = false
+end)
+
+-- FARM LOGIC
+btn.MouseButton1Click:Connect(function()   
+    running = not running   
+    btn.Text = running and "STOP" or "START AUTO FARM"   
+    btn.BackgroundColor3 = running and Color3.fromRGB(200, 0, 0) or COLOR_BLUE
+end)   
+
+clearBtn.MouseButton1Click:Connect(function()   
+    for _, o in pairs(Workspace:GetDescendants()) do   
+        if (o.Name:lower():find("traffic") or o.Name:lower():find("npc")) and not o:IsDescendantOf(LP.Character) then o:Destroy() end   
+    end   
+end)   
+
+boostBtn.MouseButton1Click:Connect(function()   
+    settings().Rendering.QualityLevel = 1   
+    Lighting.GlobalShadows = false   
+    for _, v in pairs(Workspace:GetDescendants()) do   
+        if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then   
+            v.Material = Enum.Material.SmoothPlastic   
+            local name = v.Name:lower()   
+            if name:find("tree") or name:find("grass") then v:Destroy() end   
+        end   
+    end   
+end)   
+
+-- MAIN THREAD
+task.spawn(function()   
+    while true do   
+        task.wait(0.5)   
+        if running then   
+            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")   
+            local seat = hum and hum.SeatPart   
+            if seat and seat:IsA("VehicleSeat") then   
+                local car = seat.Parent   
+                while car and not car:IsA("Model") do car = car.Parent end   
+                car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)   
+                status.Text = "WAITING FOR RIVAL..."   
+                while running and (function()
+                    local count = 0
+                    for _, p in pairs(Players:GetPlayers()) do
+                        if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                            local d = (p.Character.HumanoidRootPart.Position - startPos).Magnitude
+                            if d < 50 then count = count + 1 end
+                        end
+                    end
+                    return count
+                end)() == 0 do task.wait(1) end   
+                   
+                if running then   
+                    moneyBeforeRace = getPlayerMoney()   
+                    for i = 25, 1, -1 do   
+                        if not running then break end   
+                        status.Text = "STARTING IN: "..i.."s"   
+                        task.wait(1)   
+                    end   
+                    if running then   
+                        for i, d in ipairs(path) do   
+                            if not running or not seat.Parent then break end   
+                            local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)   
+                            car:PivotTo(cf)   
+                            seat.AssemblyLinearVelocity = cf.LookVector * 150   
+                            task.wait(math.random(20, 25) / 10)   
+                        end   
+                        status.Text = "FINISH! SYNCING..."   
+                        task.wait(3)   
+                        local moneyAfter = getPlayerMoney()   
+                        local gain = moneyAfter - moneyBeforeRace   
+                        if gain > 0 then   
+                            totalMoneyEarned = totalMoneyEarned + gain   
+                            sessionRaces = sessionRaces + 1   
+                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned   
+                            raceLabel.Text = "Races: " .. sessionRaces   
+                        end   
+                        status.Text = "RESTARTING..."   
+                        task.wait(2)   
+                    end   
+                end   
+            else   
+                status.Text = "PLEASE SIT IN CAR!"   
+            end   
+        end   
+    end   
+end)
