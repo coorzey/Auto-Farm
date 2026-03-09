@@ -1,6 +1,6 @@
--- ==========================================   
--- V56.8 AUTO FARM - AGGRESSIVE CLAIM SYSTEM
--- ==========================================   
+-- ==========================================  
+-- V56.8 AUTO FARM - OPTIMIZED UI EDITION
+-- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
 local Workspace = game:GetService("Workspace")   
@@ -25,45 +25,7 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- FUNGSI CLAIM AGGRESIF (DIPERBARUI)
-local function claimEverything()
-    status.Text = "SCANNING REMOTES..."
-    local foundCount = 0
-    
-    -- Mencari di seluruh ReplicatedStorage
-    for _, v in pairs(ReplicatedStorage:GetDescendants()) do
-        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
-            local name = v.Name:lower()
-            -- Daftar kata kunci yang sering dipakai game balap/simulator
-            if name:find("claim") or name:find("reward") or name:find("daily") or name:find("quest") or name:find("gift") or name:find("collect") then
-                foundCount = foundCount + 1
-                task.spawn(function()
-                    for i = 1, 20 do -- Mencoba slot 1 sampai 20
-                        pcall(function()
-                            if v:IsA("RemoteEvent") then
-                                v:FireServer(i)
-                                v:FireServer(tostring(i)) -- Beberapa game pakai string
-                            else
-                                v:InvokeServer(i)
-                            end
-                        end)
-                    end
-                end)
-            end
-        end
-    end
-    
-    if foundCount == 0 then
-        status.Text = "NO REMOTE FOUND!"
-    else
-        status.Text = "CLAIMED ("..foundCount.." REMOTES)"
-    end
-    
-    task.wait(2)
-    status.Text = running and "RUNNING..." or "READY (V56.8)"
-end
-
--- KONFIGURASI TELEPORT (Jalur Anda)
+-- KONFIGURASI TELEPORT
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -90,7 +52,7 @@ local path = {
     {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }   
 
--- UI THEME (YELLOW/BLACK/BLUE)
+-- UI THEME
 local COLOR_BLACK = Color3.fromRGB(0, 0, 0)
 local COLOR_YELLOW = Color3.fromRGB(255, 255, 0)
 local COLOR_BLUE = Color3.fromRGB(0, 102, 255)
@@ -102,7 +64,7 @@ sg.Name = "DeltaAutoFarm"
 sg.ResetOnSpawn = false   
 
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 320, 0, 260) 
+frame.Size = UDim2.new(0, 320, 0, 190) -- Ukuran dioptimalkan
 frame.Position = UDim2.new(0.5, -160, 0.4, 0)   
 frame.BackgroundColor3 = COLOR_BLACK
 frame.Active = true   
@@ -117,15 +79,15 @@ local header = Instance.new("Frame", frame)
 header.Size = UDim2.new(1, 0, 0, 35)   
 header.BackgroundTransparency = 1   
 
-status = Instance.new("TextLabel", header)   
-status.Size = UDim2.new(1, -50, 1, 0)   
-status.Position = UDim2.new(0, 15, 0, 0)   
-status.Text = "READY (V56.8)"   
-status.TextColor3 = Color3.fromRGB(0, 255, 150)
-status.BackgroundTransparency = 1   
-status.Font = Enum.Font.GothamBold   
-status.TextSize = 14   
-status.TextXAlignment = Enum.TextXAlignment.Left   
+local statusLabel = Instance.new("TextLabel", header)   
+statusLabel.Size = UDim2.new(1, -50, 1, 0)   
+statusLabel.Position = UDim2.new(0, 15, 0, 0)   
+statusLabel.Text = "READY (V56.8)"   
+statusLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
+statusLabel.BackgroundTransparency = 1   
+statusLabel.Font = Enum.Font.GothamBold   
+statusLabel.TextSize = 14   
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left   
 
 local toggleBtn = Instance.new("TextButton", header)   
 toggleBtn.Size = UDim2.new(0, 30, 0, 30)   
@@ -144,12 +106,12 @@ content.BackgroundTransparency = 1
 -- MINIMIZE
 toggleBtn.MouseButton1Click:Connect(function()   
     isMinimized = not isMinimized   
-    frame:TweenSize(isMinimized and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 260), "Out", "Quad", 0.3, true)   
+    frame:TweenSize(isMinimized and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 190), "Out", "Quad", 0.3, true)   
     content.Visible = not isMinimized   
     toggleBtn.Text = isMinimized and "+" or "-"   
 end)   
 
--- HUD MONEY TRACKER (Kiri)
+-- HUD MONEY TRACKER
 local moneyHud = Instance.new("Frame", sg)
 moneyHud.Size = UDim2.new(0, 160, 0, 65)
 moneyHud.Position = UDim2.new(0, 20, 0.4, 0)
@@ -206,43 +168,6 @@ clearBtn.TextColor3 = COLOR_WHITE
 clearBtn.Font = Enum.Font.GothamBold   
 Instance.new("UICorner", clearBtn)   
 
--- CHECKBOX AREA
-local claimFrame = Instance.new("Frame", content)
-claimFrame.Size = UDim2.new(0, 280, 0, 40)
-claimFrame.Position = UDim2.new(0.5, -140, 0, 140)
-claimFrame.BackgroundTransparency = 1
-
-local claimLabel = Instance.new("TextLabel", claimFrame)
-claimLabel.Size = UDim2.new(1, -40, 1, 0)
-claimLabel.Text = "CLICK TO CLAIM REWARDS"
-claimLabel.TextColor3 = COLOR_WHITE
-claimLabel.Font = Enum.Font.GothamBold
-claimLabel.TextSize = 12
-claimLabel.TextXAlignment = Enum.TextXAlignment.Left
-claimLabel.BackgroundTransparency = 1
-
-local checkBG = Instance.new("TextButton", claimFrame)
-checkBG.Size = UDim2.new(0, 30, 0, 30)
-checkBG.Position = UDim2.new(1, -35, 0.5, -15)
-checkBG.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-checkBG.Text = ""
-Instance.new("UICorner", checkBG)
-local checkStroke = Instance.new("UIStroke", checkBG)
-checkStroke.Color = COLOR_YELLOW
-
-local checkMark = Instance.new("Frame", checkBG)
-checkMark.Size = UDim2.new(0.6, 0, 0.6, 0)
-checkMark.Position = UDim2.new(0.2, 0, 0.2, 0)
-checkMark.BackgroundColor3 = COLOR_YELLOW
-checkMark.Visible = false
-Instance.new("UICorner", checkMark)
-
-checkBG.MouseButton1Click:Connect(function()
-    checkMark.Visible = true
-    claimEverything()
-    checkMark.Visible = false
-end)
-
 -- FARM LOGIC
 btn.MouseButton1Click:Connect(function()   
     running = not running   
@@ -280,7 +205,7 @@ task.spawn(function()
                 while car and not car:IsA("Model") do car = car.Parent end   
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)   
-                status.Text = "WAITING FOR RIVAL..."   
+                statusLabel.Text = "WAITING FOR RIVAL..."   
                 while running and (function()
                     local count = 0
                     for _, p in pairs(Players:GetPlayers()) do
@@ -296,7 +221,7 @@ task.spawn(function()
                     moneyBeforeRace = getPlayerMoney()   
                     for i = 25, 1, -1 do   
                         if not running then break end   
-                        status.Text = "STARTING IN: "..i.."s"   
+                        statusLabel.Text = "STARTING IN: "..i.."s"   
                         task.wait(1)   
                     end   
                     if running then   
@@ -307,7 +232,7 @@ task.spawn(function()
                             seat.AssemblyLinearVelocity = cf.LookVector * 150   
                             task.wait(math.random(20, 25) / 10)   
                         end   
-                        status.Text = "FINISH! SYNCING..."   
+                        statusLabel.Text = "FINISH! SYNCING..."   
                         task.wait(3)   
                         local moneyAfter = getPlayerMoney()   
                         local gain = moneyAfter - moneyBeforeRace   
@@ -317,12 +242,12 @@ task.spawn(function()
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned   
                             raceLabel.Text = "Races: " .. sessionRaces   
                         end   
-                        status.Text = "RESTARTING..."   
+                        statusLabel.Text = "RESTARTING..."   
                         task.wait(2)   
                     end   
                 end   
             else   
-                status.Text = "PLEASE SIT IN CAR!"   
+                statusLabel.Text = "PLEASE SIT IN CAR!"   
             end   
         end   
     end   
