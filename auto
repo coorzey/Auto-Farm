@@ -1,16 +1,14 @@
 -- ==========================================   
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
--- COMPACT UI + NO CHANGES TO ORIGINAL LOGIC
+-- FIX: COORDINATE 17 VOID + HEIGHT OPTIMIZED (+5)
 -- ==========================================   
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
 local Workspace = game:GetService("Workspace")   
 local Lighting = game:GetService("Lighting")   
 local VirtualUser = game:GetService("VirtualUser")
+local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
-
--- Pastikan PlayerGui sudah load
-local PlayerGui = LP:WaitForChild("PlayerGui", 10)
 
 -- ANTI-AFK ORIGINAL (UNTOUCHED)
 LP.Idled:Connect(function()
@@ -22,7 +20,7 @@ end)
 local totalMoneyEarned, sessionRaces = 0, 0
 local running, isMinimized = false, false
 
--- FUNGSI LOW GRAPHIC
+-- FUNGSI LOW GRAPHIC (TRIGGERED BY TP)
 local function applyLowGraphic()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -51,7 +49,7 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- KOORDINAT (UNTOUCHED)
+-- SOURCE CODE KOORDINAT (FIXED INDEX 17)
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -63,65 +61,39 @@ local path = {
     {pos = {-1247.06, 16.11, 121.99}, rot = 101.03}, {pos = {-1910.41, -11.95, 276.76}, rot = 103.87},
     {pos = {-2580.79, -8.75, 417.36}, rot = 101.97}, {pos = {-3175.10, 18.31, 542.23}, rot = 101.76},
     {pos = {-3916.48, 23.47, 701.48}, rot = 101.44}, {pos = {-4630.57, 31.07, 839.62}, rot = 102.08},
-    {pos = {-5534.23, -19.75, 1038.44}, rot = 102.18}, {pos = {-6557.41, 9.80, 1251.38}, rot = 101.13},
-    {pos = {-7277.41, 9.80, 1406.79}, rot = 106.41}, {pos = {-7794.60, 9.80, 1579.01}, rot = 111.81},
-    {pos = {-8263.78, 9.56, 1777.35}, rot = 112.83}, {pos = {-8805.38, -8.88, 2007.14}, rot = 117.64},
-    {pos = {-9503.49, -69.46, 2303.26}, rot = 113.14}, {pos = {-10147.54, -111.81, 2578.72}, rot = 112.52},
-    {pos = {-10895.69, -105.88, 2903.48}, rot = 115.66}, {pos = {-11552.18, -54.42, 3172.93}, rot = 112.78},
-    {pos = {-12169.96, -17.11, 3435.86}, rot = 112.92}, {pos = {-12767.61, -1.50, 3748.61}, rot = 124.95},
-    {pos = {-13135.41, -0.86, 4062.97}, rot = 135.41}, {pos = {-13366.22, -0.84, 4319.31}, rot = 146.03},
-    {pos = {-13670.72, -2.93, 4750.70}, rot = 143.42}, {pos = {-14030.56, -13.39, 5288.52}, rot = 146.34},
-    {pos = {-14500.27, 3.01, 5985.70}, rot = 145.91}, {pos = {-14892.54, 6.83, 6582.37}, rot = 151.69},
-    {pos = {-15236.35, 6.83, 7290.60}, rot = 160.16}, {pos = {-15482.54, 3.89, 8031.16}, rot = 165.65},
-    {pos = {-15675.67, -7.72, 8668.23}, rot = 162.54}, {pos = {-15927.57, -20.54, 9489.28}, rot = 162.16},
-    {pos = {-16199.67, -2.75, 10369.70}, rot = 162.77}, {pos = {-16348.46, 8.41, 11025.66}, rot = 171.59},
-    {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
+    {pos = {-5534.23, 19.75, 1038.44}, rot = 102.18}, -- PERBAIKAN: i19.75 -> 19.75 (Hapus huruf 'i')
+    {pos = {-6557.41, 9.80, 1251.38}, rot = 101.13}, {pos = {-7277.41, 9.80, 1406.79}, rot = 106.41}, 
+    {pos = {-7794.60, 9.80, 1579.01}, rot = 111.81}, {pos = {-8263.78, 9.56, 1777.35}, rot = 112.83}, 
+    {pos = {-8805.38, -8.88, 2007.14}, rot = 117.64}, {pos = {-9503.49, -69.46, 2303.26}, rot = 113.14}, 
+    {pos = {-10147.54, -111.81, 2578.72}, rot = 112.52}, {pos = {-10895.69, -105.88, 2903.48}, rot = 115.66}, 
+    {pos = {-11552.18, -54.42, 3172.93}, rot = 112.78}, {pos = {-12169.96, -17.11, 3435.86}, rot = 112.92}, 
+    {pos = {-12767.61, -1.50, 3748.61}, rot = 124.95}, {pos = {-13135.41, -0.86, 4062.97}, rot = 135.41}, 
+    {pos = {-13366.22, -0.84, 4319.31}, rot = 146.03}, {pos = {-13670.72, -2.93, 4750.70}, rot = 143.42}, 
+    {pos = {-14030.56, -13.39, 5288.52}, rot = 146.34}, {pos = {-14500.27, 3.01, 5985.70}, rot = 145.91}, 
+    {pos = {-14892.54, 6.83, 6582.37}, rot = 151.69}, {pos = {-15236.35, 6.83, 7290.60}, rot = 160.16}, 
+    {pos = {-15482.54, 3.89, 8031.16}, rot = 165.65}, {pos = {-15675.67, -7.72, 8668.23}, rot = 162.54}, 
+    {pos = {-15927.57, -20.54, 9489.28}, rot = 162.16}, {pos = {-16199.67, -2.75, 10369.70}, rot = 162.77}, 
+    {pos = {-16348.46, 8.41, 11025.66}, rot = 171.59}, {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, 
+    {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- UI SETUP
+-- UI SETUP (NEW COMPACT DESIGN)
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
-local sg = Instance.new("ScreenGui")
-sg.Name = "DeltaAutoFarm"
-sg.ResetOnSpawn = false
-sg.Parent = PlayerGui
+local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 
 -- MAIN FRAME
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 260, 0, 95)
-frame.Position = UDim2.new(0.5, -130, 0.2, 0)
-frame.BackgroundColor3 = Color3.new(0,0,0)
-frame.Active = true
-frame.Draggable = true
-Instance.new("UICorner", frame)
-local frameStroke = Instance.new("UIStroke", frame)
-frameStroke.Color = Color3.new(1,1,0)
-frameStroke.Thickness = 1.5
+frame.Size = UDim2.new(0, 260, 0, 95); frame.Position = UDim2.new(0.5, -130, 0.4, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
+Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Color3.new(1,1,0); frameStroke.Thickness = 1.5
 
 -- HEADER
-local header = Instance.new("Frame", frame)
-header.Size = UDim2.new(1, 0, 0, 30)
-header.BackgroundTransparency = 1
+local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 30); header.BackgroundTransparency = 1
+local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.5, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.3)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
 
-local status = Instance.new("TextLabel", header)
-status.Size = UDim2.new(0.5, 0, 1, 0)
-status.Position = UDim2.new(0, 10, 0, 0)
-status.Text = "READY (V58.3)"
-status.TextColor3 = Color3.fromRGB(0, 255, 150)
-status.BackgroundTransparency = 1
-status.Font = Enum.Font.GothamBold
-status.TextSize = 10
-status.TextXAlignment = Enum.TextXAlignment.Left
+-- CORRZEY HUB RGB LABEL
+local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 100, 1, 0); rgbLabel.Position = UDim2.new(1, -135, 0, 0); rgbLabel.Text = "CORRZEY HUB"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
 
-local rgbLabel = Instance.new("TextLabel", header)
-rgbLabel.Size = UDim2.new(0, 100, 1, 0)
-rgbLabel.Position = UDim2.new(1, -135, 0, 0)
-rgbLabel.Text = "CORRZEY HUB"
-rgbLabel.BackgroundTransparency = 1
-rgbLabel.Font = Enum.Font.GothamBold
-rgbLabel.TextSize = 10
-rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
-
--- RGB ANIMATION
+-- RGB ANIMATION LOGIC
 task.spawn(function()
     while true do
         for i = 0, 1, 0.01 do
@@ -131,85 +103,29 @@ task.spawn(function()
     end
 end)
 
-local toggleBtn = Instance.new("TextButton", header)
-toggleBtn.Size = UDim2.new(0, 24, 0, 24)
-toggleBtn.Position = UDim2.new(1, -28, 0, 3)
-toggleBtn.Text = "-"
-toggleBtn.TextColor3 = Color3.new(1,1,1)
-toggleBtn.Font = Enum.Font.GothamBold
-toggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
-Instance.new("UICorner", toggleBtn)
+-- MINIMIZE BUTTON
+local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -28, 0, 3); toggleBtn.Text = "-"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40); Instance.new("UICorner", toggleBtn)
 
--- CONTENT
-local content = Instance.new("Frame", frame)
-content.Size = UDim2.new(1, -20, 0, 40)
-content.Position = UDim2.new(0, 10, 0, 40)
-content.BackgroundTransparency = 1
+-- BUTTON CONTAINER
+local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 40); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
+local farmBtn = Instance.new("TextButton", content); farmBtn.Size = UDim2.new(0.6, -4, 1, 0); farmBtn.BackgroundColor3 = Color3.fromRGB(0, 110, 255); farmBtn.Text = "START FARM"; farmBtn.TextColor3 = Color3.new(1,1,1); farmBtn.Font = Enum.Font.GothamBold; farmBtn.TextSize = 11; Instance.new("UICorner", farmBtn)
+local purgeBtn = Instance.new("TextButton", content); purgeBtn.Position = UDim2.new(0.6, 4, 0, 0); purgeBtn.Size = UDim2.new(0.4, -4, 1, 0); purgeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50); purgeBtn.Text = "PURGE"; purgeBtn.TextColor3 = Color3.new(1,1,1); purgeBtn.Font = Enum.Font.GothamBold; purgeBtn.TextSize = 10; Instance.new("UICorner", purgeBtn)
 
-local farmBtn = Instance.new("TextButton", content)
-farmBtn.Size = UDim2.new(0.6, -4, 1, 0)
-farmBtn.BackgroundColor3 = Color3.fromRGB(0, 110, 255)
-farmBtn.Text = "START FARM"
-farmBtn.TextColor3 = Color3.new(1,1,1)
-farmBtn.Font = Enum.Font.GothamBold
-farmBtn.TextSize = 11
-Instance.new("UICorner", farmBtn)
-
-local purgeBtn = Instance.new("TextButton", content)
-purgeBtn.Position = UDim2.new(0.6, 4, 0, 0)
-purgeBtn.Size = UDim2.new(0.4, -4, 1, 0)
-purgeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-purgeBtn.Text = "PURGE"
-purgeBtn.TextColor3 = Color3.new(1,1,1)
-purgeBtn.Font = Enum.Font.GothamBold
-purgeBtn.TextSize = 10
-Instance.new("UICorner", purgeBtn)
-
--- LOGIC UI
+-- MINIMIZE LOGIC
 toggleBtn.MouseButton1Click:Connect(function()   
     isMinimized = not isMinimized
     frame:TweenSize(isMinimized and UDim2.new(0, 260, 0, 30) or UDim2.new(0, 260, 0, 95), "Out", "Quad", 0.3, true)
-    content.Visible = not isMinimized
-    toggleBtn.Text = isMinimized and "+" or "-"
+    content.Visible = not isMinimized; toggleBtn.Text = isMinimized and "+" or "-"
 end)
 
 -- MONEY HUD
-local moneyHud = Instance.new("Frame", sg)
-moneyHud.Size = UDim2.new(0, 120, 0, 45)
-moneyHud.Position = UDim2.new(0, 10, 0.45, 0)
-moneyHud.BackgroundColor3 = Color3.new(0,0,0)
-moneyHud.Draggable = true
-moneyHud.Active = true
-Instance.new("UICorner", moneyHud)
-local hs = Instance.new("UIStroke", moneyHud)
-hs.Color = Color3.new(1,1,0)
+local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 45); moneyHud.Position = UDim2.new(0, 10, 0.45, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
+local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.5, 0); moneyLabel.Text = "$0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 12; moneyLabel.BackgroundTransparency = 1
+local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.5, 0); raceLabel.Position = UDim2.new(0, 0, 0.5, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
 
-local moneyLabel = Instance.new("TextLabel", moneyHud)
-moneyLabel.Size = UDim2.new(1, 0, 0.5, 0)
-moneyLabel.Text = "$0"
-moneyLabel.TextColor3 = Color3.new(1,1,0)
-moneyLabel.Font = Enum.Font.GothamBold
-moneyLabel.TextSize = 12
-moneyLabel.BackgroundTransparency = 1
-
-local raceLabel = Instance.new("TextLabel", moneyHud)
-raceLabel.Size = UDim2.new(1, 0, 0.5, 0)
-raceLabel.Position = UDim2.new(0, 0, 0.5, 0)
-raceLabel.Text = "Races: 0"
-raceLabel.TextColor3 = Color3.new(1,1,1)
-raceLabel.Font = Enum.Font.GothamBold
-raceLabel.TextSize = 10
-raceLabel.BackgroundTransparency = 1
-
--- BUTTON ACTIONS
+-- BUTTON FUNCTIONS
 purgeBtn.MouseButton1Click:Connect(function()
-    local count = 0
-    for _, o in pairs(Workspace:GetDescendants()) do 
-        if (o.Name:lower():find("traffic") or o.Name:lower():find("npc")) then 
-            o:Destroy()
-            count = count + 1 
-        end 
-    end
+    local count = 0; for _, o in pairs(Workspace:GetDescendants()) do if (o.Name:lower():find("traffic") or o.Name:lower():find("npc")) then o:Destroy(); count = count + 1 end end
     status.Text = "PURGED: "..count
 end)
 
@@ -220,68 +136,59 @@ farmBtn.MouseButton1Click:Connect(function()
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
 end)
 
--- LOOP UTAMA (ORIGINAL)
+-- MAIN LOOP (OPTIMIZED TP)
 task.spawn(function()
     while true do
         task.wait(0.5)
         if running then
-            local char = LP.Character or LP.CharacterAdded:Wait()
-            local hum = char:FindFirstChildOfClass("Humanoid")
+            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
             local seat = hum and hum.SeatPart
-            
             if seat and seat:IsA("VehicleSeat") then
-                local car = seat.Parent
-                while car and not car:IsA("Model") do car = car.Parent end
+                local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                 
+                -- RESET POSITION (OPTIMIZED HEIGHT +5)
                 applyLowGraphic()
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
                 
                 status.Text = "WAITING RIVAL..."
                 repeat task.wait(1) until not running or (function()
-                    local cnt = 0
-                    for _, p in pairs(Players:GetPlayers()) do 
-                        if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then 
-                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 then 
-                                cnt = cnt + 1 
-                            end 
-                        end 
-                    end
+                    local cnt = 0; for _, p in pairs(Players:GetPlayers()) do if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 then cnt = cnt + 1 end end
                     return cnt > 0
                 end)()
                 
                 if running then
                     local moneyBefore = getPlayerMoney()
-                    for i = 25, 1, -1 do 
-                        if not running then break end
-                        status.Text = "START: "..i.."s"
-                        task.wait(1) 
-                    end
-                    
+                    for i = 25, 1, -1 do if not running then break end; status.Text = "START: "..i.."s"; task.wait(1) end
                     if running then
+                        -- TP SEQUENCE
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
                             status.Text = "TP: " .. i .. "/" .. #path
                             applyLowGraphic()
+                            
+                            -- ANTI-VOID STABILIZER (RESET VELOCITY)
+                            seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                            
+                            -- TELEPORT WITH HEIGHT +5
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
-                            car:PivotTo(cf)
-                            seat.AssemblyLinearVelocity = cf.LookVector * 150
+                            car:PivotTo(cf); 
+                            
+                            task.wait(0.1) -- Stabilization
+                            seat.AssemblyLinearVelocity = cf.LookVector * 155; -- Speed
                             task.wait(2.2)
                         end
                         task.wait(3)
                         local gain = getPlayerMoney() - moneyBefore
                         if gain > 0 then 
-                            totalMoneyEarned = totalMoneyEarned + gain
-                            sessionRaces = sessionRaces + 1
-                            moneyLabel.Text = "$" .. totalMoneyEarned
-                            raceLabel.Text = "Races: " .. sessionRaces
+                            totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
+                            moneyLabel.Text = "$" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
                         end
+                        applyLowGraphic()
                         status.Text = "LOOP RESTARTING..."
                         task.wait(2)
                     end
                 end
-            else 
-                status.Text = "SIT IN CAR!" 
-            end
+            else status.Text = "SIT IN CAR!" end
         end
     end
 end)
