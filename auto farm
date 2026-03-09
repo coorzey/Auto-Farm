@@ -1,5 +1,5 @@
 -- ==========================================   
--- V56.7 AUTO FARM - MANUAL CLAIM CHECKBOX
+-- V56.8 AUTO FARM - AGGRESSIVE CLAIM SYSTEM
 -- ==========================================   
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -25,31 +25,45 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- FUNGSI CLAIM SEMUA HADIAH (Daily & Quest)
+-- FUNGSI CLAIM AGGRESIF (DIPERBARUI)
 local function claimEverything()
-    status.Text = "CLAIMING REWARDS..."
+    status.Text = "SCANNING REMOTES..."
+    local foundCount = 0
+    
+    -- Mencari di seluruh ReplicatedStorage
     for _, v in pairs(ReplicatedStorage:GetDescendants()) do
         if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
             local name = v.Name:lower()
-            -- Mencari remote untuk Claim, Reward, Daily, atau Quest
-            if name:find("claim") or name:find("reward") or name:find("daily") or name:find("quest") then
-                for i = 1, 15 do -- Range lebih luas untuk quest
-                    if v:IsA("RemoteEvent") then
-                        v:FireServer(i)
-                    else
-                        pcall(function() v:InvokeServer(i) end)
+            -- Daftar kata kunci yang sering dipakai game balap/simulator
+            if name:find("claim") or name:find("reward") or name:find("daily") or name:find("quest") or name:find("gift") or name:find("collect") then
+                foundCount = foundCount + 1
+                task.spawn(function()
+                    for i = 1, 20 do -- Mencoba slot 1 sampai 20
+                        pcall(function()
+                            if v:IsA("RemoteEvent") then
+                                v:FireServer(i)
+                                v:FireServer(tostring(i)) -- Beberapa game pakai string
+                            else
+                                v:InvokeServer(i)
+                            end
+                        end)
                     end
-                end
+                end)
             end
         end
     end
-    task.wait(1)
-    status.Text = "REWARDS CLAIMED!"
-    task.wait(1)
-    status.Text = running and "RUNNING..." or "READY (V56.7)"
+    
+    if foundCount == 0 then
+        status.Text = "NO REMOTE FOUND!"
+    else
+        status.Text = "CLAIMED ("..foundCount.." REMOTES)"
+    end
+    
+    task.wait(2)
+    status.Text = running and "RUNNING..." or "READY (V56.8)"
 end
 
--- KONFIGURASI TELEPORT
+-- KONFIGURASI TELEPORT (Jalur Anda)
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -76,27 +90,25 @@ local path = {
     {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }   
 
--- UI COLORS
+-- UI THEME (YELLOW/BLACK/BLUE)
 local COLOR_BLACK = Color3.fromRGB(0, 0, 0)
 local COLOR_YELLOW = Color3.fromRGB(255, 255, 0)
 local COLOR_BLUE = Color3.fromRGB(0, 102, 255)
 local COLOR_WHITE = Color3.fromRGB(255, 255, 255)
 
--- UI SETUP
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui)   
 sg.Name = "DeltaAutoFarm"   
 sg.ResetOnSpawn = false   
 
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 320, 0, 260) -- Ukuran ditambah sedikit untuk Checkbox
+frame.Size = UDim2.new(0, 320, 0, 260) 
 frame.Position = UDim2.new(0.5, -160, 0.4, 0)   
 frame.BackgroundColor3 = COLOR_BLACK
 frame.Active = true   
 frame.Draggable = true   
 frame.ClipsDescendants = true   
 Instance.new("UICorner", frame)   
-
 local frameStroke = Instance.new("UIStroke", frame)
 frameStroke.Color = COLOR_YELLOW
 frameStroke.Thickness = 2
@@ -108,7 +120,7 @@ header.BackgroundTransparency = 1
 status = Instance.new("TextLabel", header)   
 status.Size = UDim2.new(1, -50, 1, 0)   
 status.Position = UDim2.new(0, 15, 0, 0)   
-status.Text = "READY (V56.7)"   
+status.Text = "READY (V56.8)"   
 status.TextColor3 = Color3.fromRGB(0, 255, 150)
 status.BackgroundTransparency = 1   
 status.Font = Enum.Font.GothamBold   
@@ -137,7 +149,7 @@ toggleBtn.MouseButton1Click:Connect(function()
     toggleBtn.Text = isMinimized and "+" or "-"   
 end)   
 
--- MONEY TRACKER HUD (Kiri)
+-- HUD MONEY TRACKER (Kiri)
 local moneyHud = Instance.new("Frame", sg)
 moneyHud.Size = UDim2.new(0, 160, 0, 65)
 moneyHud.Position = UDim2.new(0, 20, 0.4, 0)
@@ -194,7 +206,7 @@ clearBtn.TextColor3 = COLOR_WHITE
 clearBtn.Font = Enum.Font.GothamBold   
 Instance.new("UICorner", clearBtn)   
 
---- CHECKBOX AREA ---
+-- CHECKBOX AREA
 local claimFrame = Instance.new("Frame", content)
 claimFrame.Size = UDim2.new(0, 280, 0, 40)
 claimFrame.Position = UDim2.new(0.5, -140, 0, 140)
@@ -202,7 +214,7 @@ claimFrame.BackgroundTransparency = 1
 
 local claimLabel = Instance.new("TextLabel", claimFrame)
 claimLabel.Size = UDim2.new(1, -40, 1, 0)
-claimLabel.Text = "AUTO CLAIM DAILY & QUEST"
+claimLabel.Text = "CLICK TO CLAIM REWARDS"
 claimLabel.TextColor3 = COLOR_WHITE
 claimLabel.Font = Enum.Font.GothamBold
 claimLabel.TextSize = 12
@@ -231,7 +243,7 @@ checkBG.MouseButton1Click:Connect(function()
     checkMark.Visible = false
 end)
 
--- LOGIC FARM
+-- FARM LOGIC
 btn.MouseButton1Click:Connect(function()   
     running = not running   
     btn.Text = running and "STOP" or "START AUTO FARM"   
@@ -240,32 +252,23 @@ end)
 
 clearBtn.MouseButton1Click:Connect(function()   
     for _, o in pairs(Workspace:GetDescendants()) do   
-        if (o.Name:lower():find("traffic") or o.Name:lower():find("npc")) and not o:IsDescendantOf(LP.Character) then   
-            o:Destroy()   
-        end   
+        if (o.Name:lower():find("traffic") or o.Name:lower():find("npc")) and not o:IsDescendantOf(LP.Character) then o:Destroy() end   
     end   
 end)   
 
 boostBtn.MouseButton1Click:Connect(function()   
-    local function applyLowGraphics()   
-        settings().Rendering.QualityLevel = 1   
-        Lighting.GlobalShadows = false   
-        Lighting.FogEnd = 9e9   
-        for _, v in pairs(Workspace:GetDescendants()) do   
-            if v:IsA("BasePart") then   
-                v.Material = Enum.Material.SmoothPlastic   
-                v.CastShadow = false   
-                local name = v.Name:lower()   
-                if name:find("tree") or name:find("grass") or name:find("building") or name:find("pole") or name:find("prop") or name:find("leaf") or name:find("cloud") then   
-                    if not v:IsDescendantOf(LP.Character) then v:Destroy() end   
-                end   
-            elseif v:IsA("Decal") or v:IsA("Texture") then v:Destroy() end   
+    settings().Rendering.QualityLevel = 1   
+    Lighting.GlobalShadows = false   
+    for _, v in pairs(Workspace:GetDescendants()) do   
+        if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then   
+            v.Material = Enum.Material.SmoothPlastic   
+            local name = v.Name:lower()   
+            if name:find("tree") or name:find("grass") then v:Destroy() end   
         end   
-    end
-    applyLowGraphics()   
+    end   
 end)   
 
--- MAIN FARM THREAD
+-- MAIN THREAD
 task.spawn(function()   
     while true do   
         task.wait(0.5)   
@@ -277,7 +280,6 @@ task.spawn(function()
                 while car and not car:IsA("Model") do car = car.Parent end   
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))   
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)   
-
                 status.Text = "WAITING FOR RIVAL..."   
                 while running and (function()
                     local count = 0
@@ -297,16 +299,13 @@ task.spawn(function()
                         status.Text = "STARTING IN: "..i.."s"   
                         task.wait(1)   
                     end   
-                       
                     if running then   
                         for i, d in ipairs(path) do   
                             if not running or not seat.Parent then break end   
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)   
                             car:PivotTo(cf)   
                             seat.AssemblyLinearVelocity = cf.LookVector * 150   
-                            local delay = math.random(20, 25) / 10
-                            status.Text = "TP ["..i.."/"..#path.."] ("..delay.."s)"   
-                            task.wait(delay)   
+                            task.wait(math.random(20, 25) / 10)   
                         end   
                         status.Text = "FINISH! SYNCING..."   
                         task.wait(3)   
