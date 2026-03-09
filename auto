@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
--- UPDATE: AUTO CLOSE PRIZE POPUP + LOW GRAPHIC
+-- UPDATE: PURGE TRAFFIC + ULTIMATE LOW GRAPHIC
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -19,45 +19,59 @@ end)
 local totalMoneyEarned, sessionRaces = 0, 0
 local running, isMinimized = false, false
 
--- FUNGSI CLOSE PRIZE POPUP (Mencari tombol X secara otomatis)
-local function closePrizePopup()
+-- FUNGSI PURGE TRAFFIC (Menghapus mobil NPC/Traffic agar tidak lag)
+local function purgeTraffic()
     pcall(function()
-        -- Mencari di PlayerGui (sesuaikan nama jika kamu tahu nama pastinya)
-        for _, gui in pairs(PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and gui.Enabled then
-                -- Mencari tombol yang biasanya bernama 'Close', 'Exit', atau 'X'
-                for _, btn in pairs(gui:GetDescendants()) do
-                    if btn:IsA("TextButton") or btn:IsA("ImageButton") then
-                        if btn.Name:lower():find("close") or btn.Name == "X" or btn.Text == "X" then
-                            -- Simulasi klik
-                            local pos = btn.AbsolutePosition
-                            local size = btn.AbsoluteSize
-                            VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2)))
-                            -- Atau cara langsung jika diizinkan:
-                            -- btn:Activate() 
-                        end
-                    end
+        -- Mencari folder yang biasanya berisi Traffic/NPC di game racing
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v.Name:lower():find("traffic") or v.Name:lower():find("npc") or v.Name:lower():find("car_") then
+                if v:IsA("Model") or v:IsA("BasePart") then
+                    v:Destroy()
                 end
             end
         end
     end)
 end
 
--- FUNGSI LOW GRAPHIC
+-- FUNGSI LOW GRAPHIC (Source code lama yang lebih agresif)
 local function applyLowGraphic()
     pcall(function()
         settings().Rendering.QualityLevel = 1
         Lighting.GlobalShadows = false
+        Lighting.FogEnd = 9e9
+        Lighting.Brightness = 1
+        
         for _, v in pairs(Workspace:GetDescendants()) do
             if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
-                if v.Material ~= Enum.Material.SmoothPlastic then
-                    v.Material = Enum.Material.SmoothPlastic
-                    v.Reflectance = 0
-                end
+                v.Material = Enum.Material.SmoothPlastic
+                v.Reflectance = 0
             elseif v:IsA("Decal") or v:IsA("Texture") then 
                 v:Destroy() 
             elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
                 v.Enabled = false
+            elseif v:IsA("Explosion") then
+                v.Visible = false
+            elseif v:IsA("MeshPart") then
+                v.MeshId = ""
+            end
+        end
+    end)
+end
+
+-- FUNGSI CLOSE PRIZE POPUP
+local function closePrizePopup()
+    pcall(function()
+        for _, gui in pairs(PlayerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Enabled then
+                for _, btn in pairs(gui:GetDescendants()) do
+                    if btn:IsA("TextButton") or btn:IsA("ImageButton") then
+                        if btn.Name:lower():find("close") or btn.Name == "X" or btn.Text == "X" then
+                            local pos = btn.AbsolutePosition
+                            local size = btn.AbsoluteSize
+                            VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2)))
+                        end
+                    end
+                end
             end
         end
     end)
@@ -100,7 +114,7 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- UI SETUP (DeltaAutoFarm)
+-- UI SETUP
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 local frame = Instance.new("Frame", sg)   
@@ -121,13 +135,23 @@ toggleBtn.MouseButton1Click:Connect(function()
     content.Visible = not isMinimized; toggleBtn.Text = isMinimized and "+" or "-"
 end)
 
+purgeBtn.MouseButton1Click:Connect(function()
+    purgeTraffic()
+    status.Text = "TRAFFIC PURGED!"
+    task.wait(1)
+    status.Text = running and "FARMING..." or "READY"
+end)
+
 local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 45); moneyHud.Position = UDim2.new(0, 10, 0.45, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.5, 0); moneyLabel.Text = "$0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 12; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.5, 0); raceLabel.Position = UDim2.new(0, 0, 0.5, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
 
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
-    if running then applyLowGraphic() end
+    if running then 
+        applyLowGraphic()
+        purgeTraffic()
+    end
     farmBtn.Text = running and "STOP" or "START FARM"
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
 end)
@@ -142,9 +166,8 @@ task.spawn(function()
             if seat and seat:IsA("VehicleSeat") then
                 local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                 
-                -- RESET KE POSISI START & PAKSA DIAM
                 applyLowGraphic()
-                closePrizePopup() -- Memastikan UI tertutup saat baru balik ke start
+                closePrizePopup()
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                 seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
@@ -165,7 +188,6 @@ task.spawn(function()
                 
                 if running then
                     local moneyBefore = getPlayerMoney()
-                    
                     for i = 25, 1, -1 do 
                         if not running then break end; 
                         status.Text = "START: "..i.."s"; 
@@ -174,25 +196,18 @@ task.spawn(function()
                     end
                     
                     if running then
-                        -- TP SEQUENCE
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
                             status.Text = "TP: " .. i .. "/" .. #path
-                            
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             car:PivotTo(cf); 
-                            
                             task.wait(0.1)
                             seat.AssemblyLinearVelocity = cf.LookVector * 155;
                             task.wait(2.2)
                         end
                         
-                        -- SETELAH TP TERAKHIR (FINISH)
                         status.Text = "FINISHING..."
-                        applyLowGraphic()
-                        
-                        -- TUNGGU HADIAH MUNCUL LALU TUTUP
                         task.wait(1.5) 
                         closePrizePopup() 
                         
@@ -203,7 +218,7 @@ task.spawn(function()
                             moneyLabel.Text = "$" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
                         end
                         
-                        closePrizePopup() -- Penutupan kedua untuk memastikan
+                        closePrizePopup()
                         status.Text = "LOOP RESTARTING..."
                         task.wait(2)
                     end
