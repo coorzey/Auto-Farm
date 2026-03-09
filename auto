@@ -1,6 +1,6 @@
 -- ==========================================   
--- V57.3 FULL SCRIPT - MIDNIGHT CHASERS EDITION
--- RESTORED: ORIGINAL PURGE TRAFFIC LOGIC
+-- V57.4 FULL SCRIPT - MIDNIGHT CHASERS EDITION
+-- RESTORED: HUD MONEY & MINIMIZE BUTTON
 -- ==========================================   
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -60,7 +60,7 @@ local function claimEverything()
     end
     status.Text = foundCount == 0 and "NO REMOTE FOUND!" or "CLAIMED ("..foundCount.." REMOTES)"
     task.wait(2)
-    status.Text = running and "RUNNING..." or "READY (V57.3)"
+    status.Text = running and "RUNNING..." or "READY (V57.4)"
 end
 
 -- KONFIGURASI JALUR TP
@@ -120,19 +120,65 @@ header.BackgroundTransparency = 1
 status = Instance.new("TextLabel", header)   
 status.Size = UDim2.new(1, -50, 1, 0)   
 status.Position = UDim2.new(0, 15, 0, 0)   
-status.Text = "READY (V57.3)"   
+status.Text = "READY (V57.4)"   
 status.TextColor3 = Color3.fromRGB(0, 255, 150)
 status.BackgroundTransparency = 1   
 status.Font = Enum.Font.GothamBold   
 status.TextSize = 12   
 status.TextXAlignment = Enum.TextXAlignment.Left   
 
+-- TOMBOL MINIMIZE
+local toggleBtn = Instance.new("TextButton", header)   
+toggleBtn.Size = UDim2.new(0, 30, 0, 30)   
+toggleBtn.Position = UDim2.new(1, -35, 0, 2)   
+toggleBtn.BackgroundTransparency = 1   
+toggleBtn.Text = "-"   
+toggleBtn.TextColor3 = COLOR_WHITE   
+toggleBtn.TextSize = 30   
+toggleBtn.Font = Enum.Font.GothamBold   
+
 local content = Instance.new("Frame", frame)   
 content.Size = UDim2.new(1, 0, 1, -40)   
 content.Position = UDim2.new(0, 0, 0, 40)   
 content.BackgroundTransparency = 1   
 
--- FUNGSI BUTTONS
+toggleBtn.MouseButton1Click:Connect(function()   
+    isMinimized = not isMinimized   
+    frame:TweenSize(isMinimized and UDim2.new(0, 320, 0, 35) or UDim2.new(0, 320, 0, 260), "Out", "Quad", 0.3, true)   
+    content.Visible = not isMinimized   
+    toggleBtn.Text = isMinimized and "+" or "-"   
+end)   
+
+-- HUD MONEY TRACKER (KEMBALI KE POSISI SEMULA)
+local moneyHud = Instance.new("Frame", sg)
+moneyHud.Size = UDim2.new(0, 160, 0, 65)
+moneyHud.Position = UDim2.new(0, 20, 0.4, 0)
+moneyHud.BackgroundColor3 = COLOR_BLACK
+moneyHud.Active = true
+moneyHud.Draggable = true
+Instance.new("UICorner", moneyHud)
+local hudStroke = Instance.new("UIStroke", moneyHud)
+hudStroke.Color = COLOR_YELLOW
+hudStroke.Thickness = 2
+
+local moneyLabel = Instance.new("TextLabel", moneyHud)
+moneyLabel.Size = UDim2.new(1, 0, 0.5, 0)
+moneyLabel.Text = "Profit: $0"
+moneyLabel.TextColor3 = COLOR_YELLOW
+moneyLabel.Font = Enum.Font.GothamBold
+moneyLabel.TextSize = 14
+moneyLabel.BackgroundTransparency = 1
+
+local raceLabel = Instance.new("TextLabel", moneyHud)
+raceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+raceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+raceLabel.Text = "Races: 0"
+raceLabel.TextColor3 = COLOR_WHITE
+raceLabel.Font = Enum.Font.GothamBold
+raceLabel.TextSize = 12
+raceLabel.BackgroundTransparency = 1
+
+-- BUTTONS
 local function createBtn(text, pos, color)
     local b = Instance.new("TextButton", content)
     b.Size = UDim2.new(0, 280, 0, 35)
@@ -186,7 +232,7 @@ checkBG.MouseButton1Click:Connect(function()
     checkMark.Visible = false
 end)
 
--- KODINGAN PURGE TRAFFIC ORIGINAL
+-- LOGIC PURGE TRAFFIC ORIGINAL
 purgeBtn.MouseButton1Click:Connect(function()
     local count = 0
     for _, o in pairs(Workspace:GetDescendants()) do   
@@ -198,7 +244,7 @@ purgeBtn.MouseButton1Click:Connect(function()
     status.Text = "PURGED "..count.." TRAFFIC CARS"
 end)
 
--- BOOST FPS
+-- LOGIC BOOST FPS
 boostBtn.MouseButton1Click:Connect(function()
     settings().Rendering.QualityLevel = 1
     Lighting.GlobalShadows = false
@@ -217,7 +263,7 @@ farmBtn.MouseButton1Click:Connect(function()
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(200, 0, 0) or COLOR_BLUE
 end)
 
--- LOOP UTAMA (Sama seperti V56.8)
+-- LOOP UTAMA AUTO FARM
 task.spawn(function()   
     while true do   
         task.wait(0.5)   
@@ -258,6 +304,16 @@ task.spawn(function()
                         end   
                         status.Text = "FINISH! SYNCING..."   
                         task.wait(3)   
+                        
+                        -- UPDATE STATS PADA HUD
+                        local gain = getPlayerMoney() - moneyBeforeRace   
+                        if gain > 0 then   
+                            totalMoneyEarned = totalMoneyEarned + gain   
+                            sessionRaces = sessionRaces + 1   
+                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned   
+                            raceLabel.Text = "Races: " .. sessionRaces   
+                        end
+                        
                         status.Text = "RESTARTING..."   
                         task.wait(2)   
                     end   
