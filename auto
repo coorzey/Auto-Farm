@@ -1,6 +1,6 @@
 -- ==========================================   
--- V57.6 FULL INTEGRATED SCRIPT
--- SEMUA FITUR JADI SATU (HUD + MINIMIZE + TP)
+-- V57.7 - AUTO LOW GRAPHIC INTEGRATED
+-- LOW GRAPHIC EXECUTED EVERY START & TELEPORT
 -- ==========================================   
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -22,6 +22,25 @@ local moneyBeforeRace = 0
 local sessionRaces = 0   
 local running = false   
 local isMinimized = false   
+
+-- FUNGSI LOW GRAPHIC (BOOST FPS)
+local function applyLowGraphic()
+    pcall(function()
+        settings().Rendering.QualityLevel = 1
+        Lighting.GlobalShadows = false
+        Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
+                v.Material = Enum.Material.SmoothPlastic
+                v.Reflectance = 0
+            elseif v:IsA("Decal") or v:IsA("Texture") then 
+                v:Destroy() 
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Enabled = false
+            end
+        end
+    end)
+end
 
 local function getPlayerMoney()   
     local leaderstats = LP:FindFirstChild("leaderstats")   
@@ -68,7 +87,7 @@ frame.Size = UDim2.new(0, 320, 0, 260); frame.Position = UDim2.new(0.5, -160, 0.
 Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Color3.new(1,1,0)
 
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1
-local status = Instance.new("TextLabel", header); status.Size = UDim2.new(1, -50, 1, 0); status.Position = UDim2.new(0, 15, 0, 0); status.Text = "READY (V57.6)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 12; status.TextXAlignment = Enum.TextXAlignment.Left
+local status = Instance.new("TextLabel", header); status.Size = UDim2.new(1, -50, 1, 0); status.Position = UDim2.new(0, 15, 0, 0); status.Text = "READY (V57.7)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 12; status.TextXAlignment = Enum.TextXAlignment.Left
 
 -- TOMBOL MINIMIZE
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 30, 0, 30); toggleBtn.Position = UDim2.new(1, -35, 0, 2); toggleBtn.Text = "-"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.TextSize = 25; toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
@@ -99,7 +118,12 @@ purgeBtn.MouseButton1Click:Connect(function()
 end)
 
 farmBtn.MouseButton1Click:Connect(function()
-    running = not running; farmBtn.Text = running and "STOP" or "START AUTO FARM"; farmBtn.BackgroundColor3 = running and Color3.new(0.7,0,0) or Color3.fromRGB(0, 102, 255)
+    running = not running
+    if running then
+        applyLowGraphic() -- AKTIFKAN SAAT START
+    end
+    farmBtn.Text = running and "STOP" or "START AUTO FARM"
+    farmBtn.BackgroundColor3 = running and Color3.new(0.7,0,0) or Color3.fromRGB(0, 102, 255)
 end)
 
 -- LOOP UTAMA
@@ -125,6 +149,10 @@ task.spawn(function()
                     if running then
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
+                            
+                            -- TIAP KALI TELEPORT, PASTIKAN LOW GRAPHIC TETAP AKTIF
+                            applyLowGraphic() 
+                            
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             car:PivotTo(cf); seat.AssemblyLinearVelocity = cf.LookVector * 150; task.wait(2.2)
                         end
