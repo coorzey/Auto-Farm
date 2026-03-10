@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
 -- UPDATE: SUPER ANTI-AFK + FPS + PROGRESS TRACKER + DEEP CLEAN
--- MOD: SEPARATE DT DISPLAY + FIXED DELAY 1.5s - 2.0s
+-- OPTIMIZED: STABLE LAUNCH (ANTI-SLIP)
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -42,10 +42,8 @@ local function applyDeepClean()
         
         for _, v in pairs(Workspace:GetDescendants()) do
             local name = v.Name:lower()
-            -- Hapus NPC/Traffic/Bot
             if name:find("traffic") or name:find("npc") or name:find("bot") or name:find("car_") then
                 if not v:IsDescendantOf(LP.Character) then v:Destroy() end
-            -- Hapus Objek Berat & Ganti Material
             elseif v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
                 v.Material = Enum.Material.SmoothPlastic
                 v.Reflectance = 0
@@ -127,7 +125,6 @@ Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", fr
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 30); header.BackgroundTransparency = 1
 local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.4, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.3)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
 
--- DT LABEL (SEPARATE & NON-RGB)
 local dtStatusLabel = Instance.new("TextLabel", header); dtStatusLabel.Size = UDim2.new(0, 60, 1, 0); dtStatusLabel.Position = UDim2.new(1, -165, 0, 0); dtStatusLabel.Text = "DT: 0s"; dtStatusLabel.TextColor3 = Color3.new(1, 1, 1); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10; dtStatusLabel.TextXAlignment = Enum.TextXAlignment.Center
 
 local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 80, 1, 0); rgbLabel.Position = UDim2.new(1, -110, 0, 0); rgbLabel.Text = "CORRZEY HUB"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
@@ -150,13 +147,11 @@ purgeBtn.MouseButton1Click:Connect(function()
     status.Text = running and "FARMING..." or "READY"
 end)
 
--- MODIFIED HUD (FPS + MONEY + RACES)
 local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.45, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.33, 0); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 11; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.33, 0); raceLabel.Position = UDim2.new(0, 0, 0.33, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
 local fpsLabel = Instance.new("TextLabel", moneyHud); fpsLabel.Size = UDim2.new(1, 0, 0.33, 0); fpsLabel.Position = UDim2.new(0, 0, 0.66, 0); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.Font = Enum.Font.GothamBold; fpsLabel.TextSize = 10; fpsLabel.BackgroundTransparency = 1
 
--- FPS COUNTER LOGIC
 task.spawn(function()
     local lastUpdate = tick()
     local frames = 0
@@ -172,14 +167,12 @@ end)
 
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
-    if running then 
-        applyDeepClean()
-    end
+    if running then applyDeepClean() end
     farmBtn.Text = running and "STOP" or "START FARM"
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
 end)
 
--- MAIN LOOP
+-- MAIN LOOP (OPTIMIZED LAUNCH)
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -216,12 +209,14 @@ task.spawn(function()
                     for i = 18, 1, -1 do 
                         if not running then break end; 
                         status.Text = "START: "..i.."s"; 
-                        if seat then seat.AssemblyLinearVelocity = Vector3.new(0,0,0) end
+                        if seat then 
+                            seat.AssemblyLinearVelocity = Vector3.new(0,0,0) 
+                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                        end
                         task.wait(1) 
                     end
                     
                     if running then
-                        -- DYNAMIC TELEPORT
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
                             
@@ -231,11 +226,18 @@ task.spawn(function()
                             
                             applyDeepClean() 
                             
-                            seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                            -- FORCE STABILIZE ORIENTATION
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
-                            car:PivotTo(cf); 
-                            task.wait(0.1)
-                            seat.AssemblyLinearVelocity = cf.LookVector * 155;
+                            seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                            car:PivotTo(cf)
+                            
+                            task.wait(0.05) -- Jeda mikro agar posisi teregistrasi mesin physics
+                            
+                            -- MELUNCUR DENGAN KECEPATAN SESUAI ARAH HADAP (LOOKVECTOR)
+                            seat.AssemblyLinearVelocity = cf.LookVector * 165
+                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0) -- Kunci agar tidak berputar/gelincir
+                            
                             task.wait(dtVal) 
                         end
                         
