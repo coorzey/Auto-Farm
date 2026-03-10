@@ -67,7 +67,7 @@ local path = {
     {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }   
 
--- UI SETUP (SAMA SEPERTI SEBELUMNYA)
+-- UI SETUP
 local COLOR_BLACK, COLOR_YELLOW, COLOR_BLUE, COLOR_WHITE = Color3.fromRGB(0,0,0), Color3.fromRGB(255,255,0), Color3.fromRGB(0,102,255), Color3.fromRGB(255,255,255)
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
@@ -84,18 +84,35 @@ Instance.new("UICorner", moneyHud); local hudStroke = Instance.new("UIStroke", m
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.5, 0); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = COLOR_YELLOW; moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 14; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.5, 0); raceLabel.Position = UDim2.new(0, 0, 0.5, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = COLOR_WHITE; raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 12; raceLabel.BackgroundTransparency = 1
 
--- BUTTON LOGIC
+-- ==========================================
+-- LOGIC MINIMIZE (FIXED)
+-- ==========================================
+toggleBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        content.Visible = false
+        frame:TweenSize(UDim2.new(0, 320, 0, 35), "Out", "Quad", 0.3, true)
+        toggleBtn.Text = "+"
+    else
+        frame:TweenSize(UDim2.new(0, 320, 0, 85), "Out", "Quad", 0.3, true, function()
+            content.Visible = true
+        end)
+        toggleBtn.Text = "-"
+    end
+end)
+
+-- BUTTON LOGIC START/STOP
 btn.MouseButton1Click:Connect(function()   
     running = not running   
     if running then 
         btn.Text = "STOP FARM"; btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-        task.spawn(applyDeepClean) -- Pembersihan awal
+        task.spawn(applyDeepClean)
     else 
         btn.Text = "START AUTO FARM"; btn.BackgroundColor3 = COLOR_BLUE
     end
 end)   
 
--- MAIN LOOP
+-- MAIN LOOP (TETAP SAMA)
 task.spawn(function()   
     while true do   
         task.wait(0.5)   
@@ -132,22 +149,16 @@ task.spawn(function()
                     end
                     
                     if running then   
-                        -- MULAI TELEPORT DENGAN CONTINUOUS LOW GRAPHIC
                         for i, d in ipairs(path) do   
                             if not running or not seat.Parent then break end   
-                            
                             status.Text = "DYNAMIC TELEPORT ("..i.."/41)"
                             status.TextColor3 = COLOR_YELLOW
-                            
-                            -- FORCE LOW GRAPHIC DI SETIAP TITIK (Mencegah lag saat pindah area)
                             applyDeepClean() 
-                            
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)   
                             car:PivotTo(cf)   
                             seat.AssemblyLinearVelocity = cf.LookVector * 150   
                             task.wait(math.random(20, 25) / 10)   
                         end   
-                        
                         status.Text = "SYNCING..."; task.wait(3)   
                         local gain = (moneyObj and moneyObj.Value or 0) - moneyBeforeRace   
                         if gain > 0 then   
@@ -162,19 +173,15 @@ task.spawn(function()
     end   
 end)
 
--- ==========================================
--- SUPER ANTI-AFK (ADDED FEATURE)
--- ==========================================
+-- SUPER ANTI-AFK
 task.spawn(function()
     local VirtualUser = game:GetService("VirtualUser")
     LP.Idled:Connect(function()
         VirtualUser:CaptureController()
         VirtualUser:ClickButton2(Vector2.new())
-        status.Text = "ANTI-AFK ACTIVE"
     end)
-    -- Loop pencegahan tambahan
     while true do
         VirtualUser:Button1Down(Vector2.new(0, 0), Workspace.CurrentCamera.CFrame)
-        task.wait(60) -- Kirim sinyal input setiap 1 menit
+        task.wait(60)
     end
 end)
