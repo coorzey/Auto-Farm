@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
 -- UPDATE: SUPER ANTI-AFK + FPS + PROGRESS TRACKER + DEEP CLEAN
--- OPTIMIZED: STABLE LAUNCH (ANTI-SLIP)
+-- OPTIMIZED: STABLE LAUNCH + DEEP RECURSIVE X-BUTTON FINDER
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -60,17 +60,40 @@ local function applyDeepClean()
     end)
 end
 
--- FUNGSI CLOSE PRIZE POPUP
+-- [MODIFIED] FUNGSI CLOSE PRIZE POPUP (DEEP BUTTON SEARCH)
 local function closePrizePopup()
     pcall(function()
         for _, gui in pairs(PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and gui.Enabled then
+            -- Hanya cek GUI yang aktif dan bukan UI Delta kita sendiri
+            if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "DeltaAutoFarm" then
+                -- Cari semua objek yang bisa diklik (Button) di dalam GUI tersebut
                 for _, btn in pairs(gui:GetDescendants()) do
-                    if btn:IsA("TextButton") or btn:IsA("ImageButton") then
-                        if btn.Name:lower():find("close") or btn.Name == "X" or btn.Text == "X" then
-                            local pos = btn.AbsolutePosition
-                            local size = btn.AbsoluteSize
-                            VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2)))
+                    if btn:IsA("ImageButton") or btn:IsA("TextButton") then
+                        local n = btn.Name:lower()
+                        local t = (btn:IsA("TextButton") and btn.Text:lower()) or ""
+                        
+                        -- Cek apakah nama tombol atau teksnya mengandung 'X' atau 'Close'
+                        if n == "x" or n:find("close") or t == "x" or t:find("close") or n:find("exit") then
+                            -- Pastikan tombolnya terlihat di layar
+                            if btn.Visible and btn.AbsoluteSize.X > 0 then
+                                -- Simulasi klik pada posisi tombol
+                                local pos = btn.AbsolutePosition
+                                local size = btn.AbsoluteSize
+                                VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
+                                
+                                -- Paksa trigger event klik secara internal (Script-to-Script)
+                                pcall(function()
+                                    for _, conn in pairs(getconnections(btn.MouseButton1Click)) do
+                                        conn:Fire()
+                                    end
+                                    for _, conn in pairs(getconnections(btn.MouseButton1Down)) do
+                                        conn:Fire()
+                                    end
+                                    for _, conn in pairs(getconnections(btn.Activated)) do
+                                        conn:Fire()
+                                    end
+                                end)
+                            end
                         end
                     end
                 end
@@ -172,7 +195,7 @@ farmBtn.MouseButton1Click:Connect(function()
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
 end)
 
--- MAIN LOOP (OPTIMIZED LAUNCH)
+-- MAIN LOOP
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -226,34 +249,37 @@ task.spawn(function()
                             
                             applyDeepClean() 
                             
-                            -- FORCE STABILIZE ORIENTATION
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                             seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                             car:PivotTo(cf)
                             
-                            task.wait(0.05) -- Jeda mikro agar posisi teregistrasi mesin physics
+                            task.wait(0.05) 
                             
-                            -- MELUNCUR DENGAN KECEPATAN SESUAI ARAH HADAP (LOOKVECTOR)
                             seat.AssemblyLinearVelocity = cf.LookVector * 165
-                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0) -- Kunci agar tidak berputar/gelincir
+                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                             
                             task.wait(dtVal) 
                         end
                         
                         status.Text = "FINISHING..."
                         dtStatusLabel.Text = "DT: 0s"
-                        task.wait(1.5) 
-                        closePrizePopup() 
                         
-                        task.wait(1.5)
+                        -- Agresif Close Popup di Fase Finish
+                        task.spawn(function()
+                            for _ = 1, 15 do 
+                                closePrizePopup()
+                                task.wait(0.3)
+                            end
+                        end)
+                        
+                        task.wait(2)
                         local gain = getPlayerMoney() - moneyBeforeRace
                         if gain > 0 then 
                             totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
                         end
                         
-                        closePrizePopup()
                         status.Text = "LOOP RESTARTING..."
                         task.wait(2)
                     end
