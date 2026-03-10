@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
--- UPDATE: SUPER ANTI-AFK + ULTIMATE LOW GRAPHIC
+-- UPDATE: SUPER ANTI-AFK + FPS COUNTER + HUD
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -20,7 +20,6 @@ task.spawn(function()
         pcall(function()
             VirtualUser:CaptureController()
             VirtualUser:ClickButton2(Vector2.new())
-            -- Mencegah Kick dengan simulasi input keyboard random
             VirtualUser:SetKeyDown("w")
             task.wait(0.1)
             VirtualUser:SetKeyUp("w")
@@ -31,10 +30,9 @@ end)
 local totalMoneyEarned, sessionRaces = 0, 0
 local running, isMinimized = false, false
 
--- FUNGSI PURGE TRAFFIC (Menghapus mobil NPC/Traffic agar tidak lag)
+-- FUNGSI PURGE TRAFFIC
 local function purgeTraffic()
     pcall(function()
-        -- Mencari folder yang biasanya berisi Traffic/NPC di game racing
         for _, v in pairs(Workspace:GetDescendants()) do
             if v.Name:lower():find("traffic") or v.Name:lower():find("npc") or v.Name:lower():find("car_") then
                 if v:IsA("Model") or v:IsA("BasePart") then
@@ -45,7 +43,7 @@ local function purgeTraffic()
     end)
 end
 
--- FUNGSI LOW GRAPHIC (Source code lama yang lebih agresif)
+-- FUNGSI LOW GRAPHIC
 local function applyLowGraphic()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -154,9 +152,25 @@ purgeBtn.MouseButton1Click:Connect(function()
     status.Text = running and "FARMING..." or "READY"
 end)
 
-local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 45); moneyHud.Position = UDim2.new(0, 10, 0.45, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
-local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.5, 0); moneyLabel.Text = "$0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 12; moneyLabel.BackgroundTransparency = 1
-local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.5, 0); raceLabel.Position = UDim2.new(0, 0, 0.5, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
+-- MODIFIED HUD (Added FPS Label)
+local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.45, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
+local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.33, 0); moneyLabel.Text = "$0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 12; moneyLabel.BackgroundTransparency = 1
+local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.33, 0); raceLabel.Position = UDim2.new(0, 0, 0.33, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
+local fpsLabel = Instance.new("TextLabel", moneyHud); fpsLabel.Size = UDim2.new(1, 0, 0.33, 0); fpsLabel.Position = UDim2.new(0, 0, 0.66, 0); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.Font = Enum.Font.GothamBold; fpsLabel.TextSize = 10; fpsLabel.BackgroundTransparency = 1
+
+-- FPS COUNTER LOGIC
+task.spawn(function()
+    local lastUpdate = tick()
+    local frames = 0
+    RunService.RenderStepped:Connect(function()
+        frames = frames + 1
+        if tick() - lastUpdate >= 1 then
+            fpsLabel.Text = "FPS: " .. frames
+            frames = 0
+            lastUpdate = tick()
+        end
+    end)
+end)
 
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
