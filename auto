@@ -200,7 +200,7 @@ task.spawn(function()
                         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                             local rivalHum = p.Character:FindFirstChildOfClass("Humanoid")
                             -- CEK APAKAH RIVAL DI RADIUS 50 DAN SEDANG DUDUK DI MOBIL
-                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 and (rivalHum and rivalHum.SeatPart and rivalHum.SeatPart:IsA("VehicleSeat")) then 
+                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 20 and (rivalHum and rivalHum.SeatPart and rivalHum.SeatPart:IsA("VehicleSeat")) then 
                                 rivalFound = true 
                             end 
                         end
@@ -209,7 +209,7 @@ task.spawn(function()
                 
                 if running and rivalFound then
                     moneyBeforeRace = getPlayerMoney()
-                    for i = 25, 1, -1 do 
+                    for i = 18, 1, -1 do 
                         if not running then break end; 
                         status.Text = "START: "..i.."s"; 
                         if seat then seat.AssemblyLinearVelocity = Vector3.new(0,0,0) end
