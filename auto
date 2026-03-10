@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
--- UPDATE: SUPER ANTI-AFK + FPS COUNTER + HUD
+-- UPDATE: SUPER ANTI-AFK + FPS + PROGRESS TRACKER + DEEP CLEAN
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -28,23 +28,11 @@ task.spawn(function()
 end)
 
 local totalMoneyEarned, sessionRaces = 0, 0
+local moneyBeforeRace = 0
 local running, isMinimized = false, false
 
--- FUNGSI PURGE TRAFFIC
-local function purgeTraffic()
-    pcall(function()
-        for _, v in pairs(Workspace:GetDescendants()) do
-            if v.Name:lower():find("traffic") or v.Name:lower():find("npc") or v.Name:lower():find("car_") then
-                if v:IsA("Model") or v:IsA("BasePart") then
-                    v:Destroy()
-                end
-            end
-        end
-    end)
-end
-
--- FUNGSI LOW GRAPHIC
-local function applyLowGraphic()
+-- FUNGSI SUPER LOW GRAPHIC + PURGE (Deep Clean dari V57.3)
+local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
         Lighting.GlobalShadows = false
@@ -52,15 +40,20 @@ local function applyLowGraphic()
         Lighting.Brightness = 1
         
         for _, v in pairs(Workspace:GetDescendants()) do
-            if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
+            local name = v.Name:lower()
+            -- Hapus NPC/Traffic/Bot
+            if name:find("traffic") or name:find("npc") or name:find("bot") or name:find("car_") then
+                if not v:IsDescendantOf(LP.Character) then v:Destroy() end
+            -- Hapus Objek Berat & Ganti Material
+            elseif v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
                 v.Material = Enum.Material.SmoothPlastic
                 v.Reflectance = 0
-            elseif v:IsA("Decal") or v:IsA("Texture") then 
-                v:Destroy() 
-            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v.Enabled = false
-            elseif v:IsA("Explosion") then
-                v.Visible = false
+                v.CastShadow = false
+                if name:find("tree") or name:find("grass") or name:find("bush") or name:find("leaf") then
+                    v:Destroy()
+                end
+            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Sky") or v:IsA("Explosion") then
+                v:Destroy()
             elseif v:IsA("MeshPart") then
                 v.MeshId = ""
             end
@@ -146,15 +139,15 @@ toggleBtn.MouseButton1Click:Connect(function()
 end)
 
 purgeBtn.MouseButton1Click:Connect(function()
-    purgeTraffic()
-    status.Text = "TRAFFIC PURGED!"
+    applyDeepClean()
+    status.Text = "DEEP CLEANED!"
     task.wait(1)
     status.Text = running and "FARMING..." or "READY"
 end)
 
--- MODIFIED HUD (Added FPS Label)
+-- MODIFIED HUD (FPS + MONEY + RACES)
 local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.45, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
-local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.33, 0); moneyLabel.Text = "$0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 12; moneyLabel.BackgroundTransparency = 1
+local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.33, 0); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 11; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.33, 0); raceLabel.Position = UDim2.new(0, 0, 0.33, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
 local fpsLabel = Instance.new("TextLabel", moneyHud); fpsLabel.Size = UDim2.new(1, 0, 0.33, 0); fpsLabel.Position = UDim2.new(0, 0, 0.66, 0); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.Font = Enum.Font.GothamBold; fpsLabel.TextSize = 10; fpsLabel.BackgroundTransparency = 1
 
@@ -175,8 +168,7 @@ end)
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
     if running then 
-        applyLowGraphic()
-        purgeTraffic()
+        applyDeepClean()
     end
     farmBtn.Text = running and "STOP" or "START FARM"
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
@@ -192,7 +184,7 @@ task.spawn(function()
             if seat and seat:IsA("VehicleSeat") then
                 local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                 
-                applyLowGraphic()
+                applyDeepClean()
                 closePrizePopup()
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                 seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
@@ -200,20 +192,19 @@ task.spawn(function()
                 
                 status.Text = "WAITING RIVAL..."
                 
+                local rivalFound = false
                 repeat 
                     task.wait(1) 
                     if seat then seat.AssemblyLinearVelocity = Vector3.new(0,0,0) end
-                until not running or (function()
-                    local cnt = 0; for _, p in pairs(Players:GetPlayers()) do 
+                    for _, p in pairs(Players:GetPlayers()) do 
                         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 then 
-                            cnt = cnt + 1 
+                            rivalFound = true 
                         end 
                     end
-                    return cnt > 0
-                end)()
+                until not running or rivalFound
                 
-                if running then
-                    local moneyBefore = getPlayerMoney()
+                if running and rivalFound then
+                    moneyBeforeRace = getPlayerMoney()
                     for i = 25, 1, -1 do 
                         if not running then break end; 
                         status.Text = "START: "..i.."s"; 
@@ -222,15 +213,20 @@ task.spawn(function()
                     end
                     
                     if running then
+                        -- DYNAMIC TELEPORT WITH CONTINUOUS DEEP CLEAN
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
-                            status.Text = "TP: " .. i .. "/" .. #path
+                            status.Text = "TP: " .. i .. "/41"
+                            
+                            -- Continuous Purge
+                            applyDeepClean() 
+                            
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             car:PivotTo(cf); 
                             task.wait(0.1)
                             seat.AssemblyLinearVelocity = cf.LookVector * 155;
-                            task.wait(2.2)
+                            task.wait(math.random(20, 25) / 10) -- Randomize wait to simulate real movement
                         end
                         
                         status.Text = "FINISHING..."
@@ -238,10 +234,10 @@ task.spawn(function()
                         closePrizePopup() 
                         
                         task.wait(1.5)
-                        local gain = getPlayerMoney() - moneyBefore
+                        local gain = getPlayerMoney() - moneyBeforeRace
                         if gain > 0 then 
                             totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
-                            moneyLabel.Text = "$" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
+                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
                         end
                         
                         closePrizePopup()
