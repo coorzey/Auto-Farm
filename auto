@@ -161,3 +161,20 @@ task.spawn(function()
         end   
     end   
 end)
+
+-- ==========================================
+-- SUPER ANTI-AFK (ADDED FEATURE)
+-- ==========================================
+task.spawn(function()
+    local VirtualUser = game:GetService("VirtualUser")
+    LP.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+        status.Text = "ANTI-AFK ACTIVE"
+    end)
+    -- Loop pencegahan tambahan
+    while true do
+        VirtualUser:Button1Down(Vector2.new(0, 0), Workspace.CurrentCamera.CFrame)
+        task.wait(60) -- Kirim sinyal input setiap 1 menit
+    end
+end)
