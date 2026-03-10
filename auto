@@ -197,9 +197,13 @@ task.spawn(function()
                     task.wait(1) 
                     if seat then seat.AssemblyLinearVelocity = Vector3.new(0,0,0) end
                     for _, p in pairs(Players:GetPlayers()) do 
-                        if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 then 
-                            rivalFound = true 
-                        end 
+                        if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                            local rivalHum = p.Character:FindFirstChildOfClass("Humanoid")
+                            -- CEK APAKAH RIVAL DI RADIUS 50 DAN SEDANG DUDUK DI MOBIL
+                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 50 and (rivalHum and rivalHum.SeatPart and rivalHum.SeatPart:IsA("VehicleSeat")) then 
+                                rivalFound = true 
+                            end 
+                        end
                     end
                 until not running or rivalFound
                 
@@ -226,7 +230,7 @@ task.spawn(function()
                             car:PivotTo(cf); 
                             task.wait(0.1)
                             seat.AssemblyLinearVelocity = cf.LookVector * 155;
-                            task.wait(math.random(20, 25) / 10) -- Randomize wait to simulate real movement
+                            task.wait(math.random(20, 25) / 10) 
                         end
                         
                         status.Text = "FINISHING..."
