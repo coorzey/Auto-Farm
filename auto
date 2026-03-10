@@ -2,7 +2,7 @@
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
 -- UPDATE: SUPER ANTI-AFK + FPS + PROGRESS TRACKER + DEEP CLEAN
 -- OPTIMIZED: STABLE LAUNCH + DEEP RECURSIVE X-BUTTON FINDER
--- POSITION UPDATED: MONEY HUD MOVED UP
+-- POSITION UPDATED: MONEY HUD MOVED TO TOP (Y = 0.12)
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -165,8 +165,8 @@ purgeBtn.MouseButton1Click:Connect(function()
     status.Text = running and "FARMING..." or "READY"
 end)
 
--- POSITION UPDATED TO 0.22 (MORE TOP)
-local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.22, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
+-- POSISI DINAIKKAN LAGI KE 0.12 (SANGAT ATAS)
+local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.12, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.33, 0); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 11; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.33, 0); raceLabel.Position = UDim2.new(0, 0, 0.33, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
 local fpsLabel = Instance.new("TextLabel", moneyHud); fpsLabel.Size = UDim2.new(1, 0, 0.33, 0); fpsLabel.Position = UDim2.new(0, 0, 0.66, 0); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.Font = Enum.Font.GothamBold; fpsLabel.TextSize = 10; fpsLabel.BackgroundTransparency = 1
