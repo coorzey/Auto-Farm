@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
 -- UPDATE: SUPER ANTI-AFK + FPS + PROGRESS TRACKER + DEEP CLEAN
--- MOD: DYNAMIC TELEPORT (DT) 1.5s - 2.0s
+-- MOD: SEPARATE DT DISPLAY + FIXED DELAY 1.5s - 2.0s
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -125,8 +125,12 @@ local frame = Instance.new("Frame", sg)
 frame.Size = UDim2.new(0, 260, 0, 95); frame.Position = UDim2.new(0.5, -130, 0.4, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
 Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Color3.new(1,1,0); frameStroke.Thickness = 1.5
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 30); header.BackgroundTransparency = 1
-local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.5, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.3)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
-local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 130, 1, 0); rgbLabel.Position = UDim2.new(1, -165, 0, 0); rgbLabel.Text = "CORRZEY HUB | DT: 0s"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
+local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.4, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.3)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
+
+-- DT LABEL (SEPARATE & NON-RGB)
+local dtStatusLabel = Instance.new("TextLabel", header); dtStatusLabel.Size = UDim2.new(0, 60, 1, 0); dtStatusLabel.Position = UDim2.new(1, -165, 0, 0); dtStatusLabel.Text = "DT: 0s"; dtStatusLabel.TextColor3 = Color3.new(1, 1, 1); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10; dtStatusLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 80, 1, 0); rgbLabel.Position = UDim2.new(1, -110, 0, 0); rgbLabel.Text = "CORRZEY HUB"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
 task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.03) end end end)
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -28, 0, 3); toggleBtn.Text = "-"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40); Instance.new("UICorner", toggleBtn)
 local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 40); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
@@ -217,15 +221,14 @@ task.spawn(function()
                     end
                     
                     if running then
-                        -- DYNAMIC TELEPORT WITH DT DISPLAY
+                        -- DYNAMIC TELEPORT
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
                             
                             local dtVal = math.random(15, 20) / 10
-                            status.Text = "TP: " .. i .. "/41 DT: " .. dtVal .. "s"
-                            rgbLabel.Text = "CORRZEY HUB | DT: " .. dtVal .. "s"
+                            status.Text = "TP: " .. i .. "/41"
+                            dtStatusLabel.Text = "DT: " .. dtVal .. "s"
                             
-                            -- Continuous Purge
                             applyDeepClean() 
                             
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
@@ -237,7 +240,7 @@ task.spawn(function()
                         end
                         
                         status.Text = "FINISHING..."
-                        rgbLabel.Text = "CORRZEY HUB | DT: 0s"
+                        dtStatusLabel.Text = "DT: 0s"
                         task.wait(1.5) 
                         closePrizePopup() 
                         
