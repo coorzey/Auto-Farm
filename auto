@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
--- UPDATE: CHECKBOX 2X CASH + SUPER ANTI-AFK
+-- UPDATE: IMPROVED AUTO 2X CASH + CHECKBOX
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -10,39 +10,53 @@ local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
 
--- Variabel kontrol baru
+-- Variabel kontrol
 local use2xCashEnabled = false
 
--- FUNGSI AUTO USE 2X CASH
+-- [FIXED] FUNGSI AUTO USE 2X CASH (More Aggressive)
 local function autoUse2xCash()
     if not use2xCashEnabled then return end
     pcall(function()
+        -- Cari indikator Inactive atau durasi yang habis
+        local needsBuff = false
         for _, v in pairs(PlayerGui:GetDescendants()) do
-            if v:IsA("TextLabel") and v.Text == "Inactive" then
-                -- 1. Klik tombol Store (Kuning)
-                for _, btn in pairs(PlayerGui:GetDescendants()) do
-                    if btn:IsA("ImageButton") and btn.Name == "Store" then
-                        local pos = btn.AbsolutePosition
-                        local size = btn.AbsoluteSize
-                        VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
-                        task.wait(1)
-                    end
+            if v:IsA("TextLabel") and (v.Text:find("Inactive") or v.Text == "00:00") then
+                needsBuff = true
+                break
+            end
+        end
+
+        if needsBuff then
+            -- 1. Cari tombol Store Kuning di sisi kiri
+            local storeBtn = nil
+            for _, b in pairs(PlayerGui:GetDescendants()) do
+                if b:IsA("ImageButton") and (b.Name:lower() == "store" or b.Name:lower() == "shop") then
+                    storeBtn = b
+                    break
                 end
-                
-                -- 2. Klik tombol Use (Biru)
-                for _, useBtn in pairs(PlayerGui:GetDescendants()) do
-                    if useBtn:IsA("TextButton") and useBtn.Text:find("Use") and useBtn.Visible then
-                        local pos = useBtn.AbsolutePosition
-                        local size = useBtn.AbsoluteSize
-                        VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
+            end
+
+            if storeBtn then
+                local sPos = storeBtn.AbsolutePosition
+                local sSize = storeBtn.AbsoluteSize
+                VirtualUser:ClickButton1(Vector2.new(sPos.X + (sSize.X/2), sPos.Y + (sSize.Y/2) + 50))
+                task.wait(1.5) -- Jeda buka store
+
+                -- 2. Cari tombol USE Biru
+                for _, u in pairs(PlayerGui:GetDescendants()) do
+                    if u:IsA("TextButton") and u.Text:find("Use") and u.Visible then
+                        local uPos = u.AbsolutePosition
+                        local uSize = u.AbsoluteSize
+                        VirtualUser:ClickButton1(Vector2.new(uPos.X + (uSize.X/2), uPos.Y + (uSize.Y/2) + 50))
                         task.wait(0.5)
                         
-                        -- 3. Tutup Shop (X)
-                        for _, closeBtn in pairs(PlayerGui:GetDescendants()) do
-                            if closeBtn.Name == "Close" or (closeBtn:IsA("TextButton") and closeBtn.Text == "X") then
-                                local cPos = closeBtn.AbsolutePosition
-                                local cSize = closeBtn.AbsoluteSize
-                                VirtualUser:ClickButton1(Vector2.new(cPos.X + (cSize.X/2), cPos.Y + (cSize.Y/2) + 45))
+                        -- 3. Klik tombol X untuk tutup
+                        for _, x in pairs(PlayerGui:GetDescendants()) do
+                            if (x.Name == "Close" or x.Text == "X") and x.Visible then
+                                local xPos = x.AbsolutePosition
+                                local xSize = x.AbsoluteSize
+                                VirtualUser:ClickButton1(Vector2.new(xPos.X + (xSize.X/2), xPos.Y + (xSize.Y/2) + 50))
+                                break
                             end
                         end
                         break
@@ -239,7 +253,7 @@ task.spawn(function()
     while true do
         task.wait(0.5)
         if running then
-            -- Check 2x Cash sebelum mulai race
+            -- Panggil fungsi 2x Cash
             autoUse2xCash()
             
             local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
