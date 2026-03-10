@@ -2,6 +2,7 @@
 -- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
 -- UPDATE: SUPER ANTI-AFK + FPS + PROGRESS TRACKER + DEEP CLEAN
 -- OPTIMIZED: STABLE LAUNCH + DEEP RECURSIVE X-BUTTON FINDER
+-- POSITION UPDATED: MONEY HUD MOVED UP
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -64,24 +65,18 @@ end
 local function closePrizePopup()
     pcall(function()
         for _, gui in pairs(PlayerGui:GetChildren()) do
-            -- Hanya cek GUI yang aktif dan bukan UI Delta kita sendiri
             if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "DeltaAutoFarm" then
-                -- Cari semua objek yang bisa diklik (Button) di dalam GUI tersebut
                 for _, btn in pairs(gui:GetDescendants()) do
                     if btn:IsA("ImageButton") or btn:IsA("TextButton") then
                         local n = btn.Name:lower()
                         local t = (btn:IsA("TextButton") and btn.Text:lower()) or ""
                         
-                        -- Cek apakah nama tombol atau teksnya mengandung 'X' atau 'Close'
                         if n == "x" or n:find("close") or t == "x" or t:find("close") or n:find("exit") then
-                            -- Pastikan tombolnya terlihat di layar
                             if btn.Visible and btn.AbsoluteSize.X > 0 then
-                                -- Simulasi klik pada posisi tombol
                                 local pos = btn.AbsolutePosition
                                 local size = btn.AbsoluteSize
                                 VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
                                 
-                                -- Paksa trigger event klik secara internal (Script-to-Script)
                                 pcall(function()
                                     for _, conn in pairs(getconnections(btn.MouseButton1Click)) do
                                         conn:Fire()
@@ -170,7 +165,8 @@ purgeBtn.MouseButton1Click:Connect(function()
     status.Text = running and "FARMING..." or "READY"
 end)
 
-local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.45, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
+-- POSITION UPDATED TO 0.22 (MORE TOP)
+local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.22, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.33, 0); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 11; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.33, 0); raceLabel.Position = UDim2.new(0, 0, 0.33, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
 local fpsLabel = Instance.new("TextLabel", moneyHud); fpsLabel.Size = UDim2.new(1, 0, 0.33, 0); fpsLabel.Position = UDim2.new(0, 0, 0.66, 0); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.Font = Enum.Font.GothamBold; fpsLabel.TextSize = 10; fpsLabel.BackgroundTransparency = 1
@@ -265,7 +261,6 @@ task.spawn(function()
                         status.Text = "FINISHING..."
                         dtStatusLabel.Text = "DT: 0s"
                         
-                        -- Agresif Close Popup di Fase Finish
                         task.spawn(function()
                             for _ = 1, 15 do 
                                 closePrizePopup()
