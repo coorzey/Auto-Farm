@@ -1,8 +1,7 @@
 -- ==========================================  
--- V58.3 FINAL - RGB CORRZEY HUB EDITION (FIXED)
--- UPDATE: SUPER ANTI-AFK + FPS + PROGRESS TRACKER + DEEP CLEAN
--- OPTIMIZED: STABLE LAUNCH + DEEP RECURSIVE X-BUTTON FINDER
--- POSITION UPDATED: MONEY HUD MOVED TO VERY TOP (Y = 0.02)
+-- V58.5 FINAL REBORN - RGB CORRZEY HUB EDITION
+-- UPDATE: CPU SAVE + AUTO MEMORY PURGE + 3D TOGGLE
+-- OPTIMIZED: STABLE FOR 24/7 WITHOUT CRASHING
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -11,6 +10,21 @@ local Lighting = game:GetService("Lighting")
 local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+
+-- [NEW] OPTIMIZATION GLOBALS
+local renderingEnabled = true
+local function toggle3DRender(mode)
+    renderingEnabled = mode
+    RunService:Set3dRenderingEnabled(mode)
+end
+
+-- [NEW] AUTO MEMORY CLEANER (Menjaga RAM agar tidak penuh)
+task.spawn(function()
+    while task.wait(60) do
+        collectgarbage("collect")
+    end
+end)
 
 -- [REPLACED] SUPER ANTI-AFK (Ultra Aggressive)
 for _, v in pairs(getconnections(LP.Idled)) do
@@ -78,15 +92,9 @@ local function closePrizePopup()
                                 VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
                                 
                                 pcall(function()
-                                    for _, conn in pairs(getconnections(btn.MouseButton1Click)) do
-                                        conn:Fire()
-                                    end
-                                    for _, conn in pairs(getconnections(btn.MouseButton1Down)) do
-                                        conn:Fire()
-                                    end
-                                    for _, conn in pairs(getconnections(btn.Activated)) do
-                                        conn:Fire()
-                                    end
+                                    for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
+                                    for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
+                                    for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end
                                 end)
                             end
                         end
@@ -138,23 +146,35 @@ local path = {
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 260, 0, 95); frame.Position = UDim2.new(0.5, -130, 0.4, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
+frame.Size = UDim2.new(0, 260, 0, 125); frame.Position = UDim2.new(0.5, -130, 0.4, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
 Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Color3.new(1,1,0); frameStroke.Thickness = 1.5
+
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 30); header.BackgroundTransparency = 1
-local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.4, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.3)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
+local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.4, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.5)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
 
 local dtStatusLabel = Instance.new("TextLabel", header); dtStatusLabel.Size = UDim2.new(0, 60, 1, 0); dtStatusLabel.Position = UDim2.new(1, -165, 0, 0); dtStatusLabel.Text = "DT: 0s"; dtStatusLabel.TextColor3 = Color3.new(1, 1, 1); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10; dtStatusLabel.TextXAlignment = Enum.TextXAlignment.Center
 
 local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 80, 1, 0); rgbLabel.Position = UDim2.new(1, -110, 0, 0); rgbLabel.Text = "CORRZEY HUB"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
 task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.03) end end end)
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -28, 0, 3); toggleBtn.Text = "-"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40); Instance.new("UICorner", toggleBtn)
-local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 40); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
-local farmBtn = Instance.new("TextButton", content); farmBtn.Size = UDim2.new(0.6, -4, 1, 0); farmBtn.BackgroundColor3 = Color3.fromRGB(0, 110, 255); farmBtn.Text = "START FARM"; farmBtn.TextColor3 = Color3.new(1,1,1); farmBtn.Font = Enum.Font.GothamBold; farmBtn.TextSize = 11; Instance.new("UICorner", farmBtn)
-local purgeBtn = Instance.new("TextButton", content); purgeBtn.Position = UDim2.new(0.6, 4, 0, 0); purgeBtn.Size = UDim2.new(0.4, -4, 1, 0); purgeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50); purgeBtn.Text = "PURGE"; purgeBtn.TextColor3 = Color3.new(1,1,1); purgeBtn.Font = Enum.Font.GothamBold; purgeBtn.TextSize = 10; Instance.new("UICorner", purgeBtn)
+
+local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 80); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
+local farmBtn = Instance.new("TextButton", content); farmBtn.Size = UDim2.new(0.6, -4, 0, 40); farmBtn.BackgroundColor3 = Color3.fromRGB(0, 110, 255); farmBtn.Text = "START FARM"; farmBtn.TextColor3 = Color3.new(1,1,1); farmBtn.Font = Enum.Font.GothamBold; farmBtn.TextSize = 11; Instance.new("UICorner", farmBtn)
+local purgeBtn = Instance.new("TextButton", content); purgeBtn.Position = UDim2.new(0.6, 4, 0, 0); purgeBtn.Size = UDim2.new(0.4, -4, 0, 40); purgeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50); purgeBtn.Text = "PURGE"; purgeBtn.TextColor3 = Color3.new(1,1,1); purgeBtn.Font = Enum.Font.GothamBold; purgeBtn.TextSize = 10; Instance.new("UICorner", purgeBtn)
+
+-- [NEW] TOMBOL CPU SAVE MODE
+local cpuBtn = Instance.new("TextButton", content); cpuBtn.Size = UDim2.new(1, 0, 0, 30); cpuBtn.Position = UDim2.new(0, 0, 0, 45); cpuBtn.BackgroundColor3 = Color3.fromRGB(30, 80, 30); cpuBtn.Text = "CPU SAVE MODE: OFF (3D ON)"; cpuBtn.TextColor3 = Color3.new(1,1,1); cpuBtn.Font = Enum.Font.GothamBold; cpuBtn.TextSize = 10; Instance.new("UICorner", cpuBtn)
+
+cpuBtn.MouseButton1Click:Connect(function()
+    renderingEnabled = not renderingEnabled
+    toggle3DRender(renderingEnabled)
+    cpuBtn.Text = renderingEnabled and "CPU SAVE MODE: OFF (3D ON)" or "CPU SAVE MODE: ON (3D OFF)"
+    cpuBtn.BackgroundColor3 = renderingEnabled and Color3.fromRGB(30, 80, 30) or Color3.fromRGB(150, 50, 50)
+end)
 
 toggleBtn.MouseButton1Click:Connect(function()   
     isMinimized = not isMinimized
-    frame:TweenSize(isMinimized and UDim2.new(0, 260, 0, 30) or UDim2.new(0, 260, 0, 95), "Out", "Quad", 0.3, true)
+    frame:TweenSize(isMinimized and UDim2.new(0, 260, 0, 30) or UDim2.new(0, 260, 0, 125), "Out", "Quad", 0.3, true)
     content.Visible = not isMinimized; toggleBtn.Text = isMinimized and "+" or "-"
 end)
 
@@ -186,12 +206,17 @@ end)
 
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
-    if running then applyDeepClean() end
+    if running then 
+        applyDeepClean() 
+        setfpscap(30) -- Mengurangi beban CPU saat farming
+    else
+        setfpscap(60) -- Kembali normal saat berhenti
+    end
     farmBtn.Text = running and "STOP" or "START FARM"
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
 end)
 
--- MAIN LOOP
+-- MAIN LOOP (LOGIC BALAPAN ASLI)
 task.spawn(function()
     while true do
         task.wait(0.5)
