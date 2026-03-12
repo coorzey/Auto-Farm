@@ -142,14 +142,26 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- [[ UI SETUP - MODERN MINIMALIST ]]
+-- [[ UI SYSTEM - PERFECTED & NEON HYBRID ]]
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 
+-- Main Colors (Perfected Mode)
+local clr_bg = Color3.fromRGB(18, 18, 18)
+local clr_stroke = Color3.fromRGB(40, 40, 40)
+local clr_accent = Color3.fromRGB(255, 215, 0)
+local clr_btn_off = Color3.fromRGB(35, 35, 35)
+
+-- Neon Colors (Neon Mode)
+local clr_neon_bg = Color3.fromRGB(10, 10, 10)
+local clr_neon_stroke = Color3.fromRGB(0, 255, 255)
+local clr_neon_glow = Color3.fromRGB(0, 180, 180)
+
+-- Perfected Frame
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 240, 0, 155); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = Color3.fromRGB(15,15,15); frame.Active = true; frame.Draggable = true
+frame.Size = UDim2.new(0, 240, 0, 155); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-local fStroke = Instance.new("UIStroke", frame); fStroke.Color = Color3.fromRGB(45,45,45); fStroke.Thickness = 1.5
+local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1
 local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.5, 0, 1, 0); status.Position = UDim2.new(0, 12, 0, 0); status.Text = "● READY"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 11; status.TextXAlignment = Enum.TextXAlignment.Left
@@ -162,33 +174,57 @@ local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new
 local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 110); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
 local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local function createBtn(txt, color)
-    local b = Instance.new("TextButton", content)
-    b.Size = UDim2.new(1, 0, 0, 32); b.BackgroundColor3 = color; b.Text = txt; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.GothamBold; b.TextSize = 10; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+local function createBtn(txt, color, parent)
+    local b = Instance.new("TextButton", parent)
+    b.Size = UDim2.new(1, 0, 0, 32); b.BackgroundColor3 = color; b.Text = txt; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.GothamBold; b.TextSize = 10; b.BorderSizePixel = 0; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
     return b
 end
 
-local farmBtn = createBtn("START FARM", Color3.fromRGB(0, 100, 255))
-local purgeBtn = createBtn("PURGE ASSETS", Color3.fromRGB(40, 40, 40))
-local cpuBtn = createBtn("CPU SAVE: OFF", Color3.fromRGB(30, 60, 30))
-local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.7,0.7,0.7); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
+local farmBtn = createBtn("START FARMING", clr_btn_off, content)
+local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
+local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
+local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
 
--- MINI HUD
-local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 130, 0, 65); moneyHud.Position = UDim2.new(0, 10, 0.02, 0); moneyHud.BackgroundColor3 = Color3.fromRGB(10,10,10); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud)
-local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.fromRGB(255, 200, 0); hs.Thickness = 1.2
+-- MINI HUD (Profit & FPS)
+local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Draggable = true; miniHud.Active = true; frame.BorderSizePixel = 0; Instance.new("UICorner", miniHud)
+local hs = Instance.new("UIStroke", miniHud); hs.Color = clr_accent; hs.Thickness = 1.2
+local hGlow = Instance.new("UIStroke", miniHud); hGlow.Color = clr_neon_glow; hGlow.Thickness = 3; hGlow.Transparency = 1; hGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
 local function createHudLbl(txt, col, pos)
-    local l = Instance.new("TextLabel", moneyHud); l.Size = UDim2.new(1, -20, 0, 20); l.Position = UDim2.new(0, 10, 0, pos); l.Text = txt; l.TextColor3 = col; l.Font = Enum.Font.GothamBold; l.TextSize = 10; l.BackgroundTransparency = 1; l.TextXAlignment = "Left"; return l
+    local l = Instance.new("TextLabel", miniHud); l.Size = UDim2.new(1, -20, 0, 20); l.Position = UDim2.new(0, 10, 0, pos); l.Text = txt; l.TextColor3 = col; l.Font = Enum.Font.GothamBold; l.TextSize = 10; l.BackgroundTransparency = 1; l.TextXAlignment = "Left"; return l
 end
-local moneyLabel = createHudLbl("Profit: $0", Color3.new(1,1,0), 5)
+local moneyLabel = createHudLbl("Profit: $0", clr_accent, 5)
 local raceLabel = createHudLbl("Races: 0", Color3.new(1,1,1), 23)
 local fpsLabel = createHudLbl("FPS: 0", Color3.fromRGB(0, 255, 255), 41)
+
+-- FUNGSI SAKELAR TEMA (NEON DARK)
+local function setNeonTheme(active)
+    if active then
+        frame.BackgroundColor3 = clr_neon_bg
+        mainStroke.Color = clr_neon_stroke
+        cpuBtn.BackgroundColor3 = clr_neon_stroke
+        cpuBtn.TextColor3 = clr_neon_bg
+        cpuBtn.Text = "NEON DARK: ON (3D OFF)"
+        hs.Color = clr_neon_glow
+        hGlow.Transparency = 0.5 -- Menyalakan Glow
+        toggleBtn.BackgroundColor3 = clr_neon_glow
+    else
+        frame.BackgroundColor3 = clr_bg
+        mainStroke.Color = clr_stroke
+        cpuBtn.BackgroundColor3 = clr_btn_off
+        cpuBtn.TextColor3 = Color3.new(1,1,1)
+        cpuBtn.Text = "NEON DARK: OFF (3D ON)"
+        hs.Color = clr_accent
+        hGlow.Transparency = 1 -- Mematikan Glow
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    end
+end
 
 -- UI LOGIC
 cpuBtn.MouseButton1Click:Connect(function()
     renderingEnabled = not renderingEnabled
     toggle3DRender(renderingEnabled)
-    cpuBtn.Text = renderingEnabled and "CPU SAVE: OFF" or "CPU SAVE: ON"
-    cpuBtn.BackgroundColor3 = renderingEnabled and Color3.fromRGB(30, 60, 30) or Color3.fromRGB(120, 40, 40)
+    setNeonTheme(not renderingEnabled)
 end)
 
 toggleBtn.MouseButton1Click:Connect(function()   
@@ -199,9 +235,10 @@ end)
 
 purgeBtn.MouseButton1Click:Connect(function()
     applyDeepClean()
-    status.Text = "● DEEP CLEANED!"
+    local oldText = status.Text
+    status.Text = "● ASSETS PURGED!"
     task.wait(1)
-    status.Text = running and "● FARMING..." or "● READY"
+    status.Text = oldText
 end)
 
 task.spawn(function()
@@ -225,8 +262,8 @@ farmBtn.MouseButton1Click:Connect(function()
     else
         if setfpscap then setfpscap(60) end
     end
-    farmBtn.Text = running and "STOP FARM" or "START FARM"
-    farmBtn.BackgroundColor3 = running and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(0, 100, 255)
+    farmBtn.Text = running and "STOP FARM" or "START FARMING"
+    farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
 end)
 
 -- MAIN LOOP (LOGIC TIDAK DIUBAH)
