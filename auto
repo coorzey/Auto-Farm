@@ -310,9 +310,9 @@ task.spawn(function()
 end)
 
 -- ==============================================================================
--- ADD-ON: WEBHOOK & SYSTEM MONITOR (TANPA MENGUBAH SOURCE CODE LAMA)
+-- ADD-ON: WEBHOOK & SYSTEM MONITOR (UPDATED WEBHOOK URL)
 -- ==============================================================================
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1481443818539585567/BzeN_fxbPJv2GVOPJs38EDuThHKJFWksu1Y58ZPvMjJwKcRoEyIKktLz54Yce0Bo_E9s"
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local HttpService = game:GetService("HttpService")
 
 local function sendWebhookUpdate(gain, total, races)
