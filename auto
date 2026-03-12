@@ -1,6 +1,6 @@
 -- ==========================================  
--- V58.5 FINAL REBORN - RGB CORRZEY HUB EDITION
--- UPDATE: CPU SAVE + AUTO MEMORY PURGE + 3D TOGGLE
+-- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
+-- UPDATE: STABLE DUAL WEBHOOK + CLOUD OPTIMIZED
 -- OPTIMIZED: STABLE FOR 24/7 WITHOUT CRASHING
 -- ==========================================  
 local Players = game:GetService("Players")   
@@ -150,7 +150,7 @@ frame.Size = UDim2.new(0, 260, 0, 125); frame.Position = UDim2.new(0.5, -130, 0.
 Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Color3.new(1,1,0); frameStroke.Thickness = 1.5
 
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 30); header.BackgroundTransparency = 1
-local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.4, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.5)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
+local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.4, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.6)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
 
 local dtStatusLabel = Instance.new("TextLabel", header); dtStatusLabel.Size = UDim2.new(0, 60, 1, 0); dtStatusLabel.Position = UDim2.new(1, -165, 0, 0); dtStatusLabel.Text = "DT: 0s"; dtStatusLabel.TextColor3 = Color3.new(1, 1, 1); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10; dtStatusLabel.TextXAlignment = Enum.TextXAlignment.Center
 
@@ -206,9 +206,9 @@ farmBtn.MouseButton1Click:Connect(function()
     running = not running
     if running then 
         applyDeepClean() 
-        setfpscap(30)
+        if setfpscap then setfpscap(30) end
     else
-        setfpscap(60)
+        if setfpscap then setfpscap(60) end
     end
     farmBtn.Text = running and "STOP" or "START FARM"
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
@@ -298,7 +298,7 @@ task.spawn(function()
 end)
 
 -- ==============================================================================
--- [NEW] TWO-CHANNEL WEBHOOK SYSTEM (STABLE VERSION)
+-- [FIXED] TWO-CHANNEL WEBHOOK SYSTEM (STABLE DISCONNECT DETECTION)
 -- ==============================================================================
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
@@ -314,40 +314,53 @@ local function sendWebhook(url, gain, total, races, isOffline)
     local data = {
         ["embeds"] = {{
             ["title"] = isOffline and "⚠️ ACCOUNT OFFLINE / DISCONNECTED" or "🚀 CORRZEY HUB - AUTO REPORT",
-            ["color"] = isOffline and 16711680 or 65430, -- Merah (Offline) / Hijau (Profit)
+            ["color"] = isOffline and 16711680 or 65430,
             ["fields"] = {
                 {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
                 {["name"] = isOffline and "💰 Total Profit" or "💰 Race Profit", ["value"] = "```$" .. tostring(isOffline and total or gain) .. "```", ["inline"] = true},
                 {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
                 {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fpsStr .. " | RAM: " .. memStr, ["inline"] = false},
             },
-            ["footer"] = {["text"] = "V58.5 Optimized System • " .. os.date("%X")},
+            ["footer"] = {["text"] = "V58.6 Cloud Optimized • " .. os.date("%X")},
             ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
     }
 
-    task.spawn(function()
+    local payload = HttpService:JSONEncode(data)
+    
+    if isOffline then
+        -- Kirim secara sinkron untuk memastikan terkirim sebelum game tutup
         pcall(function()
-            local payload = HttpService:JSONEncode(data)
             if request then
                 request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
             else
                 HttpService:PostAsync(url, payload)
             end
         end)
-    end)
+    else
+        task.spawn(function()
+            pcall(function()
+                if request then
+                    request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
+                else
+                    HttpService:PostAsync(url, payload)
+                end
+            end)
+        end)
+    end
 end
 
 -- Monitor Trigger Disconnect (Kirim ke STATUS_WEBHOOK)
 Players.PlayerRemoving:Connect(function(player)
     if player == LP then
         sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
+        task.wait(2) 
     end
 end)
 
 game:BindToClose(function()
     sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
-    task.wait(1.5)
+    task.wait(2) 
 end)
 
 -- Monitor Laporan Rutin Profit (Kirim ke MAIN_WEBHOOK)
@@ -356,7 +369,7 @@ task.spawn(function()
     while task.wait(5) do
         if sessionRaces > lastRaces then
             local currentGain = getPlayerMoney() - moneyBeforeRace
-            if currentGain <= 0 then currentGain = "0 (Check Game)" end
+            if currentGain <= 0 then currentGain = "Update" end
             sendWebhook(MAIN_WEBHOOK, currentGain, totalMoneyEarned, sessionRaces, false)
             lastRaces = sessionRaces
         end
