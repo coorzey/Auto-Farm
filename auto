@@ -304,6 +304,7 @@ local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjR
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
 
 local HttpService = game:GetService("HttpService")
+local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
 
 local function sendWebhook(url, gain, total, races, isOffline)
     if not url or url == "" then return end
@@ -328,40 +329,41 @@ local function sendWebhook(url, gain, total, races, isOffline)
 
     local payload = HttpService:JSONEncode(data)
     
-    if isOffline then
-        -- Kirim secara sinkron untuk memastikan terkirim sebelum game tutup
+    -- Mengirim secara sinkron tanpa spawn jika offline untuk menjamin pengiriman sebelum close
+    local function executeRequest()
         pcall(function()
-            if request then
-                request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
+            if httpRequest then
+                httpRequest({
+                    Url = url,
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = payload
+                })
             else
                 HttpService:PostAsync(url, payload)
             end
         end)
+    end
+
+    if isOffline then
+        executeRequest()
     else
-        task.spawn(function()
-            pcall(function()
-                if request then
-                    request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
-                else
-                    HttpService:PostAsync(url, payload)
-                end
-            end)
-        end)
+        task.spawn(executeRequest)
     end
 end
 
 -- Monitor Trigger Disconnect (Kirim ke STATUS_WEBHOOK)
+local function onShutdown()
+    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
+end
+
 Players.PlayerRemoving:Connect(function(player)
     if player == LP then
-        sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
-        task.wait(2) 
+        onShutdown()
     end
 end)
 
-game:BindToClose(function()
-    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
-    task.wait(2) 
-end)
+game:BindToClose(onShutdown)
 
 -- Monitor Laporan Rutin Profit (Kirim ke MAIN_WEBHOOK)
 task.spawn(function()
