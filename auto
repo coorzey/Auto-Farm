@@ -298,7 +298,7 @@ task.spawn(function()
 end)
 
 -- ==============================================================================
--- [FIXED] TWO-CHANNEL WEBHOOK SYSTEM (STABLE DISCONNECT + STUCK DETECTION)
+-- [FIXED] TWO-CHANNEL WEBHOOK SYSTEM (STABLE DISCONNECT DETECTION)
 -- ==============================================================================
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
@@ -306,30 +306,19 @@ local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ7
 local HttpService = game:GetService("HttpService")
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
 
-local function sendWebhook(url, gain, total, races, statusType)
+local function sendWebhook(url, gain, total, races, isOffline)
     if not url or url == "" then return end
-    
-    local title = "🚀 CORRZEY HUB - AUTO REPORT"
-    local color = 65430 -- Default Green
-    
-    if statusType == "OFFLINE" then
-        title = "⚠️ ACCOUNT OFFLINE / DISCONNECTED"
-        color = 16711680 -- Red
-    elseif statusType == "STUCK" then
-        title = "⏳ ALERT: FARM STUCK (4 MIN NO PROFIT)"
-        color = 16753920 -- Orange
-    end
     
     local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
     local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
     
     local data = {
         ["embeds"] = {{
-            ["title"] = title,
-            ["color"] = color,
+            ["title"] = isOffline and "⚠️ ACCOUNT OFFLINE / DISCONNECTED" or "🚀 CORRZEY HUB - AUTO REPORT",
+            ["color"] = isOffline and 16711680 or 65430,
             ["fields"] = {
                 {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
-                {["name"] = (statusType == "OFFLINE" or statusType == "STUCK") and "💰 Total Profit" or "💰 Race Profit", ["value"] = "```$" .. tostring((statusType == "OFFLINE" or statusType == "STUCK") and total or gain) .. "```", ["inline"] = true},
+                {["name"] = isOffline and "💰 Total Profit" or "💰 Race Profit", ["value"] = "```$" .. tostring(isOffline and total or gain) .. "```", ["inline"] = true},
                 {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
                 {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fpsStr .. " | RAM: " .. memStr, ["inline"] = false},
             },
@@ -340,6 +329,7 @@ local function sendWebhook(url, gain, total, races, statusType)
 
     local payload = HttpService:JSONEncode(data)
     
+    -- Mengirim secara sinkron tanpa spawn jika offline untuk menjamin pengiriman sebelum close
     local function executeRequest()
         pcall(function()
             if httpRequest then
@@ -355,41 +345,16 @@ local function sendWebhook(url, gain, total, races, statusType)
         end)
     end
 
-    if statusType == "OFFLINE" then
+    if isOffline then
         executeRequest()
     else
         task.spawn(executeRequest)
     end
 end
 
--- MONITOR STUCK (4 MENIT TANPA PERUBAHAN UANG)
-task.spawn(function()
-    local lastMoney = getPlayerMoney()
-    local lastChangeTick = tick()
-    
-    while task.wait(10) do
-        if running then
-            local currentMoney = getPlayerMoney()
-            
-            if currentMoney ~= lastMoney then
-                lastMoney = currentMoney
-                lastChangeTick = tick()
-            else
-                -- Jika sudah lewat 240 detik (4 menit)
-                if tick() - lastChangeTick >= 240 then
-                    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, "STUCK")
-                    lastChangeTick = tick() -- Reset timer agar tidak spam
-                end
-            end
-        else
-            lastChangeTick = tick() -- Reset jika farm dimatikan manual
-        end
-    end
-end)
-
--- MONITOR DISCONNECT
+-- Monitor Trigger Disconnect (Kirim ke STATUS_WEBHOOK)
 local function onShutdown()
-    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, "OFFLINE")
+    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
 end
 
 Players.PlayerRemoving:Connect(function(player)
@@ -400,14 +365,14 @@ end)
 
 game:BindToClose(onShutdown)
 
--- MONITOR LAPORAN RUTIN
+-- Monitor Laporan Rutin Profit (Kirim ke MAIN_WEBHOOK)
 task.spawn(function()
     local lastRaces = 0
     while task.wait(5) do
         if sessionRaces > lastRaces then
             local currentGain = getPlayerMoney() - moneyBeforeRace
             if currentGain <= 0 then currentGain = "Update" end
-            sendWebhook(MAIN_WEBHOOK, currentGain, totalMoneyEarned, sessionRaces, "NORMAL")
+            sendWebhook(MAIN_WEBHOOK, currentGain, totalMoneyEarned, sessionRaces, false)
             lastRaces = sessionRaces
         end
     end
