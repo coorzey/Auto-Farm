@@ -146,20 +146,17 @@ local path = {
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 
--- Main Colors (Perfected Mode)
 local clr_bg = Color3.fromRGB(18, 18, 18)
 local clr_stroke = Color3.fromRGB(40, 40, 40)
 local clr_accent = Color3.fromRGB(255, 215, 0)
 local clr_btn_off = Color3.fromRGB(35, 35, 35)
 
--- Neon Colors (Neon Mode)
 local clr_neon_bg = Color3.fromRGB(10, 10, 10)
 local clr_neon_stroke = Color3.fromRGB(0, 255, 255)
 local clr_neon_glow = Color3.fromRGB(0, 180, 180)
 
--- Perfected Frame
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 240, 0, 155); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0
+frame.Size = UDim2.new(0, 240, 0, 155); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
@@ -185,8 +182,8 @@ local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
 
--- MINI HUD (Profit & FPS)
-local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Draggable = true; miniHud.Active = true; frame.BorderSizePixel = 0; Instance.new("UICorner", miniHud)
+-- MINI HUD
+local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Draggable = true; miniHud.Active = true; Instance.new("UICorner", miniHud)
 local hs = Instance.new("UIStroke", miniHud); hs.Color = clr_accent; hs.Thickness = 1.2
 local hGlow = Instance.new("UIStroke", miniHud); hGlow.Color = clr_neon_glow; hGlow.Thickness = 3; hGlow.Transparency = 1; hGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
@@ -197,7 +194,7 @@ local moneyLabel = createHudLbl("Profit: $0", clr_accent, 5)
 local raceLabel = createHudLbl("Races: 0", Color3.new(1,1,1), 23)
 local fpsLabel = createHudLbl("FPS: 0", Color3.fromRGB(0, 255, 255), 41)
 
--- FUNGSI SAKELAR TEMA (NEON DARK)
+-- SAKELAR TEMA
 local function setNeonTheme(active)
     if active then
         frame.BackgroundColor3 = clr_neon_bg
@@ -206,7 +203,7 @@ local function setNeonTheme(active)
         cpuBtn.TextColor3 = clr_neon_bg
         cpuBtn.Text = "NEON DARK: ON (3D OFF)"
         hs.Color = clr_neon_glow
-        hGlow.Transparency = 0.5 -- Menyalakan Glow
+        hGlow.Transparency = 0.5
         toggleBtn.BackgroundColor3 = clr_neon_glow
     else
         frame.BackgroundColor3 = clr_bg
@@ -215,22 +212,33 @@ local function setNeonTheme(active)
         cpuBtn.TextColor3 = Color3.new(1,1,1)
         cpuBtn.Text = "NEON DARK: OFF (3D ON)"
         hs.Color = clr_accent
-        hGlow.Transparency = 1 -- Mematikan Glow
+        hGlow.Transparency = 1
         toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
     end
 end
 
--- UI LOGIC
+-- [[ UPDATED TRANSITION LOGIC ]]
+toggleBtn.MouseButton1Click:Connect(function()   
+    isMinimized = not isMinimized
+    
+    if isMinimized then
+        -- Menutup: Sembunyikan konten sedikit lebih cepat sebelum frame mengecil sempurna
+        task.delay(0.05, function() content.Visible = false end)
+        frame:TweenSize(UDim2.new(0, 240, 0, 35), "Out", "Quad", 0.3, true)
+        toggleBtn.Text = "+"
+    else
+        -- Membuka: Frame melebar dulu baru konten muncul
+        frame:TweenSize(UDim2.new(0, 240, 0, 155), "Out", "Quad", 0.3, true)
+        task.wait(0.25) -- Sinkronisasi transisi
+        content.Visible = true
+        toggleBtn.Text = "−"
+    end
+end)
+
 cpuBtn.MouseButton1Click:Connect(function()
     renderingEnabled = not renderingEnabled
     toggle3DRender(renderingEnabled)
     setNeonTheme(not renderingEnabled)
-end)
-
-toggleBtn.MouseButton1Click:Connect(function()   
-    isMinimized = not isMinimized
-    frame:TweenSize(isMinimized and UDim2.new(0, 240, 0, 35) or UDim2.new(0, 240, 0, 155), "Out", "Quad", 0.3, true)
-    content.Visible = not isMinimized; toggleBtn.Text = isMinimized and "+" or "−"
 end)
 
 purgeBtn.MouseButton1Click:Connect(function()
@@ -266,7 +274,7 @@ farmBtn.MouseButton1Click:Connect(function()
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
 end)
 
--- MAIN LOOP (LOGIC TIDAK DIUBAH)
+-- MAIN LOOP (TIDAK DIUBAH)
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -349,9 +357,7 @@ task.spawn(function()
     end
 end)
 
--- ==============================================================================
--- [FIXED] TWO-CHANNEL WEBHOOK SYSTEM (STABLE DISCONNECT DETECTION)
--- ==============================================================================
+-- WEBHOOK SYSTEM (TIDAK DIUBAH)
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
 
@@ -360,10 +366,8 @@ local httpRequest = (syn and syn.request) or (http and http.request) or http_req
 
 local function sendWebhook(url, gain, total, races, isOffline)
     if not url or url == "" then return end
-    
     local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
     local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
-    
     local data = {
         ["embeds"] = {{
             ["title"] = isOffline and "⚠️ ACCOUNT OFFLINE / DISCONNECTED" or "🚀 CORRZEY HUB - AUTO REPORT",
@@ -378,43 +382,22 @@ local function sendWebhook(url, gain, total, races, isOffline)
             ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
     }
-
     local payload = HttpService:JSONEncode(data)
-    
     local function executeRequest()
         pcall(function()
             if httpRequest then
-                httpRequest({
-                    Url = url,
-                    Method = "POST",
-                    Headers = {["Content-Type"] = "application/json"},
-                    Body = payload
-                })
+                httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
             else
                 HttpService:PostAsync(url, payload)
             end
         end)
     end
-
-    if isOffline then
-        executeRequest()
-    else
-        task.spawn(executeRequest)
-    end
+    if isOffline then executeRequest() else task.spawn(executeRequest) end
 end
 
-local function onShutdown()
-    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
-end
-
-Players.PlayerRemoving:Connect(function(player)
-    if player == LP then
-        onShutdown()
-    end
-end)
-
+local function onShutdown() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end
+Players.PlayerRemoving:Connect(function(player) if player == LP then onShutdown() end end)
 game:BindToClose(onShutdown)
-
 task.spawn(function()
     local lastRaces = 0
     while task.wait(5) do
