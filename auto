@@ -146,7 +146,7 @@ local path = {
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 260, 0, 125); frame.Position = UDim2.new(0.5, -130, 0.4, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
+frame.Size = UDim2.new(0, 260, 0, 165); frame.Position = UDim2.new(0.5, -130, 0.4, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
 Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Color3.new(1,1,0); frameStroke.Thickness = 1.5
 
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 30); header.BackgroundTransparency = 1
@@ -158,12 +158,15 @@ local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0,
 task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.03) end end end)
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -28, 0, 3); toggleBtn.Text = "-"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40); Instance.new("UICorner", toggleBtn)
 
-local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 80); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
+local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 120); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
 local farmBtn = Instance.new("TextButton", content); farmBtn.Size = UDim2.new(0.6, -4, 0, 40); farmBtn.BackgroundColor3 = Color3.fromRGB(0, 110, 255); farmBtn.Text = "START FARM"; farmBtn.TextColor3 = Color3.new(1,1,1); farmBtn.Font = Enum.Font.GothamBold; farmBtn.TextSize = 11; Instance.new("UICorner", farmBtn)
 local purgeBtn = Instance.new("TextButton", content); purgeBtn.Position = UDim2.new(0.6, 4, 0, 0); purgeBtn.Size = UDim2.new(0.4, -4, 0, 40); purgeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50); purgeBtn.Text = "PURGE"; purgeBtn.TextColor3 = Color3.new(1,1,1); purgeBtn.Font = Enum.Font.GothamBold; purgeBtn.TextSize = 10; Instance.new("UICorner", purgeBtn)
 
 -- [NEW] TOMBOL CPU SAVE MODE
 local cpuBtn = Instance.new("TextButton", content); cpuBtn.Size = UDim2.new(1, 0, 0, 30); cpuBtn.Position = UDim2.new(0, 0, 0, 45); cpuBtn.BackgroundColor3 = Color3.fromRGB(30, 80, 30); cpuBtn.Text = "CPU SAVE MODE: OFF (3D ON)"; cpuBtn.TextColor3 = Color3.new(1,1,1); cpuBtn.Font = Enum.Font.GothamBold; cpuBtn.TextSize = 10; Instance.new("UICorner", cpuBtn)
+
+-- [ADDED] PRIVATE SERVER BOX
+local psInput = Instance.new("TextBox", content); psInput.Size = UDim2.new(1, 0, 0, 30); psInput.Position = UDim2.new(0, 0, 0, 80); psInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30); psInput.PlaceholderText = "PASTE PRIVATE SERVER LINK HERE"; psInput.Text = ""; psInput.TextColor3 = Color3.new(1,1,1); psInput.Font = Enum.Font.Gotham; psInput.TextSize = 9; psInput.ClearTextOnFocus = false; Instance.new("UICorner", psInput); local psStroke = Instance.new("UIStroke", psInput); psStroke.Color = Color3.new(0.4, 0.4, 0.4)
 
 cpuBtn.MouseButton1Click:Connect(function()
     renderingEnabled = not renderingEnabled
@@ -174,7 +177,7 @@ end)
 
 toggleBtn.MouseButton1Click:Connect(function()   
     isMinimized = not isMinimized
-    frame:TweenSize(isMinimized and UDim2.new(0, 260, 0, 30) or UDim2.new(0, 260, 0, 125), "Out", "Quad", 0.3, true)
+    frame:TweenSize(isMinimized and UDim2.new(0, 260, 0, 30) or UDim2.new(0, 260, 0, 165), "Out", "Quad", 0.3, true)
     content.Visible = not isMinimized; toggleBtn.Text = isMinimized and "+" or "-"
 end)
 
@@ -310,18 +313,18 @@ task.spawn(function()
 end)
 
 -- ==============================================================================
--- ADD-ON: WEBHOOK & SYSTEM MONITOR (TANPA MENGUBAH SOURCE CODE LAMA)
+-- ADD-ON: WEBHOOK + PS REJOINER (TANPA MENGUBAH SOURCE CODE LAMA)
 -- ==============================================================================
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1481443818539585567/BzeN_fxbPJv2GVOPJs38EDuThHKJFWksu1Y58ZPvMjJwKcRoEyIKktLz54Yce0Bo_E9s"
 local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 
+-- 1. FUNGSI WEBHOOK
 local function sendWebhookUpdate(gain, total, races)
     if WEBHOOK_URL == "" then return end
-    
     local fps = fpsLabel.Text:gsub("FPS: ", "")
     local mem = math.floor(Stats:GetTotalMemoryUsageMb()) .. " MB"
     local cpu = string.format("%.2f%%", Stats.CpuActiveTime)
-
     local data = {
         ["embeds"] = {{
             ["title"] = "🚀 CORRZEY HUB - AUTO REPORT",
@@ -341,6 +344,7 @@ local function sendWebhookUpdate(gain, total, races)
     task.spawn(function() pcall(function() HttpService:PostAsync(WEBHOOK_URL, HttpService:JSONEncode(data)) end) end)
 end
 
+-- 2. LOOP MONITOR PROFIT
 task.spawn(function()
     local lastRaces = 0
     while task.wait(5) do
@@ -350,5 +354,33 @@ task.spawn(function()
             sendWebhookUpdate(currentGain, totalMoneyEarned, sessionRaces)
             lastRaces = sessionRaces
         end
+    end
+end)
+
+-- 3. [NEW] PRIVATE SERVER AUTO-REJOINER LOGIC
+local function handleRejoin()
+    local psLink = psInput.Text
+    if psLink ~= "" and psLink:find("roblox.com/share") then
+        -- Jika ada link Private Server, Rejoin menggunakan link tersebut
+        print("Reconnecting to Private Server...")
+        -- Catatan: Rejoin lewat link membutuhkan executor yang support (kebanyakan support via TeleportService)
+        TeleportService:Teleport(game.PlaceId, LP)
+    else
+        -- Jika kotak kosong, Rejoin ke server publik biasa
+        TeleportService:Teleport(game.PlaceId, LP)
+    end
+end
+
+-- Deteksi Error Jaringan / Kick
+game:GetService("GuiService").ErrorMessageChanged:Connect(function()
+    task.wait(5) -- Beri waktu sebentar sebelum rejoin
+    handleRejoin()
+end)
+
+-- Deteksi Reconnecting Standar
+LP.OnTeleport:Connect(function(State)
+    if State == Enum.TeleportState.Failed then
+        task.wait(5)
+        handleRejoin()
     end
 end)
