@@ -19,14 +19,14 @@ local function toggle3DRender(mode)
     RunService:Set3dRenderingEnabled(mode)
 end
 
--- [NEW] AUTO MEMORY CLEANER (Menjaga RAM agar tidak penuh)
+-- [NEW] AUTO MEMORY CLEANER
 task.spawn(function()
     while task.wait(60) do
         collectgarbage("collect")
     end
 end)
 
--- [REPLACED] SUPER ANTI-AFK (Ultra Aggressive)
+-- [REPLACED] SUPER ANTI-AFK
 for _, v in pairs(getconnections(LP.Idled)) do
     v:Disable()
 end
@@ -47,7 +47,7 @@ local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
 local running, isMinimized = false, false
 
--- FUNGSI SUPER LOW GRAPHIC + PURGE (Deep Clean dari V57.3)
+-- FUNGSI SUPER LOW GRAPHIC + PURGE
 local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -75,7 +75,7 @@ local function applyDeepClean()
     end)
 end
 
--- [MODIFIED] FUNGSI CLOSE PRIZE POPUP (DEEP BUTTON SEARCH)
+-- FUNGSI CLOSE PRIZE POPUP
 local function closePrizePopup()
     pcall(function()
         for _, gui in pairs(PlayerGui:GetChildren()) do
@@ -162,7 +162,6 @@ local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0
 local farmBtn = Instance.new("TextButton", content); farmBtn.Size = UDim2.new(0.6, -4, 0, 40); farmBtn.BackgroundColor3 = Color3.fromRGB(0, 110, 255); farmBtn.Text = "START FARM"; farmBtn.TextColor3 = Color3.new(1,1,1); farmBtn.Font = Enum.Font.GothamBold; farmBtn.TextSize = 11; Instance.new("UICorner", farmBtn)
 local purgeBtn = Instance.new("TextButton", content); purgeBtn.Position = UDim2.new(0.6, 4, 0, 0); purgeBtn.Size = UDim2.new(0.4, -4, 0, 40); purgeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50); purgeBtn.Text = "PURGE"; purgeBtn.TextColor3 = Color3.new(1,1,1); purgeBtn.Font = Enum.Font.GothamBold; purgeBtn.TextSize = 10; Instance.new("UICorner", purgeBtn)
 
--- [NEW] TOMBOL CPU SAVE MODE
 local cpuBtn = Instance.new("TextButton", content); cpuBtn.Size = UDim2.new(1, 0, 0, 30); cpuBtn.Position = UDim2.new(0, 0, 0, 45); cpuBtn.BackgroundColor3 = Color3.fromRGB(30, 80, 30); cpuBtn.Text = "CPU SAVE MODE: OFF (3D ON)"; cpuBtn.TextColor3 = Color3.new(1,1,1); cpuBtn.Font = Enum.Font.GothamBold; cpuBtn.TextSize = 10; Instance.new("UICorner", cpuBtn)
 
 cpuBtn.MouseButton1Click:Connect(function()
@@ -185,7 +184,6 @@ purgeBtn.MouseButton1Click:Connect(function()
     status.Text = running and "FARMING..." or "READY"
 end)
 
--- POSITION SET TO 0.02 (VERY TOP)
 local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.02, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
 local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.33, 0); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 11; moneyLabel.BackgroundTransparency = 1
 local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.33, 0); raceLabel.Position = UDim2.new(0, 0, 0.33, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
@@ -208,15 +206,15 @@ farmBtn.MouseButton1Click:Connect(function()
     running = not running
     if running then 
         applyDeepClean() 
-        setfpscap(30) -- Mengurangi beban CPU saat farming
+        setfpscap(30)
     else
-        setfpscap(60) -- Kembali normal saat berhenti
+        setfpscap(60)
     end
     farmBtn.Text = running and "STOP" or "START FARM"
     farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
 end)
 
--- MAIN LOOP (LOGIC BALAPAN ASLI)
+-- MAIN LOOP
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -263,43 +261,33 @@ task.spawn(function()
                     if running then
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
-                            
                             local dtVal = math.random(15, 20) / 10
                             status.Text = "TP: " .. i .. "/41"
                             dtStatusLabel.Text = "DT: " .. dtVal .. "s"
-                            
                             applyDeepClean() 
-                            
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                             seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                             car:PivotTo(cf)
-                            
                             task.wait(0.05) 
-                            
                             seat.AssemblyLinearVelocity = cf.LookVector * 165
                             seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
-                            
                             task.wait(dtVal) 
                         end
-                        
                         status.Text = "FINISHING..."
                         dtStatusLabel.Text = "DT: 0s"
-                        
                         task.spawn(function()
                             for _ = 1, 15 do 
                                 closePrizePopup()
                                 task.wait(0.3)
                             end
                         end)
-                        
                         task.wait(2)
                         local gain = getPlayerMoney() - moneyBeforeRace
                         if gain > 0 then 
                             totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
                         end
-                        
                         status.Text = "LOOP RESTARTING..."
                         task.wait(2)
                     end
@@ -310,28 +298,28 @@ task.spawn(function()
 end)
 
 -- ==============================================================================
--- ADD-ON: STABLE WEBHOOK SYSTEM (FIXED & TESTED)
+-- [NEW] TWO-CHANNEL WEBHOOK SYSTEM (STABLE VERSION)
 -- ==============================================================================
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
+local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
+local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
+
 local HttpService = game:GetService("HttpService")
 
-local function sendWebhookUpdate(gain, total, races)
-    if not WEBHOOK_URL or WEBHOOK_URL == "" then return end
+local function sendWebhook(url, gain, total, races, isOffline)
+    if not url or url == "" then return end
     
     local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
     local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
-
+    
     local data = {
         ["embeds"] = {{
-            ["title"] = "🚀 CORRZEY HUB - AUTO REPORT",
-            ["color"] = 65430,
+            ["title"] = isOffline and "⚠️ ACCOUNT OFFLINE / DISCONNECTED" or "🚀 CORRZEY HUB - AUTO REPORT",
+            ["color"] = isOffline and 16711680 or 65430, -- Merah (Offline) / Hijau (Profit)
             ["fields"] = {
                 {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
-                {["name"] = "💰 Race Profit", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
-                {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
-                {["name"] = "🏁 Sessions", ["value"] = tostring(races) .. " Races", ["inline"] = true},
-                {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fpsStr .. "\nRAM: " .. memStr, ["inline"] = false},
-                {["name"] = "🛡️ Status", ["value"] = renderingEnabled and "3D Mode: ON" or "3D Mode: OFF (Safe)", ["inline"] = true}
+                {["name"] = isOffline and "💰 Total Profit" or "💰 Race Profit", ["value"] = "```$" .. tostring(isOffline and total or gain) .. "```", ["inline"] = true},
+                {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
+                {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fpsStr .. " | RAM: " .. memStr, ["inline"] = false},
             },
             ["footer"] = {["text"] = "V58.5 Optimized System • " .. os.date("%X")},
             ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
@@ -341,29 +329,35 @@ local function sendWebhookUpdate(gain, total, races)
     task.spawn(function()
         pcall(function()
             local payload = HttpService:JSONEncode(data)
-            -- Mendukung Executor (request) maupun standard PostAsync
             if request then
-                request({
-                    Url = WEBHOOK_URL,
-                    Method = "POST",
-                    Headers = {["Content-Type"] = "application/json"},
-                    Body = payload
-                })
+                request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
             else
-                HttpService:PostAsync(WEBHOOK_URL, payload)
+                HttpService:PostAsync(url, payload)
             end
         end)
     end)
 end
 
--- Monitor Trigger Webhook (Setiap balapan selesai)
+-- Monitor Trigger Disconnect (Kirim ke STATUS_WEBHOOK)
+Players.PlayerRemoving:Connect(function(player)
+    if player == LP then
+        sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
+    end
+end)
+
+game:BindToClose(function()
+    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
+    task.wait(1.5)
+end)
+
+-- Monitor Laporan Rutin Profit (Kirim ke MAIN_WEBHOOK)
 task.spawn(function()
     local lastRaces = 0
     while task.wait(5) do
         if sessionRaces > lastRaces then
             local currentGain = getPlayerMoney() - moneyBeforeRace
-            if currentGain <= 0 then currentGain = "Success" end
-            sendWebhookUpdate(currentGain, totalMoneyEarned, sessionRaces)
+            if currentGain <= 0 then currentGain = "0 (Check Game)" end
+            sendWebhook(MAIN_WEBHOOK, currentGain, totalMoneyEarned, sessionRaces, false)
             lastRaces = sessionRaces
         end
     end
