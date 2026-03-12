@@ -313,14 +313,16 @@ task.spawn(function()
 end)
 
 -- ==============================================================================
--- FIX ADD-ON: WEBHOOK + PS REJOINER (KEAMANAN WEBHOOK DIPERBAIKI)
+-- FIX ADD-ON: WEBHOOK + PS REJOINER (FIXED PROXY & REQUEST LOGIC)
 -- ==============================================================================
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
-local WebhookLink = "https://discord.com/api/webhooks/1481443818539585567/BzeN_fxbPJv2GVOPJs38EDuThHKJFWksu1Y58ZPvMjJwKcRoEyIKktLz54Yce0Bo_E9s"
+
+-- URL dipasang Proxy agar tembus blokir Discord
+local RawWebhook = "https://discord.com/api/webhooks/1481443818539585567/BzeN_fxbPJv2GVOPJs38EDuThHKJFWksu1Y58ZPvMjJwKcRoEyIKktLz54Yce0Bo_E9s"
+local WebhookLink = RawWebhook:gsub("discord.com", "hooks.hyra.io")
 
 local function sendWebhookUpdate(gain, total, races)
-    local headers = {["Content-Type"] = "application/json"}
     local fps = fpsLabel.Text:gsub("FPS: ", "")
     local mem = math.floor(Stats:GetTotalMemoryUsageMb()) .. " MB"
     local cpu = string.format("%.2f%%", Stats.CpuActiveTime)
@@ -344,12 +346,17 @@ local function sendWebhookUpdate(gain, total, races)
 
     local payload = HttpService:JSONEncode(embed)
     
-    -- Menggunakan Request untuk kompatibilitas lebih luas (Delta/Fluxus/Hydrogen)
     task.spawn(function()
         pcall(function()
-            if request then
-                request({Url = WebhookLink, Method = "POST", Headers = headers, Body = payload})
-            elseif HttpService then
+            local requestFunc = (syn and syn.request) or (http and http.request) or http_request or request
+            if requestFunc then
+                requestFunc({
+                    Url = WebhookLink,
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = payload
+                })
+            else
                 HttpService:PostAsync(WebhookLink, payload)
             end
         end)
