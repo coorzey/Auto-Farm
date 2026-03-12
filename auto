@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
+-- DESIGN UPDATE: MODERN DARK UI (IMAGE MATCH)
 -- UPDATE: STABLE DUAL WEBHOOK + CLOUD OPTIMIZED
--- OPTIMIZED: STABLE FOR 24/7 WITHOUT CRASHING
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -142,66 +142,72 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- UI SETUP
+-- ==========================================  
+-- [NEW UI SYSTEM] - MATCHING IMAGE DESIGN
+-- ==========================================  
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
-local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 260, 0, 125); frame.Position = UDim2.new(0.5, -130, 0.4, 0); frame.BackgroundColor3 = Color3.new(0,0,0); frame.Active = true; frame.Draggable = true
-Instance.new("UICorner", frame); local frameStroke = Instance.new("UIStroke", frame); frameStroke.Color = Color3.new(1,1,0); frameStroke.Thickness = 1.5
 
-local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 30); header.BackgroundTransparency = 1
-local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.4, 0, 1, 0); status.Position = UDim2.new(0, 10, 0, 0); status.Text = "READY (V58.6)"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
+-- 1. MONITOR BOX (Kiri Atas - Neon Kuning)
+local monitor = Instance.new("Frame", sg)
+monitor.Size = UDim2.new(0, 180, 0, 90)
+monitor.Position = UDim2.new(0, 20, 0, 20)
+monitor.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+monitor.BackgroundTransparency = 0.2
+monitor.Active = true; monitor.Draggable = true
+local mCorner = Instance.new("UICorner", monitor); mCorner.CornerRadius = UDim.new(0, 8)
+local mStroke = Instance.new("UIStroke", monitor); mStroke.Color = Color3.fromRGB(255, 230, 0); mStroke.Thickness = 2
 
-local dtStatusLabel = Instance.new("TextLabel", header); dtStatusLabel.Size = UDim2.new(0, 60, 1, 0); dtStatusLabel.Position = UDim2.new(1, -165, 0, 0); dtStatusLabel.Text = "DT: 0s"; dtStatusLabel.TextColor3 = Color3.new(1, 1, 1); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10; dtStatusLabel.TextXAlignment = Enum.TextXAlignment.Center
+local profitLab = Instance.new("TextLabel", monitor)
+profitLab.Size = UDim2.new(1, -20, 0, 25); profitLab.Position = UDim2.new(0, 15, 0, 10)
+profitLab.Text = "Profit: $0"; profitLab.TextColor3 = Color3.fromRGB(255, 230, 0); profitLab.Font = Enum.Font.GothamBold; profitLab.TextSize = 14; profitLab.TextXAlignment = "Left"; profitLab.BackgroundTransparency = 1
 
-local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 80, 1, 0); rgbLabel.Position = UDim2.new(1, -110, 0, 0); rgbLabel.Text = "CORRZEY HUB"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
-task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.03) end end end)
-local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -28, 0, 3); toggleBtn.Text = "-"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40); Instance.new("UICorner", toggleBtn)
+local racesLab = Instance.new("TextLabel", monitor)
+racesLab.Size = UDim2.new(1, -20, 0, 25); racesLab.Position = UDim2.new(0, 15, 0, 35)
+racesLab.Text = "Races: 0"; racesLab.TextColor3 = Color3.new(1,1,1); racesLab.Font = Enum.Font.GothamBold; racesLab.TextSize = 13; racesLab.TextXAlignment = "Left"; racesLab.BackgroundTransparency = 1
 
-local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 80); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
-local farmBtn = Instance.new("TextButton", content); farmBtn.Size = UDim2.new(0.6, -4, 0, 40); farmBtn.BackgroundColor3 = Color3.fromRGB(0, 110, 255); farmBtn.Text = "START FARM"; farmBtn.TextColor3 = Color3.new(1,1,1); farmBtn.Font = Enum.Font.GothamBold; farmBtn.TextSize = 11; Instance.new("UICorner", farmBtn)
-local purgeBtn = Instance.new("TextButton", content); purgeBtn.Position = UDim2.new(0.6, 4, 0, 0); purgeBtn.Size = UDim2.new(0.4, -4, 0, 40); purgeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50); purgeBtn.Text = "PURGE"; purgeBtn.TextColor3 = Color3.new(1,1,1); purgeBtn.Font = Enum.Font.GothamBold; purgeBtn.TextSize = 10; Instance.new("UICorner", purgeBtn)
+local fpsLab = Instance.new("TextLabel", monitor)
+fpsLab.Size = UDim2.new(1, -20, 0, 25); fpsLab.Position = UDim2.new(0, 15, 0, 60)
+fpsLab.Text = "FPS: 0"; fpsLab.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLab.Font = Enum.Font.GothamBold; fpsLab.TextSize = 12; fpsLab.TextXAlignment = "Left"; fpsLab.BackgroundTransparency = 1
 
-local cpuBtn = Instance.new("TextButton", content); cpuBtn.Size = UDim2.new(1, 0, 0, 30); cpuBtn.Position = UDim2.new(0, 0, 0, 45); cpuBtn.BackgroundColor3 = Color3.fromRGB(30, 80, 30); cpuBtn.Text = "CPU SAVE MODE: OFF (3D ON)"; cpuBtn.TextColor3 = Color3.new(1,1,1); cpuBtn.Font = Enum.Font.GothamBold; cpuBtn.TextSize = 10; Instance.new("UICorner", cpuBtn)
+-- 2. MAIN HUB (Tengah Kanan - Dark Style)
+local mainHub = Instance.new("Frame", sg)
+mainHub.Size = UDim2.new(0, 280, 0, 175)
+mainHub.Position = UDim2.new(0.65, 0, 0.25, 0)
+mainHub.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainHub.BorderSizePixel = 0
+mainHub.Active = true; mainHub.Draggable = true
+local hCorner = Instance.new("UICorner", mainHub); hCorner.CornerRadius = UDim.new(0, 10)
+local hStroke = Instance.new("UIStroke", mainHub); hStroke.Color = Color3.fromRGB(50, 50, 50); hStroke.Thickness = 2
 
-cpuBtn.MouseButton1Click:Connect(function()
-    renderingEnabled = not renderingEnabled
-    toggle3DRender(renderingEnabled)
-    cpuBtn.Text = renderingEnabled and "CPU SAVE MODE: OFF (3D ON)" or "CPU SAVE MODE: ON (3D OFF)"
-    cpuBtn.BackgroundColor3 = renderingEnabled and Color3.fromRGB(30, 80, 30) or Color3.fromRGB(150, 50, 50)
-end)
+local hubHeader = Instance.new("TextLabel", mainHub)
+hubHeader.Size = UDim2.new(1, -20, 0, 30); hubHeader.Position = UDim2.new(0, 15, 0, 10)
+hubHeader.Text = "• RACING: IDLE"; hubHeader.TextColor3 = Color3.fromRGB(0, 255, 150)
+hubHeader.Font = Enum.Font.GothamBold; hubHeader.TextSize = 12; hubHeader.TextXAlignment = "Left"; hubHeader.BackgroundTransparency = 1
 
-toggleBtn.MouseButton1Click:Connect(function()   
-    isMinimized = not isMinimized
-    frame:TweenSize(isMinimized and UDim2.new(0, 260, 0, 30) or UDim2.new(0, 260, 0, 125), "Out", "Quad", 0.3, true)
-    content.Visible = not isMinimized; toggleBtn.Text = isMinimized and "+" or "-"
-end)
+local titleRGB = Instance.new("TextLabel", mainHub)
+titleRGB.Size = UDim2.new(0, 100, 0, 30); titleRGB.Position = UDim2.new(1, -115, 0, 10)
+titleRGB.Text = "CORRZEY HUB"; titleRGB.Font = Enum.Font.GothamBold; titleRGB.TextSize = 11; titleRGB.TextXAlignment = "Right"; titleRGB.BackgroundTransparency = 1
+task.spawn(function() while true do for i = 0, 1, 0.01 do titleRGB.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.04) end end end)
 
-purgeBtn.MouseButton1Click:Connect(function()
-    applyDeepClean()
-    status.Text = "DEEP CLEANED!"
-    task.wait(1)
-    status.Text = running and "FARMING..." or "READY"
-end)
+local farmBtn = Instance.new("TextButton", mainHub)
+farmBtn.Size = UDim2.new(1, -30, 0, 40); farmBtn.Position = UDim2.new(0, 15, 0, 45)
+farmBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0); farmBtn.Text = "START FARM"; farmBtn.TextColor3 = Color3.new(1,1,1)
+farmBtn.Font = Enum.Font.GothamBold; farmBtn.TextSize = 13; Instance.new("UICorner", farmBtn)
 
-local moneyHud = Instance.new("Frame", sg); moneyHud.Size = UDim2.new(0, 120, 0, 60); moneyHud.Position = UDim2.new(0, 10, 0.02, 0); moneyHud.BackgroundColor3 = Color3.new(0,0,0); moneyHud.Draggable = true; moneyHud.Active = true; Instance.new("UICorner", moneyHud); local hs = Instance.new("UIStroke", moneyHud); hs.Color = Color3.new(1,1,0)
-local moneyLabel = Instance.new("TextLabel", moneyHud); moneyLabel.Size = UDim2.new(1, 0, 0.33, 0); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = Color3.new(1,1,0); moneyLabel.Font = Enum.Font.GothamBold; moneyLabel.TextSize = 11; moneyLabel.BackgroundTransparency = 1
-local raceLabel = Instance.new("TextLabel", moneyHud); raceLabel.Size = UDim2.new(1, 0, 0.33, 0); raceLabel.Position = UDim2.new(0, 0, 0.33, 0); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.Font = Enum.Font.GothamBold; raceLabel.TextSize = 10; raceLabel.BackgroundTransparency = 1
-local fpsLabel = Instance.new("TextLabel", moneyHud); fpsLabel.Size = UDim2.new(1, 0, 0.33, 0); fpsLabel.Position = UDim2.new(0, 0, 0.66, 0); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.Font = Enum.Font.GothamBold; fpsLabel.TextSize = 10; fpsLabel.BackgroundTransparency = 1
+local purgeBtn = Instance.new("TextButton", mainHub)
+purgeBtn.Size = UDim2.new(1, -30, 0, 35); purgeBtn.Position = UDim2.new(0, 15, 0, 90)
+purgeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40); purgeBtn.Text = "PURGE ASSETS (LAG FIX)"; purgeBtn.TextColor3 = Color3.new(1,1,1)
+purgeBtn.Font = Enum.Font.GothamBold; purgeBtn.TextSize = 11; Instance.new("UICorner", purgeBtn)
 
-task.spawn(function()
-    local lastUpdate = tick()
-    local frames = 0
-    RunService.RenderStepped:Connect(function()
-        frames = frames + 1
-        if tick() - lastUpdate >= 1 then
-            fpsLabel.Text = "FPS: " .. frames
-            frames = 0
-            lastUpdate = tick()
-        end
-    end)
-end)
+local cpuBtn = Instance.new("TextButton", mainHub)
+cpuBtn.Size = UDim2.new(1, -30, 0, 35); cpuBtn.Position = UDim2.new(0, 15, 0, 130)
+cpuBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); cpuBtn.Text = "NEON DARK: OFF"; cpuBtn.TextColor3 = Color3.new(1,1,1)
+cpuBtn.Font = Enum.Font.GothamBold; cpuBtn.TextSize = 11; Instance.new("UICorner", cpuBtn)
 
+-- ==========================================  
+-- [BUTTON LOGIC]
+-- ==========================================  
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
     if running then 
@@ -210,11 +216,41 @@ farmBtn.MouseButton1Click:Connect(function()
     else
         if setfpscap then setfpscap(60) end
     end
-    farmBtn.Text = running and "STOP" or "START FARM"
-    farmBtn.BackgroundColor3 = running and Color3.new(0.6,0,0) or Color3.fromRGB(0, 110, 255)
+    farmBtn.Text = running and "STOP FARM" or "START FARM"
+    farmBtn.BackgroundColor3 = running and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(0, 110, 255)
 end)
 
--- MAIN LOOP
+purgeBtn.MouseButton1Click:Connect(function()
+    applyDeepClean()
+    hubHeader.Text = "• ASSETS PURGED!"
+    task.wait(1)
+    hubHeader.Text = running and "• RACING: ON" or "• RACING: IDLE"
+end)
+
+cpuBtn.MouseButton1Click:Connect(function()
+    renderingEnabled = not renderingEnabled
+    toggle3DRender(renderingEnabled)
+    cpuBtn.Text = renderingEnabled and "NEON DARK: OFF" or "NEON DARK: ON (3D OFF)"
+    cpuBtn.BackgroundColor3 = renderingEnabled and Color3.fromRGB(30, 30, 30) or Color3.fromRGB(150, 50, 50)
+end)
+
+-- FPS Counter logic
+task.spawn(function()
+    local lastUpdate = tick()
+    local frames = 0
+    RunService.RenderStepped:Connect(function()
+        frames = frames + 1
+        if tick() - lastUpdate >= 1 then
+            fpsLab.Text = "FPS: " .. frames
+            frames = 0
+            lastUpdate = tick()
+        end
+    end)
+end)
+
+-- ==========================================  
+-- [MAIN LOOP LOGIC]
+-- ==========================================  
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -230,7 +266,7 @@ task.spawn(function()
                 seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
                 
-                status.Text = "WAITING RIVAL..."
+                hubHeader.Text = "• WAITING RIVAL..."
                 
                 local rivalFound = false
                 repeat 
@@ -250,7 +286,7 @@ task.spawn(function()
                     moneyBeforeRace = getPlayerMoney()
                     for i = 18, 1, -1 do 
                         if not running then break end; 
-                        status.Text = "START: "..i.."s"; 
+                        hubHeader.Text = "• STARTING: "..i.."s"; 
                         if seat then 
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0) 
                             seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
@@ -262,8 +298,7 @@ task.spawn(function()
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
                             local dtVal = math.random(15, 20) / 10
-                            status.Text = "TP: " .. i .. "/41"
-                            dtStatusLabel.Text = "DT: " .. dtVal .. "s"
+                            hubHeader.Text = "• RACING: " .. i .. "/41"
                             applyDeepClean() 
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
@@ -274,8 +309,7 @@ task.spawn(function()
                             seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                             task.wait(dtVal) 
                         end
-                        status.Text = "FINISHING..."
-                        dtStatusLabel.Text = "DT: 0s"
+                        hubHeader.Text = "• FINISHING..."
                         task.spawn(function()
                             for _ = 1, 15 do 
                                 closePrizePopup()
@@ -286,19 +320,19 @@ task.spawn(function()
                         local gain = getPlayerMoney() - moneyBeforeRace
                         if gain > 0 then 
                             totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
-                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
+                            profitLab.Text = "Profit: $" .. totalMoneyEarned; racesLab.Text = "Races: " .. sessionRaces
                         end
-                        status.Text = "LOOP RESTARTING..."
+                        hubHeader.Text = "• LOOP RESTARTING..."
                         task.wait(2)
                     end
                 end
-            else status.Text = "SIT IN CAR!" end
+            else hubHeader.Text = "• SIT IN CAR!" end
         end
     end
 end)
 
 -- ==============================================================================
--- [FIXED] TWO-CHANNEL WEBHOOK SYSTEM (STABLE DISCONNECT + STUCK DETECTION)
+-- [STABLE WEBHOOK SYSTEM + STALL DETECTION]
 -- ==============================================================================
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
@@ -308,19 +342,12 @@ local httpRequest = (syn and syn.request) or (http and http.request) or http_req
 
 local function sendWebhook(url, gain, total, races, statusType)
     if not url or url == "" then return end
-    
     local title = "🚀 CORRZEY HUB - AUTO REPORT"
-    local color = 65430 -- Default Green
+    local color = 65430
+    if statusType == "OFFLINE" then title = "⚠️ ACCOUNT DISCONNECTED"; color = 16711680
+    elseif statusType == "STUCK" then title = "⏳ ALERT: FARM STUCK (4 MIN NO PROFIT)"; color = 16753920 end
     
-    if statusType == "OFFLINE" then
-        title = "⚠️ ACCOUNT OFFLINE / DISCONNECTED"
-        color = 16711680 -- Red
-    elseif statusType == "STUCK" then
-        title = "⏳ ALERT: FARM STUCK (4 MIN NO PROFIT)"
-        color = 16753920 -- Orange
-    end
-    
-    local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
+    local fpsStr = fpsLab.Text:gsub("FPS: ", "")
     local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
     
     local data = {
@@ -337,70 +364,38 @@ local function sendWebhook(url, gain, total, races, statusType)
             ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
     }
-
     local payload = HttpService:JSONEncode(data)
-    
     local function executeRequest()
         pcall(function()
-            if httpRequest then
-                httpRequest({
-                    Url = url,
-                    Method = "POST",
-                    Headers = {["Content-Type"] = "application/json"},
-                    Body = payload
-                })
-            else
-                HttpService:PostAsync(url, payload)
-            end
+            if httpRequest then httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
+            else HttpService:PostAsync(url, payload) end
         end)
     end
-
-    if statusType == "OFFLINE" then
-        executeRequest()
-    else
-        task.spawn(executeRequest)
-    end
+    if statusType == "OFFLINE" then executeRequest() else task.spawn(executeRequest) end
 end
 
--- MONITOR STUCK (4 MENIT TANPA PERUBAHAN UANG)
+-- STUCK MONITOR (4 MINS)
 task.spawn(function()
     local lastMoney = getPlayerMoney()
     local lastChangeTick = tick()
-    
     while task.wait(10) do
         if running then
             local currentMoney = getPlayerMoney()
-            
-            if currentMoney ~= lastMoney then
-                lastMoney = currentMoney
+            if currentMoney ~= lastMoney then lastMoney = currentMoney; lastChangeTick = tick()
+            elseif tick() - lastChangeTick >= 240 then
+                sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, "STUCK")
                 lastChangeTick = tick()
-            else
-                -- Jika sudah lewat 240 detik (4 menit)
-                if tick() - lastChangeTick >= 240 then
-                    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, "STUCK")
-                    lastChangeTick = tick() -- Reset timer agar tidak spam
-                end
             end
-        else
-            lastChangeTick = tick() -- Reset jika farm dimatikan manual
-        end
+        else lastChangeTick = tick() end
     end
 end)
 
--- MONITOR DISCONNECT
-local function onShutdown()
-    sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, "OFFLINE")
-end
-
-Players.PlayerRemoving:Connect(function(player)
-    if player == LP then
-        onShutdown()
-    end
-end)
-
+-- SHUTDOWN MONITOR
+local function onShutdown() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, "OFFLINE") end
+Players.PlayerRemoving:Connect(function(player) if player == LP then onShutdown() end end)
 game:BindToClose(onShutdown)
 
--- MONITOR LAPORAN RUTIN
+-- ROUTINE REPORT
 task.spawn(function()
     local lastRaces = 0
     while task.wait(5) do
