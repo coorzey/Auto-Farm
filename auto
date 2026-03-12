@@ -310,37 +310,53 @@ task.spawn(function()
 end)
 
 -- ==============================================================================
--- ADD-ON: WEBHOOK & SYSTEM MONITOR (UPDATED WEBHOOK URL)
+-- ADD-ON: STABLE WEBHOOK SYSTEM (FIXED & TESTED)
 -- ==============================================================================
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local HttpService = game:GetService("HttpService")
 
 local function sendWebhookUpdate(gain, total, races)
-    if WEBHOOK_URL == "" then return end
+    if not WEBHOOK_URL or WEBHOOK_URL == "" then return end
     
-    local fps = fpsLabel.Text:gsub("FPS: ", "")
-    local mem = math.floor(Stats:GetTotalMemoryUsageMb()) .. " MB"
-    local cpu = string.format("%.2f%%", Stats.CpuActiveTime)
+    local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
+    local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
 
     local data = {
         ["embeds"] = {{
             ["title"] = "🚀 CORRZEY HUB - AUTO REPORT",
-            ["color"] = 0x00FF96,
+            ["color"] = 65430,
             ["fields"] = {
-                {["name"] = "👤 Player", ["value"] = "||" .. LP.Name .. "||", ["inline"] = true},
-                {["name"] = "💰 Race Profit", ["value"] = "```$" .. gain .. "```", ["inline"] = true},
-                {["name"] = "📈 Total Profit", ["value"] = "```$" .. total .. "```", ["inline"] = true},
-                {["name"] = "🏁 Sessions", ["value"] = races .. " Races", ["inline"] = true},
-                {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fps .. "\nRAM: " .. mem .. "\nCPU: " .. cpu, ["inline"] = false},
+                {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
+                {["name"] = "💰 Race Profit", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
+                {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
+                {["name"] = "🏁 Sessions", ["value"] = tostring(races) .. " Races", ["inline"] = true},
+                {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fpsStr .. "\nRAM: " .. memStr, ["inline"] = false},
                 {["name"] = "🛡️ Status", ["value"] = renderingEnabled and "3D Mode: ON" or "3D Mode: OFF (Safe)", ["inline"] = true}
             },
             ["footer"] = {["text"] = "V58.5 Optimized System • " .. os.date("%X")},
             ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
     }
-    task.spawn(function() pcall(function() HttpService:PostAsync(WEBHOOK_URL, HttpService:JSONEncode(data)) end) end)
+
+    task.spawn(function()
+        pcall(function()
+            local payload = HttpService:JSONEncode(data)
+            -- Mendukung Executor (request) maupun standard PostAsync
+            if request then
+                request({
+                    Url = WEBHOOK_URL,
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = payload
+                })
+            else
+                HttpService:PostAsync(WEBHOOK_URL, payload)
+            end
+        end)
+    end)
 end
 
+-- Monitor Trigger Webhook (Setiap balapan selesai)
 task.spawn(function()
     local lastRaces = 0
     while task.wait(5) do
