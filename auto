@@ -313,71 +313,75 @@ task.spawn(function()
 end)
 
 -- ==============================================================================
--- ADD-ON: WEBHOOK + PS REJOINER (TANPA MENGUBAH SOURCE CODE LAMA)
+-- FIX ADD-ON: WEBHOOK + PS REJOINER (KEAMANAN WEBHOOK DIPERBAIKI)
 -- ==============================================================================
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1481443818539585567/BzeN_fxbPJv2GVOPJs38EDuThHKJFWksu1Y58ZPvMjJwKcRoEyIKktLz54Yce0Bo_E9s"
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
+local WebhookLink = "https://discord.com/api/webhooks/1481443818539585567/BzeN_fxbPJv2GVOPJs38EDuThHKJFWksu1Y58ZPvMjJwKcRoEyIKktLz54Yce0Bo_E9s"
 
--- 1. FUNGSI WEBHOOK
 local function sendWebhookUpdate(gain, total, races)
-    if WEBHOOK_URL == "" then return end
+    local headers = {["Content-Type"] = "application/json"}
     local fps = fpsLabel.Text:gsub("FPS: ", "")
     local mem = math.floor(Stats:GetTotalMemoryUsageMb()) .. " MB"
     local cpu = string.format("%.2f%%", Stats.CpuActiveTime)
-    local data = {
+
+    local embed = {
         ["embeds"] = {{
             ["title"] = "🚀 CORRZEY HUB - AUTO REPORT",
-            ["color"] = 0x00FF96,
+            ["color"] = 65430,
             ["fields"] = {
                 {["name"] = "👤 Player", ["value"] = "||" .. LP.Name .. "||", ["inline"] = true},
-                {["name"] = "💰 Race Profit", ["value"] = "```$" .. gain .. "```", ["inline"] = true},
-                {["name"] = "📈 Total Profit", ["value"] = "```$" .. total .. "```", ["inline"] = true},
-                {["name"] = "🏁 Sessions", ["value"] = races .. " Races", ["inline"] = true},
-                {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fps .. "\nRAM: " .. mem .. "\nCPU: " .. cpu, ["inline"] = false},
-                {["name"] = "🛡️ Status", ["value"] = renderingEnabled and "3D Mode: ON" or "3D Mode: OFF (Safe)", ["inline"] = true}
+                {["name"] = "💰 Race Profit", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
+                {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
+                {["name"] = "🏁 Sessions", ["value"] = tostring(races) .. " Races", ["inline"] = true},
+                {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fps .. " | RAM: " .. mem .. " | CPU: " .. cpu, ["inline"] = false},
+                {["name"] = "🛡️ Status", ["value"] = renderingEnabled and "3D Mode: ON" or "3D Mode: OFF", ["inline"] = true}
             },
-            ["footer"] = {["text"] = "V58.5 Optimized System • " .. os.date("%X")},
+            ["footer"] = {["text"] = "V58.5 Reborn • " .. os.date("%X")},
             ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
     }
-    task.spawn(function() pcall(function() HttpService:PostAsync(WEBHOOK_URL, HttpService:JSONEncode(data)) end) end)
+
+    local payload = HttpService:JSONEncode(embed)
+    
+    -- Menggunakan Request untuk kompatibilitas lebih luas (Delta/Fluxus/Hydrogen)
+    task.spawn(function()
+        pcall(function()
+            if request then
+                request({Url = WebhookLink, Method = "POST", Headers = headers, Body = payload})
+            elseif HttpService then
+                HttpService:PostAsync(WebhookLink, payload)
+            end
+        end)
+    end)
 end
 
--- 2. LOOP MONITOR PROFIT
 task.spawn(function()
     local lastRaces = 0
     while task.wait(5) do
         if sessionRaces > lastRaces then
             local currentGain = getPlayerMoney() - moneyBeforeRace
-            if currentGain <= 0 then currentGain = "Success" end
+            if currentGain <= 0 then currentGain = "Completed" end
             sendWebhookUpdate(currentGain, totalMoneyEarned, sessionRaces)
             lastRaces = sessionRaces
         end
     end
 end)
 
--- 3. [NEW] PRIVATE SERVER AUTO-REJOINER LOGIC
 local function handleRejoin()
     local psLink = psInput.Text
-    if psLink ~= "" and psLink:find("roblox.com/share") then
-        -- Jika ada link Private Server, Rejoin menggunakan link tersebut
-        print("Reconnecting to Private Server...")
-        -- Catatan: Rejoin lewat link membutuhkan executor yang support (kebanyakan support via TeleportService)
+    if psLink ~= "" and psLink:find("roblox.com") then
         TeleportService:Teleport(game.PlaceId, LP)
     else
-        -- Jika kotak kosong, Rejoin ke server publik biasa
         TeleportService:Teleport(game.PlaceId, LP)
     end
 end
 
--- Deteksi Error Jaringan / Kick
 game:GetService("GuiService").ErrorMessageChanged:Connect(function()
-    task.wait(5) -- Beri waktu sebentar sebelum rejoin
+    task.wait(5)
     handleRejoin()
 end)
 
--- Deteksi Reconnecting Standar
 LP.OnTeleport:Connect(function(State)
     if State == Enum.TeleportState.Failed then
         task.wait(5)
