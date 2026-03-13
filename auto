@@ -443,20 +443,23 @@ task.spawn(function()
 end)
 
 -- ==========================================  
--- ADDON: ROUND TRIP SYSTEM (INTEGRATED)
--- COORDINATES: -5300, -15, -1175 TO -4109, -15, 4423
+-- ADDON: ROUND TRIP SYSTEM (ULTRA STABLE UI)
 -- ==========================================  
 
-task.defer(function()
-    -- Tunggu ScreenGui DeltaAutoFarm tersedia
-    local targetGui = LP.PlayerGui:WaitForChild("DeltaAutoFarm", 10)
-    if not targetGui then return end
+task.spawn(function()
+    -- Loop hingga UI Utama Benar-Benar Ada
+    local function getMainGui()
+        return LP.PlayerGui:FindFirstChild("DeltaAutoFarm")
+    end
+
+    while not getMainGui() do task.wait(0.5) end
+    local targetGui = getMainGui()
 
     local rtRunning = false
     local rtStartPos = Vector3.new(-5300, -15, -1175)
     local rtEndPos = Vector3.new(-4109, -15, 4423)
 
-    -- [[ UI ROUND TRIP - IDENTICAL STYLE ]]
+    -- [[ UI ROUND TRIP ]]
     local rtFrame = Instance.new("Frame", targetGui)   
     rtFrame.Name = "RoundTripFrame"
     rtFrame.Size = UDim2.new(0, 240, 0, 85)
@@ -472,53 +475,32 @@ task.defer(function()
     rtStroke.Thickness = 1.8
 
     local rtHeader = Instance.new("Frame", rtFrame)
-    rtHeader.Size = UDim2.new(1, 0, 0, 30)
-    rtHeader.BackgroundTransparency = 1
+    rtHeader.Size = UDim2.new(1, 0, 0, 30); rtHeader.BackgroundTransparency = 1
     
     local rtTitle = Instance.new("TextLabel", rtHeader)
-    rtTitle.Size = UDim2.new(1, -12, 1, 0)
-    rtTitle.Position = UDim2.new(0, 12, 0, 0)
-    rtTitle.Text = "ROUND TRIP MODULE"
-    rtTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    rtTitle.BackgroundTransparency = 1
-    rtTitle.Font = Enum.Font.GothamBold
-    rtTitle.TextSize = 10
-    rtTitle.TextXAlignment = Enum.TextXAlignment.Left
+    rtTitle.Size = UDim2.new(1, -12, 1, 0); rtTitle.Position = UDim2.new(0, 12, 0, 0); rtTitle.Text = "ROUND TRIP MODULE"; rtTitle.TextColor3 = Color3.fromRGB(255, 255, 255); rtTitle.BackgroundTransparency = 1; rtTitle.Font = Enum.Font.GothamBold; rtTitle.TextSize = 10; rtTitle.TextXAlignment = Enum.TextXAlignment.Left
 
     local rtContent = Instance.new("Frame", rtFrame)
-    rtContent.Size = UDim2.new(1, -20, 0, 45)
-    rtContent.Position = UDim2.new(0, 10, 0, 35)
-    rtContent.BackgroundTransparency = 1
+    rtContent.Size = UDim2.new(1, -20, 0, 45); rtContent.Position = UDim2.new(0, 10, 0, 35); rtContent.BackgroundTransparency = 1
     
     local rtBtn = Instance.new("TextButton", rtContent)
-    rtBtn.Size = UDim2.new(1, 0, 0, 32)
-    rtBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    rtBtn.Text = "START ROUND TRIP"
-    rtBtn.TextColor3 = Color3.new(1,1,1)
-    rtBtn.Font = Enum.Font.GothamBold
-    rtBtn.TextSize = 10
-    rtBtn.BorderSizePixel = 0
-    Instance.new("UICorner", rtBtn).CornerRadius = UDim.new(0, 6)
+    rtBtn.Size = UDim2.new(1, 0, 0, 32); rtBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35); rtBtn.Text = "START ROUND TRIP"; rtBtn.TextColor3 = Color3.new(1,1,1); rtBtn.Font = Enum.Font.GothamBold; rtBtn.TextSize = 10; rtBtn.BorderSizePixel = 0; Instance.new("UICorner", rtBtn).CornerRadius = UDim.new(0, 6)
 
-    -- Logic Click
+    -- Click Logic
     rtBtn.MouseButton1Click:Connect(function()
         rtRunning = not rtRunning
         if rtRunning then
-            -- Mematikan farm utama jika sedang jalan menggunakan variabel 'running' asli
             if running then 
                 running = false 
-                farmBtn.Text = "START FARMING"
-                farmBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                farmBtn.Text = "START FARMING"; farmBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
             end
-            rtBtn.Text = "STOP ROUND TRIP"
-            rtBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+            rtBtn.Text = "STOP ROUND TRIP"; rtBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
         else
-            rtBtn.Text = "START ROUND TRIP"
-            rtBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            rtBtn.Text = "START ROUND TRIP"; rtBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
         end
     end)
 
-    -- Logic Round Trip Loop
+    -- Core Movement Logic
     task.spawn(function()
         while true do
             task.wait(0.1)
@@ -529,32 +511,27 @@ task.defer(function()
                     if seat and seat:IsA("VehicleSeat") then
                         local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                         
-                        -- Set velocity ke 0 agar tidak mental saat teleport
                         seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                         seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                         
-                        -- Teleport Start
                         car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0)))
                         task.wait(0.5)
-                        
-                        -- Teleport End
                         car:PivotTo(CFrame.new(rtEndPos + Vector3.new(0, 5, 0)))
-                        task.wait(2) -- Delay di tujuan
+                        task.wait(2)
                         
                         if not rtRunning then return end
                         
-                        -- Teleport Kembali
                         car:PivotTo(CFrame.new(rtEndPos + Vector3.new(0, 5, 0)))
                         task.wait(0.5)
                         car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0)))
-                        task.wait(2) -- Delay di awal
+                        task.wait(2)
                     end
                 end)
             end
         end
     end)
 
-    -- Sinkronisasi Tema Neon Dark otomatis
+    -- Visual Neon Sync
     task.spawn(function()
         while task.wait(0.5) do
             if not renderingEnabled then
