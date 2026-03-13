@@ -441,3 +441,96 @@ task.spawn(function()
         end
     end
 end)
+
+-- ==========================================  
+-- ADDON: ROUND TRIP SYSTEM (SEPARATE UI)
+-- COORDINATES: -5300, -15, -1175 TO -4109, -15, 4423
+-- ==========================================  
+
+local roundRunning = false
+local rtStartPos = Vector3.new(-5300, -15, -1175)
+local rtEndPos = Vector3.new(-4109, -15, 4423)
+
+-- [[ UI ROUND TRIP - IDENTICAL STYLE ]]
+local rtFrame = Instance.new("Frame", sg)   
+rtFrame.Size = UDim2.new(0, 240, 0, 85); 
+rtFrame.Position = UDim2.new(0.5, -120, 0.4, 165); -- Muncul di bawah frame utama
+rtFrame.BackgroundColor3 = clr_bg; 
+rtFrame.Active = true; 
+rtFrame.Draggable = true; 
+rtFrame.BorderSizePixel = 0;
+Instance.new("UICorner", rtFrame).CornerRadius = UDim.new(0, 8)
+local rtStroke = Instance.new("UIStroke", rtFrame); rtStroke.Color = clr_stroke; rtStroke.Thickness = 1.8
+
+local rtHeader = Instance.new("Frame", rtFrame); rtHeader.Size = UDim2.new(1, 0, 0, 30); rtHeader.BackgroundTransparency = 1
+local rtTitle = Instance.new("TextLabel", rtHeader); rtTitle.Size = UDim2.new(1, -12, 1, 0); rtTitle.Position = UDim2.new(0, 12, 0, 0); rtTitle.Text = "ROUND TRIP MODULE"; rtTitle.TextColor3 = Color3.fromRGB(255, 255, 255); rtTitle.BackgroundTransparency = 1; rtTitle.Font = Enum.Font.GothamBold; rtTitle.TextSize = 10; rtTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local rtContent = Instance.new("Frame", rtFrame); rtContent.Size = UDim2.new(1, -20, 0, 45); rtContent.Position = UDim2.new(0, 10, 0, 35); rtContent.BackgroundTransparency = 1
+local rtBtn = createBtn("START ROUND TRIP", clr_btn_off, rtContent)
+
+-- [[ LOGIC ROUND TRIP ]]
+rtBtn.MouseButton1Click:Connect(function()
+    roundRunning = not roundRunning
+    if roundRunning then
+        if running then 
+            running = false 
+            farmBtn.Text = "START FARMING"
+            farmBtn.BackgroundColor3 = clr_btn_off 
+        end
+        rtBtn.Text = "STOP ROUND TRIP"
+        rtBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+        status.Text = "● RT: ACTIVE"
+    else
+        rtBtn.Text = "START ROUND TRIP"
+        rtBtn.BackgroundColor3 = clr_btn_off
+        status.Text = "● READY"
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if roundRunning then
+            pcall(function()
+                local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+                local seat = hum and hum.SeatPart
+                if seat and seat:IsA("VehicleSeat") then
+                    local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
+                    
+                    -- Jalur Pergi
+                    status.Text = "● RT: GOING TO END"
+                    seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                    seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                    car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0)))
+                    task.wait(0.5)
+                    car:PivotTo(CFrame.new(rtEndPos + Vector3.new(0, 5, 0)))
+                    task.wait(2)
+                    
+                    if not roundRunning then return end
+                    
+                    -- Jalur Pulang
+                    status.Text = "● RT: RETURNING"
+                    seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                    seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                    car:PivotTo(CFrame.new(rtEndPos + Vector3.new(0, 5, 0)))
+                    task.wait(0.5)
+                    car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0)))
+                    task.wait(2)
+                else
+                    status.Text = "● RT: NEED CAR!"
+                end
+            end)
+        end
+    end
+end)
+
+-- Sinkronisasi Tema Neon dengan UI Baru
+RunService.Heartbeat:Connect(function()
+    if not renderingEnabled then
+        rtFrame.BackgroundColor3 = clr_neon_bg
+        rtStroke.Color = clr_neon_stroke
+    else
+        rtFrame.BackgroundColor3 = clr_bg
+        rtStroke.Color = clr_stroke
+    end
+end)
