@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
--- FIX: UI FRAME HEIGHT & BUTTON VISIBILITY
+-- FIX: FULL SOURCE + SCROLLABLE UI
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -10,22 +10,33 @@ local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
+local HttpService = game:GetService("HttpService")
 
--- [NEW] OPTIMIZATION GLOBALS
+-- [1] OPTIMIZATION & GLOBALS
 local renderingEnabled = true
+local running = false
+local isMinimized = false
+local rtRunning = false
+local carSpeed = 165
+local totalMoneyEarned, sessionRaces = 0, 0
+local moneyBeforeRace = 0
+
+local startRT = {pos = {-5300, -15, -1175}, rot = 0} 
+local endRT   = {pos = {-4109, -15, 4423}, rot = 180}
+
 local function toggle3DRender(mode)
     renderingEnabled = mode
     RunService:Set3dRenderingEnabled(mode)
 end
 
--- [NEW] AUTO MEMORY CLEANER
+-- [2] AUTO MEMORY CLEANER
 task.spawn(function()
     while task.wait(60) do
         collectgarbage("collect")
     end
 end)
 
--- [REPLACED] SUPER ANTI-AFK
+-- [3] SUPER ANTI-AFK
 for _, v in pairs(getconnections(LP.Idled)) do
     v:Disable()
 end
@@ -42,17 +53,7 @@ task.spawn(function()
     end
 end)
 
-local totalMoneyEarned, sessionRaces = 0, 0
-local moneyBeforeRace = 0
-local running, isMinimized = false, false
-
--- [ADDED] ROUND TRIP & SPEED GLOBALS
-local rtRunning = false
-local carSpeed = 165
-local startRT = {pos = {-5300, -15, -1175}, rot = 0} 
-local endRT   = {pos = {-4109, -15, 4423}, rot = 180}
-
--- FUNGSI SUPER LOW GRAPHIC + PURGE
+-- [4] FUNGSI LOW GRAPHIC + PURGE
 local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -80,7 +81,7 @@ local function applyDeepClean()
     end)
 end
 
--- FUNGSI CLOSE PRIZE POPUP
+-- [5] FUNGSI CLOSE PRIZE POPUP
 local function closePrizePopup()
     pcall(function()
         for _, gui in pairs(PlayerGui:GetChildren()) do
@@ -89,16 +90,13 @@ local function closePrizePopup()
                     if btn:IsA("ImageButton") or btn:IsA("TextButton") then
                         local n = btn.Name:lower()
                         local t = (btn:IsA("TextButton") and btn.Text:lower()) or ""
-                        
                         if n == "x" or n:find("close") or t == "x" or t:find("close") or n:find("exit") then
                             if btn.Visible and btn.AbsoluteSize.X > 0 then
                                 local pos = btn.AbsolutePosition
                                 local size = btn.AbsoluteSize
                                 VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
-                                
                                 pcall(function()
                                     for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
-                                    for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
                                     for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end
                                 end)
                             end
@@ -119,7 +117,7 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- KOORDINAT (PATH 1-41)
+-- [6] DATA PATH
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -147,7 +145,7 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- [[ UI SYSTEM - UPDATED HEIGHT ]]
+-- [7] UI SYSTEM (SCROLLABLE)
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 
@@ -156,280 +154,196 @@ local clr_stroke = Color3.fromRGB(40, 40, 40)
 local clr_accent = Color3.fromRGB(255, 215, 0)
 local clr_btn_off = Color3.fromRGB(35, 35, 35)
 
-local clr_neon_bg = Color3.fromRGB(10, 10, 10)
-local clr_neon_stroke = Color3.fromRGB(0, 255, 255)
-local clr_neon_glow = Color3.fromRGB(0, 180, 180)
-
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 240, 0, 275); -- UPDATED HEIGHT
-frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
+frame.Size = UDim2.new(0, 240, 0, 280); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1
-local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.5, 0, 1, 0); status.Position = UDim2.new(0, 12, 0, 0); status.Text = "● READY"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 11; status.TextXAlignment = Enum.TextXAlignment.Left
-
-local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 80, 1, 0); rgbLabel.Position = UDim2.new(1, -115, 0, 0); rgbLabel.Text = "CORRZEY HUB"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
-task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.03) end end end)
+local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.6, 0, 1, 0); status.Position = UDim2.new(0, 12, 0, 0); status.Text = "● READY"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 10; status.TextXAlignment = Enum.TextXAlignment.Left
 
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 
-local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 230); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
-local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
+-- CONTAINER SCROLLING
+local content = Instance.new("ScrollingFrame", frame)
+content.Size = UDim2.new(1, -10, 1, -45); content.Position = UDim2.new(0, 5, 0, 40); content.BackgroundTransparency = 1; content.ScrollBarThickness = 2; content.CanvasSize = UDim2.new(0, 0, 0, 360)
+local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder; layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local function createBtn(txt, color, parent)
+local function createBtn(txt, color, parent, order)
     local b = Instance.new("TextButton", parent)
-    b.Size = UDim2.new(1, 0, 0, 32); b.BackgroundColor3 = color; b.Text = txt; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.GothamBold; b.TextSize = 10; b.BorderSizePixel = 0; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    b.Size = UDim2.new(1, -10, 0, 35); b.BackgroundColor3 = color; b.Text = txt; b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.GothamBold; b.TextSize = 10; b.BorderSizePixel = 0; b.LayoutOrder = order or 0; Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
     return b
 end
 
-local farmBtn = createBtn("START FARMING", clr_btn_off, content)
-local rtBtn = createBtn("ROUND TRIP: OFF", clr_btn_off, content) -- TOMBOL ROUND TRIP
-local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
-local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
+-- TOMBOL-TOMBOL (DENGAN URUTAN TETAP)
+local farmBtn = createBtn("START FARMING", Color3.fromRGB(0, 120, 255), content, 1)
+local rtBtn = createBtn("ROUND TRIP: OFF", clr_btn_off, content, 2)
+local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content, 3)
+local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content, 4)
 
--- [SPEED CONTROL UI]
 local speedFrame = Instance.new("Frame", content)
-speedFrame.Size = UDim2.new(1, 0, 0, 32); speedFrame.BackgroundTransparency = 1
+speedFrame.Size = UDim2.new(1, -10, 0, 35); speedFrame.BackgroundTransparency = 1; speedFrame.LayoutOrder = 5
 local speedLabel = Instance.new("TextLabel", speedFrame); speedLabel.Size = UDim2.new(0.4, 0, 1, 0); speedLabel.Text = "SPEED: "..carSpeed; speedLabel.TextColor3 = Color3.new(1,1,1); speedLabel.Font = Enum.Font.GothamBold; speedLabel.TextSize = 10; speedLabel.BackgroundTransparency = 1
 local btnSlow = createBtn("-", Color3.fromRGB(50, 50, 50), speedFrame); btnSlow.Size = UDim2.new(0.25, -5, 1, 0); btnSlow.Position = UDim2.new(0.4, 5, 0, 0)
 local btnFast = createBtn("+", Color3.fromRGB(50, 50, 50), speedFrame); btnFast.Size = UDim2.new(0.25, -5, 1, 0); btnFast.Position = UDim2.new(0.7, 5, 0, 0)
 
-local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
+local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, -10, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 9; dtStatusLabel.LayoutOrder = 6
 
--- MINI HUD
+-- HUD KECIL
 local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Draggable = true; miniHud.Active = true; Instance.new("UICorner", miniHud)
 local hs = Instance.new("UIStroke", miniHud); hs.Color = clr_accent; hs.Thickness = 1.2
-local hGlow = Instance.new("UIStroke", miniHud); hGlow.Color = clr_neon_glow; hGlow.Thickness = 3; hGlow.Transparency = 1; hGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 local function createHudLbl(txt, col, pos)
-    local l = Instance.new("TextLabel", miniHud); l.Size = UDim2.new(1, -20, 0, 20); l.Position = UDim2.new(0, 10, 0, pos); l.Text = txt; l.TextColor3 = col; l.Font = Enum.Font.GothamBold; l.TextSize = 10; l.BackgroundTransparency = 1; l.TextXAlignment = "Left"; return l
+    local l = Instance.new("TextLabel", miniHud); l.Size = UDim2.new(1, -20, 0, 20); l.Position = UDim2.new(0, 10, 0, pos); l.Text = txt; l.TextColor3 = col; l.Font = Enum.Font.GothamBold; l.TextSize = 9; l.BackgroundTransparency = 1; l.TextXAlignment = "Left"; return l
 end
 local moneyLabel = createHudLbl("Profit: $0", clr_accent, 5)
 local raceLabel = createHudLbl("Races: 0", Color3.new(1,1,1), 23)
 local fpsLabel = createHudLbl("FPS: 0", Color3.fromRGB(0, 255, 255), 41)
 
--- SAKELAR TEMA
-local function setNeonTheme(active)
-    if active then
-        frame.BackgroundColor3 = clr_neon_bg
-        mainStroke.Color = clr_neon_stroke
-        cpuBtn.BackgroundColor3 = clr_neon_stroke
-        cpuBtn.TextColor3 = clr_neon_bg
-        cpuBtn.Text = "NEON DARK: ON (3D OFF)"
-        hs.Color = clr_neon_glow
-        hGlow.Transparency = 0.5
-        toggleBtn.BackgroundColor3 = clr_neon_glow
-    else
-        frame.BackgroundColor3 = clr_bg
-        mainStroke.Color = clr_stroke
-        cpuBtn.BackgroundColor3 = clr_btn_off
-        cpuBtn.TextColor3 = Color3.new(1,1,1)
-        cpuBtn.Text = "NEON DARK: OFF (3D ON)"
-        hs.Color = clr_accent
-        hGlow.Transparency = 1
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    end
-end
-
--- [[ BUTTON LOGIC ]]
-btnSlow.MouseButton1Click:Connect(function() 
-    carSpeed = math.max(10, carSpeed - 10)
-    speedLabel.Text = "SPEED: "..carSpeed 
-end)
-
-btnFast.MouseButton1Click:Connect(function() 
-    carSpeed = carSpeed + 10
-    speedLabel.Text = "SPEED: "..carSpeed 
-end)
-
-toggleBtn.MouseButton1Click:Connect(function()   
-    isMinimized = not isMinimized
-    if isMinimized then
-        task.delay(0.05, function() content.Visible = false end)
-        frame:TweenSize(UDim2.new(0, 240, 0, 35), "Out", "Quad", 0.3, true)
-        toggleBtn.Text = "+"
-    else
-        frame:TweenSize(UDim2.new(0, 240, 0, 275), "Out", "Quad", 0.3, true)
-        task.wait(0.25)
-        content.Visible = true
-        toggleBtn.Text = "−"
-    end
-end)
-
-cpuBtn.MouseButton1Click:Connect(function()
-    renderingEnabled = not renderingEnabled
-    toggle3DRender(renderingEnabled)
-    setNeonTheme(not renderingEnabled)
-end)
-
-purgeBtn.MouseButton1Click:Connect(function()
-    applyDeepClean()
-    local oldText = status.Text
-    status.Text = "● ASSETS PURGED!"
-    task.wait(1)
-    status.Text = oldText
-end)
-
-farmBtn.MouseButton1Click:Connect(function()
-    running = not running
-    if running then 
-        rtRunning = false; rtBtn.Text = "ROUND TRIP: OFF"; rtBtn.BackgroundColor3 = clr_btn_off
-        applyDeepClean()
-        if setfpscap then setfpscap(30) end
-    else
-        if setfpscap then setfpscap(60) end
-    end
-    farmBtn.Text = running and "STOP FARM" or "START FARMING"
-    farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
-end)
-
-rtBtn.MouseButton1Click:Connect(function()
-    rtRunning = not rtRunning
-    if rtRunning then
-        running = false; farmBtn.Text = "START FARMING"; farmBtn.BackgroundColor3 = clr_btn_off
-        -- INITIAL TELEPORT
-        pcall(function()
-            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
-            local seat = hum and hum.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
-                local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
-                status.Text = "● RT: TELEPORTING START..."
-                car:PivotTo(CFrame.new(startRT.pos[1], startRT.pos[2] + 5, startRT.pos[3]) * CFrame.Angles(0, math.rad(startRT.rot), 0))
-                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
-            end
-        end)
-    end
-    rtBtn.Text = rtRunning and "ROUND TRIP: ON" or "ROUND TRIP: OFF"
-    rtBtn.BackgroundColor3 = rtRunning and Color3.fromRGB(0, 150, 255) or clr_btn_off
-end)
-
--- FPS COUNTER
-task.spawn(function()
-    local lastUpdate = tick(); local frames = 0
-    RunService.RenderStepped:Connect(function()
-        frames = frames + 1
-        if tick() - lastUpdate >= 1 then
-            fpsLabel.Text = "FPS: " .. frames; frames = 0; lastUpdate = tick()
-        end
-    end)
-end)
-
--- MAIN AUTO FARM LOOP
-task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if running then
-            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
-            local seat = hum and hum.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
-                local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
-                applyDeepClean(); closePrizePopup()
-                seat.AssemblyLinearVelocity = Vector3.new(0,0,0); seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
-                car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
-                status.Text = "● WAITING RIVAL..."
-                local rivalFound = false
-                repeat 
-                    task.wait(1) 
-                    for _, p in pairs(Players:GetPlayers()) do 
-                        if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then 
-                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 20 then rivalFound = true end 
-                        end 
-                    end
-                until not running or rivalFound
-                if running and rivalFound then
-                    moneyBeforeRace = getPlayerMoney()
-                    for i = 18, 1, -1 do if not running then break end; status.Text = "● START IN: "..i.."s"; task.wait(1) end
-                    if running then
-                        for i, d in ipairs(path) do
-                            if not running or not seat.Parent then break end
-                            local dtVal = math.random(15, 20) / 10; status.Text = "● RACING: " .. i .. "/41"; dtStatusLabel.Text = "DELAY: " .. dtVal .. "s"
-                            local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
-                            car:PivotTo(cf); task.wait(0.05); seat.AssemblyLinearVelocity = cf.LookVector * carSpeed; task.wait(dtVal) 
-                        end
-                        status.Text = "● FINISHING..."; task.wait(2)
-                        local gain = getPlayerMoney() - moneyBeforeRace
-                        if gain > 0 then totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1; moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces end
-                        status.Text = "● LOOP RESTARTING..."; task.wait(2)
-                    end
-                end
-            else status.Text = "● SIT IN CAR!" end
-        end
-    end
-end)
-
--- ROUND TRIP LOOP
-task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if rtRunning then
-            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
-            local seat = hum and hum.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
-                local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
-                
-                -- GOING TO END
-                status.Text = "● RT: GOING TO END"
-                local cfEnd = CFrame.new(endRT.pos[1], endRT.pos[2] + 5, endRT.pos[3]) * CFrame.Angles(0, math.rad(endRT.rot), 0)
-                car:PivotTo(cfEnd); task.wait(0.1); seat.AssemblyLinearVelocity = cfEnd.LookVector * carSpeed; task.wait(2.5)
-                
-                if not rtRunning then continue end
-                
-                -- RETURNING START
-                status.Text = "● RT: RETURNING START"
-                local cfStart = CFrame.new(startRT.pos[1], startRT.pos[2] + 5, startRT.pos[3]) * CFrame.Angles(0, math.rad(startRT.rot), 0)
-                car:PivotTo(cfStart); task.wait(0.1); seat.AssemblyLinearVelocity = cfStart.LookVector * carSpeed; task.wait(2.5)
-                
-                sessionRaces = sessionRaces + 1; raceLabel.Text = "Races: " .. sessionRaces
-            else status.Text = "● RT: SIT IN CAR!" end
-        end
-    end
-end)
-
--- WEBHOOK SYSTEM
+-- [8] WEBHOOK SYSTEM (FULL)
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
 
-local HttpService = game:GetService("HttpService")
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
 
 local function sendWebhook(url, gain, total, races, isOffline)
     if not url or url == "" then return end
     local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
     local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
-    local data = {["embeds"] = {{["title"] = isOffline and "⚠️ STUCK DETECTED - NO PROFIT" or "🚀 CORRZEY HUB - AUTO REPORT",["color"] = isOffline and 16711680 or 65430,["fields"] = {{["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},{["name"] = isOffline and "💰 Total Profit" or "💰 Race Profit", ["value"] = "$" .. tostring(isOffline and total or gain) .. "", ["inline"] = true,["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true,["name"] = "⚡ Performance", ["value"] = "FPS
+    local data = {["embeds"] = {{["title"] = isOffline and "⚠️ STUCK DETECTED" or "🚀 CORRZEY HUB AUTO REPORT",["color"] = isOffline and 16711680 or 65430,["fields"] = {{["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},{["name"] = isOffline and "💰 Total Profit" or "💰 Race Profit", ["value"] = "$" .. tostring(isOffline and total or gain) .. "", ["inline"] = true,["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true,["name"] = "⚡ Performance", ["value"] = "FPS
 local payload = HttpService:JSONEncode(data)
-local function executeRequest() pcall(function() if httpRequest then httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload}) else HttpService:PostAsync(url, payload) end end) end
-if isOffline then executeRequest() else task.spawn(executeRequest) end
+task.spawn(function()
+pcall(function()
+if httpRequest then httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
+else HttpService:PostAsync(url, payload) end
+end)
+end)
 end
-​local function onShutdown() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end
-Players.PlayerRemoving:Connect(function(player) if player == LP then onShutdown() end end)
-game:BindToClose(onShutdown)
-​task.spawn(function()
-local lastRaces = 0
-while task.wait(5) do
-if sessionRaces > lastRaces then
-local currentGain = getPlayerMoney() - moneyBeforeRace
-if currentGain <= 0 then currentGain = "Update" end
-sendWebhook(MAIN_WEBHOOK, currentGain, totalMoneyEarned, sessionRaces, false)
-lastRaces = sessionRaces
+​-- [9] LOGIKA BUTTON & UI
+btnSlow.MouseButton1Click:Connect(function() carSpeed = math.max(10, carSpeed - 10); speedLabel.Text = "SPEED: "..carSpeed end)
+btnFast.MouseButton1Click:Connect(function() carSpeed = carSpeed + 10; speedLabel.Text = "SPEED: "..carSpeed end)
+​toggleBtn.MouseButton1Click:Connect(function()
+isMinimized = not isMinimized
+if isMinimized then
+content.Visible = false
+frame:TweenSize(UDim2.new(0, 240, 0, 35), "Out", "Quad", 0.3, true)
+toggleBtn.Text = "+"
+else
+frame:TweenSize(UDim2.new(0, 240, 0, 280), "Out", "Quad", 0.3, true)
+task.wait(0.25); content.Visible = true; toggleBtn.Text = "−"
+end
+end)
+​cpuBtn.MouseButton1Click:Connect(function()
+renderingEnabled = not renderingEnabled
+toggle3DRender(renderingEnabled)
+cpuBtn.Text = renderingEnabled and "NEON DARK: OFF" or "NEON DARK: ON (3D OFF)"
+cpuBtn.BackgroundColor3 = renderingEnabled and clr_btn_off or Color3.fromRGB(0, 255, 255)
+cpuBtn.TextColor3 = renderingEnabled and Color3.new(1,1,1) or Color3.new(0,0,0)
+end)
+​purgeBtn.MouseButton1Click:Connect(function() applyDeepClean(); status.Text = "● ASSETS PURGED!"; task.wait(1); status.Text = "● READY" end)
+​farmBtn.MouseButton1Click:Connect(function()
+running = not running
+if running then
+rtRunning = false; rtBtn.Text = "ROUND TRIP: OFF"; rtBtn.BackgroundColor3 = clr_btn_off
+applyDeepClean()
+end
+farmBtn.Text = running and "STOP FARM" or "START FARMING"
+farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
+end)
+​rtBtn.MouseButton1Click:Connect(function()
+rtRunning = not rtRunning
+if rtRunning then
+running = false; farmBtn.Text = "START FARMING"; farmBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+pcall(function()
+local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+local seat = hum and hum.SeatPart
+if seat and seat:IsA("VehicleSeat") then
+local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
+car:PivotTo(CFrame.new(startRT.pos[1], startRT.pos[2] + 5, startRT.pos[3]) * CFrame.Angles(0, math.rad(startRT.rot), 0))
+end
+end)
+end
+rtBtn.Text = rtRunning and "ROUND TRIP: ON" or "ROUND TRIP: OFF"
+rtBtn.BackgroundColor3 = rtRunning and Color3.fromRGB(255, 150, 0) or clr_btn_off
+end)
+​-- [10] MAIN LOOPS
+task.spawn(function()
+local lastUpdate = tick(); local frames = 0
+RunService.RenderStepped:Connect(function()
+frames = frames + 1
+if tick() - lastUpdate >= 1 then fpsLabel.Text = "FPS: " .. frames; frames = 0; lastUpdate = tick() end
+end)
+end)
+​-- AUTO FARM
+task.spawn(function()
+while true do
+task.wait(0.5)
+if running then
+local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+local seat = hum and hum.SeatPart
+if seat and seat:IsA("VehicleSeat") then
+local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
+applyDeepClean(); closePrizePopup()
+car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
+status.Text = "● WAITING RIVAL..."
+local rivalFound = false
+repeat task.wait(1) for _, p in pairs(Players:GetPlayers()) do if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 20 then rivalFound = true end end end until not running or rivalFound
+if running and rivalFound then
+moneyBeforeRace = getPlayerMoney()
+for i = 18, 1, -1 do if not running then break end; status.Text = "● START IN: "..i.."s"; task.wait(1) end
+if running then
+for i, d in ipairs(path) do
+if not running or not seat.Parent then break end
+local dtVal = math.random(15, 20) / 10; status.Text = "● RACING: " .. i .. "/41"; dtStatusLabel.Text = "DELAY: "..dtVal.."s"
+local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
+car:PivotTo(cf); task.wait(0.05); seat.AssemblyLinearVelocity = cf.LookVector * carSpeed; task.wait(dtVal)
+end
+local gain = getPlayerMoney() - moneyBeforeRace
+if gain > 0 then
+totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
+moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
+sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false)
+end
+task.wait(2)
+end
+end
+else status.Text = "● SIT IN CAR!" end
 end
 end
 end)
-​-- STUCK DETECTION SYSTEM
+​-- ROUND TRIP
 task.spawn(function()
-local lastMoney = getPlayerMoney(); local lastTimeMoneyChanged = tick(); local stuckReported = false
+while true do
+task.wait(0.5)
+if rtRunning then
+local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+local seat = hum and hum.SeatPart
+if seat and seat:IsA("VehicleSeat") then
+local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
+status.Text = "● RT: GOING TO END"
+local cfEnd = CFrame.new(endRT.pos[1], endRT.pos[2] + 5, endRT.pos[3]) * CFrame.Angles(0, math.rad(endRT.rot), 0)
+car:PivotTo(cfEnd); task.wait(0.1); seat.AssemblyLinearVelocity = cfEnd.LookVector * carSpeed; task.wait(2.5)
+if not rtRunning then continue end
+status.Text = "● RT: RETURNING START"
+local cfStart = CFrame.new(startRT.pos[1], startRT.pos[2] + 5, startRT.pos[3]) * CFrame.Angles(0, math.rad(startRT.rot), 0)
+car:PivotTo(cfStart); task.wait(0.1); seat.AssemblyLinearVelocity = cfStart.LookVector * carSpeed; task.wait(2.5)
+sessionRaces = sessionRaces + 1; raceLabel.Text = "Races: " .. sessionRaces
+else status.Text = "● RT: SIT IN CAR!" end
+end
+end
+end)
+​-- STUCK DETECTION
+task.spawn(function()
+local lastMoney = getPlayerMoney(); local lastTimeMoneyChanged = tick()
 while task.wait(10) do
 if running or rtRunning then
 local currentMoney = getPlayerMoney()
 if currentMoney > lastMoney then
-lastMoney = currentMoney; lastTimeMoneyChanged = tick(); stuckReported = false
-elseif tick() - lastTimeMoneyChanged >= 240 and not stuckReported then
-status.Text = "● STATUS: STUCK!"; status.TextColor3 = Color3.fromRGB(255, 0, 0)
-sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true); stuckReported = true
+lastMoney = currentMoney; lastTimeMoneyChanged = tick()
+elseif tick() - lastTimeMoneyChanged >= 240 then
+sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
+lastTimeMoneyChanged = tick()
 end
-else
-lastTimeMoneyChanged = tick(); lastMoney = getPlayerMoney(); stuckReported = false
 end
 end
 end)
