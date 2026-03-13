@@ -207,27 +207,31 @@ rtBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- [[ SEAMLESS ROAD TRIP LOGIC ]]
 task.spawn(function()
+    local target = rtEndPos
     while true do
-        task.wait(0.1)
+        task.wait(0.01)
         if rtRunning then
             pcall(function()
-                local hum = LP.Character:FindFirstChildOfClass("Humanoid"); local seat = hum and hum.SeatPart
+                local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+                local seat = hum and hum.SeatPart
                 if seat and seat:IsA("VehicleSeat") then
                     local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
-                    local function driveTo(targetPos)
-                        while rtRunning and (seat.Position - targetPos).Magnitude > 25 do
-                            local direction = (targetPos - seat.Position).Unit
-                            seat.AssemblyLinearVelocity = direction * rtSpeed
-                            car:PivotTo(CFrame.new(seat.Position, targetPos))
-                            RunService.Heartbeat:Wait()
-                        end
-                        seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                    
+                    rtInfo.Text = (target == rtEndPos) and "GOING TO END..." or "GOING TO START..."
+                    
+                    local direction = (target - seat.Position).Unit
+                    seat.AssemblyLinearVelocity = direction * rtSpeed
+                    car:PivotTo(CFrame.new(seat.Position, target))
+                    
+                    -- Deteksi sampai tujuan tanpa ngerem
+                    if (seat.Position - target).Magnitude < 35 then
+                        target = (target == rtEndPos) and rtStartPos or rtEndPos
                     end
-                    rtInfo.Text = "GOING TO END..."; driveTo(rtEndPos); task.wait(0.5)
-                    if not rtRunning then return end
-                    rtInfo.Text = "GOING TO START..."; driveTo(rtStartPos); task.wait(0.5)
-                else rtInfo.Text = "SIT IN CAR!" end
+                else 
+                    rtInfo.Text = "SIT IN CAR!" 
+                end
             end)
         end
     end
