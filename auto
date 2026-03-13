@@ -443,22 +443,24 @@ task.spawn(function()
 end)
 
 -- ==========================================  
--- ADDON: ROUND TRIP SYSTEM (FIXED UI ACCESS)
+-- ADDON: ROUND TRIP SYSTEM (INTEGRATED)
+-- COORDINATES: -5300, -15, -1175 TO -4109, -15, 4423
 -- ==========================================  
 
-local roundRunning = false
-local rtStartPos = Vector3.new(-5300, -15, -1175)
-local rtEndPos = Vector3.new(-4109, -15, 4423)
+task.defer(function()
+    -- Tunggu ScreenGui DeltaAutoFarm tersedia
+    local targetGui = LP.PlayerGui:WaitForChild("DeltaAutoFarm", 10)
+    if not targetGui then return end
 
--- Mencari ScreenGui dari script utama tanpa mengubah sourcecode asli
-local mainGui = PlayerGui:FindFirstChild("DeltaAutoFarm")
+    local rtRunning = false
+    local rtStartPos = Vector3.new(-5300, -15, -1175)
+    local rtEndPos = Vector3.new(-4109, -15, 4423)
 
-if mainGui then
     -- [[ UI ROUND TRIP - IDENTICAL STYLE ]]
-    local rtFrame = Instance.new("Frame", mainGui)   
+    local rtFrame = Instance.new("Frame", targetGui)   
     rtFrame.Name = "RoundTripFrame"
     rtFrame.Size = UDim2.new(0, 240, 0, 85)
-    rtFrame.Position = UDim2.new(0.5, -120, 0.4, 165) -- Muncul di bawah menu utama
+    rtFrame.Position = UDim2.new(0.5, -120, 0.4, 165) 
     rtFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
     rtFrame.Active = true
     rtFrame.Draggable = true
@@ -498,10 +500,11 @@ if mainGui then
     rtBtn.BorderSizePixel = 0
     Instance.new("UICorner", rtBtn).CornerRadius = UDim.new(0, 6)
 
-    -- [[ LOGIC ROUND TRIP ]]
+    -- Logic Click
     rtBtn.MouseButton1Click:Connect(function()
-        roundRunning = not roundRunning
-        if roundRunning then
+        rtRunning = not rtRunning
+        if rtRunning then
+            -- Mematikan farm utama jika sedang jalan menggunakan variabel 'running' asli
             if running then 
                 running = false 
                 farmBtn.Text = "START FARMING"
@@ -509,47 +512,49 @@ if mainGui then
             end
             rtBtn.Text = "STOP ROUND TRIP"
             rtBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-            status.Text = "● RT: ACTIVE"
         else
             rtBtn.Text = "START ROUND TRIP"
             rtBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-            status.Text = "● READY"
         end
     end)
 
+    -- Logic Round Trip Loop
     task.spawn(function()
         while true do
             task.wait(0.1)
-            if roundRunning then
+            if rtRunning then
                 pcall(function()
                     local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
                     local seat = hum and hum.SeatPart
                     if seat and seat:IsA("VehicleSeat") then
                         local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                         
-                        -- Loop Round Trip
+                        -- Set velocity ke 0 agar tidak mental saat teleport
                         seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                         seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                        
+                        -- Teleport Start
                         car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0)))
                         task.wait(0.5)
+                        
+                        -- Teleport End
                         car:PivotTo(CFrame.new(rtEndPos + Vector3.new(0, 5, 0)))
-                        task.wait(2)
+                        task.wait(2) -- Delay di tujuan
                         
-                        if not roundRunning then return end
+                        if not rtRunning then return end
                         
+                        -- Teleport Kembali
                         car:PivotTo(CFrame.new(rtEndPos + Vector3.new(0, 5, 0)))
                         task.wait(0.5)
                         car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0)))
-                        task.wait(2)
-                    else
-                        status.Text = "● RT: NEED CAR!"
+                        task.wait(2) -- Delay di awal
                     end
                 end)
             end
         end
     end)
-    
-    -- Sync Neon Theme (Dark Mode)
+
+    -- Sinkronisasi Tema Neon Dark otomatis
     task.spawn(function()
         while task.wait(0.5) do
             if not renderingEnabled then
@@ -561,4 +566,4 @@ if mainGui then
             end
         end
     end)
-end
+end)
