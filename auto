@@ -1,6 +1,6 @@
 -- ==========================================  
--- V59.0 FINAL REBORN - COMPLETE SOURCE CODE
--- ALL FEATURES RESTORED & OPTIMIZED
+-- V59.2 FINAL REBORN - COMPLETE RESTORED
+-- ALL FEATURES + FIX MINIMIZE + REALTIME HUD
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -13,7 +13,7 @@ local HttpService = game:GetService("HttpService")
 
 -- [SYSTEM GLOBALS]
 local renderingEnabled = true
-local running, rtRunning, isMinimized = false, false, false
+local running, rtRunning = false, false
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
 local rtSpeed = 180 
@@ -26,17 +26,14 @@ local function sendReport(gain, total, races)
     if not MAIN_WEBHOOK or MAIN_WEBHOOK == "" then return end
     local data = {
         ["embeds"] = {{
-            ["title"] = "🚀 **CORRZEY HUB - AUTO FARM REPORT**",
-            ["description"] = "New race session completed successfully!",
+            ["title"] = "🚀 **CORRZEY HUB - REPORT**",
             ["color"] = 65430,
             ["fields"] = {
-                {["name"] = "👤 **Player Name**", ["value"] = "```" .. LP.Name .. "```", ["inline"] = true},
-                {["name"] = "💰 **Money Gained**", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
-                {["name"] = "📈 **Total Profit**", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
-                {["name"] = "🏁 **Total Races**", ["value"] = "```" .. tostring(races) .. "```", ["inline"] = true},
-                {["name"] = "📡 **Status**", ["value"] = "```Stable / Running```", ["inline"] = false}
+                {["name"] = "👤 **Player**", ["value"] = "```" .. LP.Name .. "```", ["inline"] = true},
+                {["name"] = "💰 **Gained**", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
+                {["name"] = "📈 **Total**", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
+                {["name"] = "🏁 **Races**", ["value"] = "```" .. tostring(races) .. "```", ["inline"] = true}
             },
-            ["footer"] = {["text"] = "Corrzey Hub V59.0"},
             ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
     }
@@ -94,6 +91,15 @@ local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new
 local content = Instance.new("Frame", mainFrame); content.Size = UDim2.new(1, -20, 0, 140); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
 Instance.new("UIListLayout", content).Padding = UDim.new(0, 5)
 
+-- LOGIKA MINIMIZE UTAMA
+local isMainMinimized = false
+toggleBtn.MouseButton1Click:Connect(function()
+    isMainMinimized = not isMainMinimized
+    content.Visible = not isMainMinimized
+    mainFrame:TweenSize(isMainMinimized and UDim2.new(0, 240, 0, 35) or UDim2.new(0, 240, 0, 185), "Out", "Quad", 0.3, true)
+    toggleBtn.Text = isMainMinimized and "+" or "−"
+end)
+
 local function createBtn(txt, parent)
     local b = Instance.new("TextButton", parent); b.Size = UDim2.new(1, 0, 0, 30); b.BackgroundColor3 = Color3.fromRGB(35,35,35); b.TextColor3 = Color3.new(1,1,1); b.Font = "GothamBold"; b.TextSize = 9; b.Text = txt; Instance.new("UICorner", b); return b
 end
@@ -103,11 +109,27 @@ local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", content)
 local cpuBtn = createBtn("NEON DARK: OFF", content)
 local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 15); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = "GothamBold"; dtStatusLabel.TextSize = 9
 
--- [MINI HUD MONEY]
-local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); Instance.new("UIStroke", miniHud).Color = clr_accent; Instance.new("UICorner", miniHud)
+-- [[ HUD MONEY - DRAGGABLE & REALTIME ]]
+local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Active = true; miniHud.Draggable = true; Instance.new("UIStroke", miniHud).Color = clr_accent; Instance.new("UICorner", miniHud)
 local moneyLabel = Instance.new("TextLabel", miniHud); moneyLabel.Size = UDim2.new(1, -20, 0, 20); moneyLabel.Position = UDim2.new(0, 10, 0, 5); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = clr_accent; moneyLabel.BackgroundTransparency = 1; moneyLabel.Font = "GothamBold"; moneyLabel.TextSize = 10; moneyLabel.TextXAlignment = "Left"
 local raceLabel = Instance.new("TextLabel", miniHud); raceLabel.Size = UDim2.new(1, -20, 0, 20); raceLabel.Position = UDim2.new(0, 10, 0, 23); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.BackgroundTransparency = 1; raceLabel.Font = "GothamBold"; raceLabel.TextSize = 10; raceLabel.TextXAlignment = "Left"
 local fpsLabel = Instance.new("TextLabel", miniHud); fpsLabel.Size = UDim2.new(1, -20, 0, 20); fpsLabel.Position = UDim2.new(0, 10, 0, 41); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.BackgroundTransparency = 1; fpsLabel.Font = "GothamBold"; fpsLabel.TextSize = 10; fpsLabel.TextXAlignment = "Left"
+
+-- REAL-TIME MONEY TRACKER
+task.spawn(function()
+    local initialMoney = getPlayerMoney()
+    while task.wait(1) do
+        local currentMoney = getPlayerMoney()
+        if currentMoney > initialMoney then
+            local gain = currentMoney - initialMoney
+            totalMoneyEarned = totalMoneyEarned + gain
+            initialMoney = currentMoney
+            moneyLabel.Text = "Profit: $" .. totalMoneyEarned
+        elseif currentMoney < initialMoney then
+            initialMoney = currentMoney
+        end
+    end
+end)
 
 -- [FARM LOGIC]
 farmBtn.MouseButton1Click:Connect(function() running = not running; farmBtn.Text = running and "STOP FARM" or "START FARMING (1-41)"; farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35) end)
@@ -135,7 +157,7 @@ task.spawn(function()
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0); car:PivotTo(cf); task.wait(0.05); seat.AssemblyLinearVelocity = cf.LookVector * 165; task.wait(dtVal) 
                         end
                         task.wait(2); local gain = getPlayerMoney() - moneyBeforeRace
-                        if gain > 0 then totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1; moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces; sendReport(gain, totalMoneyEarned, sessionRaces) end
+                        if gain > 0 then sessionRaces = sessionRaces + 1; raceLabel.Text = "Races: " .. sessionRaces; sendReport(gain, totalMoneyEarned, sessionRaces) end
                     end
                 end
             else status.Text = "● SIT IN CAR!" end
@@ -143,25 +165,41 @@ task.spawn(function()
     end
 end)
 
--- [[ UI SYSTEM - RIGHT (ROAD TRIP VELOCITY) ]]
+-- [[ UI SYSTEM - RIGHT (ROAD TRIP) ]]
 if PlayerGui:FindFirstChild("RoundTripGui") then PlayerGui.RoundTripGui:Destroy() end
 local rtg = Instance.new("ScreenGui", PlayerGui); rtg.Name = "RoundTripGui"; rtg.ResetOnSpawn = false
 local rtStartPos, rtEndPos = Vector3.new(-5300, -15, -1175), Vector3.new(-4109, -15, 4423)
 
-local rtFrame = Instance.new("Frame", rtg); rtFrame.Size = UDim2.new(0, 240, 0, 145); rtFrame.Position = UDim2.new(1, -250, 0.4, 0); rtFrame.BackgroundColor3 = clr_bg; rtFrame.Active = true; rtFrame.Draggable = true; Instance.new("UIStroke", rtFrame).Color = clr_accent; Instance.new("UICorner", rtFrame)
-local rtTitle = Instance.new("TextLabel", rtFrame); rtTitle.Size = UDim2.new(1, 0, 0, 30); rtTitle.Text = "ROAD TRIP VELOCITY"; rtTitle.TextColor3 = Color3.new(1,1,1); rtTitle.BackgroundTransparency = 1; rtTitle.Font = "GothamBold"; rtTitle.TextSize = 10
-local rtSpeedInput = Instance.new("TextBox", rtFrame); rtSpeedInput.Size = UDim2.new(0, 220, 0, 25); rtSpeedInput.Position = UDim2.new(0.5, -110, 0, 30); rtSpeedInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30); rtSpeedInput.Text = "180"; rtSpeedInput.TextColor3 = Color3.new(1,1,1); rtSpeedInput.Font = "GothamBold"; rtSpeedInput.TextSize = 10; Instance.new("UICorner", rtSpeedInput)
+local rtFrame = Instance.new("Frame", rtg); rtFrame.Size = UDim2.new(0, 240, 0, 145); rtFrame.Position = UDim2.new(1, -250, 0.4, 0); rtFrame.BackgroundColor3 = clr_bg; rtFrame.Active = true; rtFrame.Draggable = true; rtFrame.ClipsDescendants = true; Instance.new("UIStroke", rtFrame).Color = clr_accent; Instance.new("UICorner", rtFrame)
+
+local rtHeader = Instance.new("Frame", rtFrame); rtHeader.Size = UDim2.new(1, 0, 0, 30); rtHeader.BackgroundTransparency = 1
+local rtTitle = Instance.new("TextLabel", rtHeader); rtTitle.Size = UDim2.new(0.7, 0, 1, 0); rtTitle.Position = UDim2.new(0, 10, 0, 0); rtTitle.Text = "ROAD TRIP"; rtTitle.TextColor3 = Color3.new(1,1,1); rtTitle.BackgroundTransparency = 1; rtTitle.Font = "GothamBold"; rtTitle.TextSize = 10; rtTitle.TextXAlignment = "Left"
+
+local rtToggleBtn = Instance.new("TextButton", rtHeader); rtToggleBtn.Size = UDim2.new(0, 24, 0, 24); rtToggleBtn.Position = UDim2.new(1, -30, 0, 3); rtToggleBtn.Text = "−"; rtToggleBtn.TextColor3 = Color3.new(1,1,1); rtToggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", rtToggleBtn)
+
+local rtContent = Instance.new("Frame", rtFrame); rtContent.Size = UDim2.new(1, 0, 1, -30); rtContent.Position = UDim2.new(0, 0, 0, 30); rtContent.BackgroundTransparency = 1
+
+local rtSpeedInput = Instance.new("TextBox", rtContent); rtSpeedInput.Size = UDim2.new(0, 220, 0, 25); rtSpeedInput.Position = UDim2.new(0.5, -110, 0, 5); rtSpeedInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30); rtSpeedInput.Text = "180"; rtSpeedInput.TextColor3 = Color3.new(1,1,1); rtSpeedInput.Font = "GothamBold"; rtSpeedInput.TextSize = 10; Instance.new("UICorner", rtSpeedInput)
 rtSpeedInput.FocusLost:Connect(function() rtSpeed = tonumber(rtSpeedInput.Text) or 180 end)
 
-local rtBtn = createBtn("START ROAD TRIP", rtFrame); rtBtn.Size = UDim2.new(0, 220, 0, 32); rtBtn.Position = UDim2.new(0.5, -110, 0, 65)
-local rtInfo = Instance.new("TextLabel", rtFrame); rtInfo.Size = UDim2.new(1, 0, 0, 20); rtInfo.Position = UDim2.new(0, 0, 0, 105); rtInfo.Text = "STATUS: IDLE"; rtInfo.TextColor3 = Color3.new(0.6, 0.6, 0.6); rtInfo.BackgroundTransparency = 1; rtInfo.Font = "GothamBold"; rtInfo.TextSize = 9
+local rtBtn = createBtn("START ROAD TRIP", rtContent); rtBtn.Size = UDim2.new(0, 220, 0, 32); rtBtn.Position = UDim2.new(0.5, -110, 0, 35)
+local rtInfo = Instance.new("TextLabel", rtContent); rtInfo.Size = UDim2.new(1, 0, 0, 20); rtInfo.Position = UDim2.new(0, 0, 0, 75); rtInfo.Text = "STATUS: IDLE"; rtInfo.TextColor3 = Color3.new(0.6, 0.6, 0.6); rtInfo.BackgroundTransparency = 1; rtInfo.Font = "GothamBold"; rtInfo.TextSize = 9
+
+-- LOGIKA MINIMIZE ROAD TRIP
+local isRTMinimized = false
+rtToggleBtn.MouseButton1Click:Connect(function()
+    isRTMinimized = not isRTMinimized
+    rtContent.Visible = not isRTMinimized
+    rtFrame:TweenSize(isRTMinimized and UDim2.new(0, 240, 0, 30) or UDim2.new(0, 240, 0, 145), "Out", "Quad", 0.3, true)
+    rtToggleBtn.Text = isRTMinimized and "+" or "−"
+end)
 
 rtBtn.MouseButton1Click:Connect(function()
     rtRunning = not rtRunning; rtBtn.Text = rtRunning and "STOP ROAD TRIP" or "START ROAD TRIP"; rtBtn.BackgroundColor3 = rtRunning and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35)
     if rtRunning then 
         pcall(function()
-            local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid"); local seat = hum and hum.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
+            local hum = LP.Character:FindFirstChildOfClass("Humanoid"); local seat = hum.SeatPart
+            if seat then
                 local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                 car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0), rtEndPos))
             end
@@ -174,7 +212,7 @@ task.spawn(function()
         task.wait(0.1)
         if rtRunning then
             pcall(function()
-                local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid"); local seat = hum and hum.SeatPart
+                local hum = LP.Character:FindFirstChildOfClass("Humanoid"); local seat = hum and hum.SeatPart
                 if seat and seat:IsA("VehicleSeat") then
                     local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                     local function driveTo(targetPos)
