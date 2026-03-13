@@ -222,14 +222,12 @@ toggleBtn.MouseButton1Click:Connect(function()
     isMinimized = not isMinimized
     
     if isMinimized then
-        -- Menutup: Sembunyikan konten sedikit lebih cepat sebelum frame mengecil sempurna
         task.delay(0.05, function() content.Visible = false end)
         frame:TweenSize(UDim2.new(0, 240, 0, 35), "Out", "Quad", 0.3, true)
         toggleBtn.Text = "+"
     else
-        -- Membuka: Frame melebar dulu baru konten muncul
         frame:TweenSize(UDim2.new(0, 240, 0, 155), "Out", "Quad", 0.3, true)
-        task.wait(0.25) -- Sinkronisasi transisi
+        task.wait(0.25)
         content.Visible = true
         toggleBtn.Text = "−"
     end
@@ -370,7 +368,7 @@ local function sendWebhook(url, gain, total, races, isOffline)
     local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
     local data = {
         ["embeds"] = {{
-            ["title"] = isOffline and "⚠️ ACCOUNT OFFLINE / DISCONNECTED" or "🚀 CORRZEY HUB - AUTO REPORT",
+            ["title"] = isOffline and "⚠️ STUCK DETECTED - NO PROFIT" or "🚀 CORRZEY HUB - AUTO REPORT",
             ["color"] = isOffline and 16711680 or 65430,
             ["fields"] = {
                 {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
@@ -406,6 +404,40 @@ task.spawn(function()
             if currentGain <= 0 then currentGain = "Update" end
             sendWebhook(MAIN_WEBHOOK, currentGain, totalMoneyEarned, sessionRaces, false)
             lastRaces = sessionRaces
+        end
+    end
+end)
+
+-- [[ NEW: STUCK DETECTION SYSTEM (4 MINUTES) ]]
+task.spawn(function()
+    local lastMoney = getPlayerMoney()
+    local lastTimeMoneyChanged = tick()
+    local stuckReported = false
+
+    while task.wait(10) do
+        if running then
+            local currentMoney = getPlayerMoney()
+            
+            if currentMoney > lastMoney then
+                lastMoney = currentMoney
+                lastTimeMoneyChanged = tick()
+                stuckReported = false -- Reset status jika uang bertambah
+            else
+                local duration = tick() - lastTimeMoneyChanged
+                if duration >= 240 then -- 4 Menit tanpa perubahan uang
+                    if not stuckReported then
+                        status.Text = "● STATUS: STUCK!"
+                        status.TextColor3 = Color3.fromRGB(255, 0, 0)
+                        sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true)
+                        stuckReported = true
+                    end
+                end
+            end
+        else
+            -- Reset timer jika farm dalam posisi OFF
+            lastTimeMoneyChanged = tick()
+            lastMoney = getPlayerMoney()
+            stuckReported = false
         end
     end
 end)
