@@ -1,5 +1,5 @@
 -- ==========================================  
--- V59.2 FINAL REBORN - GRAPHIC SELECTIVE
+-- V59.2 FINAL REBORN - COMPLETE VERSION
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -39,7 +39,7 @@ local function sendReport(gain, total, races)
     pcall(function() if httpRequest then httpRequest({Url = MAIN_WEBHOOK, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end end)
 end
 
--- [[ RESET GRAPHICS ]]
+-- [[ GRAPHIC ENGINE ]]
 local function resetGraphics()
     pcall(function()
         settings().Rendering.QualityLevel = 3
@@ -55,7 +55,6 @@ local function resetGraphics()
     end)
 end
 
--- [[ SUPER LOW GRAPHICS - FOR AUTO RACE ONLY ]]
 local function applySuperLowGraphics()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -92,6 +91,16 @@ local function applySuperLowGraphics()
     end)
 end
 
+local function applyDeepClean()
+    pcall(function()
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") then
+                v:Destroy()
+            end
+        end
+    end)
+end
+
 local function getPlayerMoney()   
     local leaderstats = LP:FindFirstChild("leaderstats")   
     if leaderstats then   
@@ -109,18 +118,24 @@ task.spawn(function() while task.wait(20) do VirtualUser:CaptureController() Vir
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local path = {{pos = {3353.99, -15.28, 883.01}, rot = 68.97}, {pos = {3048.26, -15.26, 680.38}, rot = 68.89}, {pos = {2739.67, -15.11, 570.12}, rot = 70.95}, {pos = {2271.23, -1.68, 411.61}, rot = 73.02}, {pos = {1946.53, 14.22, 306.79}, rot = 71.72}, {pos = {1570.71, 20.61, 186.11}, rot = 74.46}, {pos = {1033.94, 20.61, 92.19}, rot = 87.54}, {pos = {688.36, 20.60, 85.04}, rot = 92.30}, {pos = {-24.31, 20.63, 84.78}, rot = 90.45}, {pos = {-583.41, 20.61, 88.00}, rot = 90.43}, {pos = {-1247.06, 16.11, 121.99}, rot = 101.03}, {pos = {-1910.41, -11.95, 276.76}, rot = 103.87}, {pos = {-2580.79, -8.75, 417.36}, rot = 101.97}, {pos = {-3175.10, 18.31, 542.23}, rot = 101.76}, {pos = {-3916.48, 23.47, 701.48}, rot = 101.44}, {pos = {-4630.57, 31.07, 839.62}, rot = 102.08}, {pos = {-5534.23, 19.75, 1038.44}, rot = 102.18}, {pos = {-6557.41, 9.80, 1251.38}, rot = 101.13}, {pos = {-7277.41, 9.80, 1406.79}, rot = 106.41}, {pos = {-7794.60, 9.80, 1579.01}, rot = 111.81}, {pos = {-8263.78, 9.56, 1777.35}, rot = 112.83}, {pos = {-8805.38, -8.88, 2007.14}, rot = 117.64}, {pos = {-9503.49, -69.46, 2303.26}, rot = 113.14}, {pos = {-10147.54, -111.81, 2578.72}, rot = 112.52}, {pos = {-10895.69, -105.88, 2903.48}, rot = 115.66}, {pos = {-11552.18, -54.42, 3172.93}, rot = 112.78}, {pos = {-12169.96, -17.11, 3435.86}, rot = 112.92}, {pos = {-12767.61, -1.50, 3748.61}, rot = 124.95}, {pos = {-13135.41, -0.86, 4062.97}, rot = 135.41}, {pos = {-13366.22, -0.84, 4319.31}, rot = 146.03}, {pos = {-13670.72, -2.93, 4750.70}, rot = 143.42}, {pos = {-14030.56, -13.39, 5288.52}, rot = 146.34}, {pos = {-14500.27, 3.01, 5985.70}, rot = 145.91}, {pos = {-14892.54, 6.83, 6582.37}, rot = 151.69}, {pos = {-15236.35, 6.83, 7290.60}, rot = 160.16}, {pos = {-15482.54, 3.89, 8031.16}, rot = 165.65}, {pos = {-15675.67, -7.72, 8668.23}, rot = 162.54}, {pos = {-15927.57, -20.54, 9489.28}, rot = 162.16}, {pos = {-16199.67, -2.75, 10369.70}, rot = 162.77}, {pos = {-16348.46, 8.41, 11025.66}, rot = 171.59}, {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}}
 
--- [[ UI ]]
+-- [[ UI SYSTEM ]]
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 local clr_bg, clr_stroke, clr_accent = Color3.fromRGB(18, 18, 18), Color3.fromRGB(40, 40, 40), Color3.fromRGB(255, 215, 0)
+
+-- Main Menu UI
 local mainFrame = Instance.new("Frame", sg); mainFrame.Size = UDim2.new(0, 240, 0, 185); mainFrame.Position = UDim2.new(0.5, -250, 0.4, 0); mainFrame.BackgroundColor3 = clr_bg; mainFrame.Active = true; mainFrame.Draggable = true; mainFrame.ClipsDescendants = true; Instance.new("UICorner", mainFrame); Instance.new("UIStroke", mainFrame).Color = clr_stroke
 local header = Instance.new("Frame", mainFrame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1
 local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.5, 0, 1, 0); status.Position = UDim2.new(0, 12, 0, 0); status.Text = "● READY"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = "GothamBold"; status.TextSize = 11; status.TextXAlignment = "Left"
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 local content = Instance.new("Frame", mainFrame); content.Size = UDim2.new(1, -20, 0, 140); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; Instance.new("UIListLayout", content).Padding = UDim.new(0, 5)
+
 local function createBtn(txt, parent) local b = Instance.new("TextButton", parent); b.Size = UDim2.new(1, 0, 0, 30); b.BackgroundColor3 = Color3.fromRGB(35,35,35); b.TextColor3 = Color3.new(1,1,1); b.Font = "GothamBold"; b.TextSize = 9; b.Text = txt; Instance.new("UICorner", b); return b end
 local farmBtn = createBtn("AUTO RACE (1-41)", content)
+local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", content)
+local cpuBtn = createBtn("NEON DARK: OFF", content)
 
+-- Round Trip UI
 if PlayerGui:FindFirstChild("RoundTripGui") then PlayerGui.RoundTripGui:Destroy() end
 local rtg = Instance.new("ScreenGui", PlayerGui); rtg.Name = "RoundTripGui"; rtg.ResetOnSpawn = false
 local rtStartPos, rtEndPos = Vector3.new(-5300, -15, -1175), Vector3.new(-4109, -15, 4423)
@@ -132,11 +147,17 @@ local rtContent = Instance.new("Frame", rtFrame); rtContent.Size = UDim2.new(1, 
 local rtSpeedInput = Instance.new("TextBox", rtContent); rtSpeedInput.Size = UDim2.new(1, 0, 0, 30); rtSpeedInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35); rtSpeedInput.Text = "180"; rtSpeedInput.TextColor3 = Color3.new(1,1,1); rtSpeedInput.Font = "GothamBold"; rtSpeedInput.TextSize = 9; rtSpeedInput.PlaceholderText = "SPEED"; Instance.new("UICorner", rtSpeedInput); rtSpeedInput.FocusLost:Connect(function() rtSpeed = tonumber(rtSpeedInput.Text) or 180 end)
 local rtBtn = createBtn("AUTO FARM", rtContent)
 
--- [[ LOGIC ]]
+-- HUD Info
+local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Active = true; miniHud.Draggable = true; Instance.new("UIStroke", miniHud).Color = clr_accent; Instance.new("UICorner", miniHud)
+local moneyLabel = Instance.new("TextLabel", miniHud); moneyLabel.Size = UDim2.new(1, -20, 0, 20); moneyLabel.Position = UDim2.new(0, 10, 0, 5); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = clr_accent; moneyLabel.BackgroundTransparency = 1; moneyLabel.Font = "GothamBold"; moneyLabel.TextSize = 10; moneyLabel.TextXAlignment = "Left"
+local raceLabel = Instance.new("TextLabel", miniHud); raceLabel.Size = UDim2.new(1, -20, 0, 20); raceLabel.Position = UDim2.new(0, 10, 0, 23); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.BackgroundTransparency = 1; raceLabel.Font = "GothamBold"; raceLabel.TextSize = 10; raceLabel.TextXAlignment = "Left"
+local fpsLabel = Instance.new("TextLabel", miniHud); fpsLabel.Size = UDim2.new(1, -20, 0, 20); fpsLabel.Position = UDim2.new(0, 10, 0, 41); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.BackgroundTransparency = 1; fpsLabel.Font = "GothamBold"; fpsLabel.TextSize = 10; fpsLabel.TextXAlignment = "Left"
+
+-- [[ LOGIC CONTROL ]]
 farmBtn.MouseButton1Click:Connect(function() 
     if not running then 
         rtRunning = false; rtBtn.Text = "AUTO FARM"
-        applySuperLowGraphics() -- VOID HANYA DI RACE
+        applySuperLowGraphics()
     else 
         resetGraphics() 
     end
@@ -148,7 +169,7 @@ end)
 rtBtn.MouseButton1Click:Connect(function()
     if not rtRunning then 
         running = false; farmBtn.Text = "AUTO RACE (1-41)"
-        resetGraphics() -- PASTIKAN GRAFIK NORMAL SAAT FARM
+        resetGraphics() 
     end
     rtRunning = not rtRunning
     rtBtn.Text = rtRunning and "STOP FARM" or "AUTO FARM"
@@ -165,8 +186,10 @@ rtBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- [TASKS]
-local currentTarget = rtEndPos
+purgeBtn.MouseButton1Click:Connect(applyDeepClean)
+cpuBtn.MouseButton1Click:Connect(function() renderingEnabled = not renderingEnabled; RunService:Set3dRenderingEnabled(renderingEnabled); cpuBtn.Text = renderingEnabled and "NEON DARK: OFF" or "NEON DARK: ON" end)
+
+-- [RACE TASK]
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -188,14 +211,16 @@ task.spawn(function()
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0); car:PivotTo(cf); task.wait(0.05); seat.AssemblyLinearVelocity = cf.LookVector * 165; task.wait(dtVal) 
                         end
                         task.wait(2); local gain = getPlayerMoney() - moneyBeforeRace
-                        if gain > 0 then sessionRaces = sessionRaces + 1; sendReport(gain, totalMoneyEarned, sessionRaces) end
+                        if gain > 0 then sessionRaces = sessionRaces + 1; raceLabel.Text = "Races: " .. sessionRaces; sendReport(gain, totalMoneyEarned, sessionRaces) end
                     end
                 end
-            end
+            else status.Text = "● SIT IN CAR!" end
         end
     end
 end)
 
+-- [FARM TASK]
+local currentTarget = rtEndPos
 task.spawn(function()
     while true do
         task.wait(0.01)
@@ -213,3 +238,27 @@ task.spawn(function()
         end
     end
 end)
+
+-- [MINIMIZE SYSTEM]
+local function setupMinimize(btn, frame, cnt, sizeOpen, sizeClose)
+    local closed = false
+    btn.MouseButton1Click:Connect(function()
+        closed = not closed; cnt.Visible = not closed
+        frame:TweenSize(closed and sizeClose or sizeOpen, "Out", "Quad", 0.3, true)
+        btn.Text = closed and "+" or "−"
+    end)
+end
+setupMinimize(toggleBtn, mainFrame, content, UDim2.new(0, 240, 0, 185), UDim2.new(0, 240, 0, 35))
+setupMinimize(rtToggleBtn, rtFrame, rtContent, UDim2.new(0, 240, 0, 185), UDim2.new(0, 240, 0, 35))
+
+-- [STATS UPDATE]
+task.spawn(function()
+    local initialMoney = getPlayerMoney()
+    while task.wait(1) do
+        local currentMoney = getPlayerMoney()
+        if currentMoney > initialMoney then totalMoneyEarned = totalMoneyEarned + (currentMoney - initialMoney); initialMoney = currentMoney; moneyLabel.Text = "Profit: $" .. totalMoneyEarned
+        elseif currentMoney < initialMoney then initialMoney = currentMoney end
+    end
+end)
+
+task.spawn(function() local lastUpdate, frames = tick(), 0 RunService.RenderStepped:Connect(function() frames = frames + 1 if tick() - lastUpdate >= 1 then fpsLabel.Text = "FPS: " .. frames; frames = 0; lastUpdate = tick() end end) end)
