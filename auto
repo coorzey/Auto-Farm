@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: STABLE DUAL WEBHOOK + CLOUD OPTIMIZED
--- FIX: WEBHOOK PROFIT CALCULATION
+-- FIX: ABSOLUTE WEBHOOK SYNC
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -45,7 +45,7 @@ end)
 
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
-_G.LastRaceGain = 0 -- Global variable untuk menangkap profit terakhir
+_G.LastRaceGain = 0 
 local running, isMinimized = false, false
 
 -- FUNGSI SUPER LOW GRAPHIC + PURGE
@@ -143,7 +143,7 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- [[ UI SYSTEM - PERFECTED & NEON HYBRID ]]
+-- [[ UI SYSTEM ]]
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 
@@ -218,10 +218,8 @@ local function setNeonTheme(active)
     end
 end
 
--- [[ UPDATED TRANSITION LOGIC ]]
 toggleBtn.MouseButton1Click:Connect(function()   
     isMinimized = not isMinimized
-    
     if isMinimized then
         task.delay(0.05, function() content.Visible = false end)
         frame:TweenSize(UDim2.new(0, 240, 0, 35), "Out", "Quad", 0.3, true)
@@ -273,7 +271,42 @@ farmBtn.MouseButton1Click:Connect(function()
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
 end)
 
--- MAIN LOOP (TIDAK DIUBAH PATHNYA)
+-- WEBHOOK CORE
+local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
+local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
+
+local HttpService = game:GetService("HttpService")
+local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
+
+local function sendWebhook(url, gain, total, races, isOffline)
+    if not url or url == "" then return end
+    local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
+    local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
+    local data = {
+        ["embeds"] = {{
+            ["title"] = isOffline and "⚠️ STUCK DETECTED - NO PROFIT" or "🚀 CORRZEY HUB - AUTO REPORT",
+            ["color"] = isOffline and 16711680 or 65430,
+            ["fields"] = {
+                {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
+                {["name"] = isOffline and "💰 Total Profit" or "💰 Race Profit", ["value"] = "```$" .. tostring(isOffline and total or gain) .. "```", ["inline"] = true},
+                {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
+                {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fpsStr .. " | RAM: " .. memStr, ["inline"] = false},
+            },
+            ["footer"] = {["text"] = "V58.6 Cloud Optimized • " .. os.date("%X")},
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
+    }
+    local payload = HttpService:JSONEncode(data)
+    pcall(function()
+        if httpRequest then
+            httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
+        else
+            HttpService:PostAsync(url, payload)
+        end
+    end)
+end
+
+-- MAIN LOOP (WITH FIXED SYNC)
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -290,7 +323,6 @@ task.spawn(function()
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
                 
                 status.Text = "● WAITING RIVAL..."
-                
                 local rivalFound = false
                 repeat 
                     task.wait(1) 
@@ -333,21 +365,27 @@ task.spawn(function()
                             seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                             task.wait(dtVal) 
                         end
+                        
+                        -- [[ SYNC POINT ]]
                         status.Text = "● FINISHING..."
                         dtStatusLabel.Text = "DELAY: 0s"
-                        task.spawn(function()
-                            for _ = 1, 15 do 
-                                closePrizePopup()
-                                task.wait(0.3)
-                            end
-                        end)
-                        task.wait(2)
-                        local gain = getPlayerMoney() - moneyBeforeRace
+                        task.wait(3) -- Tunggu server update uang
+                        
+                        local currentMoney = getPlayerMoney()
+                        local gain = currentMoney - moneyBeforeRace
+                        
                         if gain > 0 then 
-                            _G.LastRaceGain = gain -- UPDATE DISINI
-                            totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
-                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
+                            totalMoneyEarned = totalMoneyEarned + gain
+                            sessionRaces = sessionRaces + 1
+                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned
+                            raceLabel.Text = "Races: " .. sessionRaces
+                            
+                            -- LANGSUNG KIRIM WEBHOOK DISINI (BIAR PASTI)
+                            task.spawn(function()
+                                sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false)
+                            end)
                         end
+                        
                         status.Text = "● LOOP RESTARTING..."
                         task.wait(2)
                     end
@@ -357,71 +395,19 @@ task.spawn(function()
     end
 end)
 
--- WEBHOOK SYSTEM (OPTIMIZED)
-local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
-local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
-
-local HttpService = game:GetService("HttpService")
-local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
-
-local function sendWebhook(url, gain, total, races, isOffline)
-    if not url or url == "" then return end
-    local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
-    local memStr = tostring(math.floor(Stats:GetTotalMemoryUsageMb())) .. " MB"
-    local data = {
-        ["embeds"] = {{
-            ["title"] = isOffline and "⚠️ STUCK DETECTED - NO PROFIT" or "🚀 CORRZEY HUB - AUTO REPORT",
-            ["color"] = isOffline and 16711680 or 65430,
-            ["fields"] = {
-                {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
-                {["name"] = isOffline and "💰 Total Profit" or "💰 Race Profit", ["value"] = "```$" .. tostring(isOffline and total or gain) .. "```", ["inline"] = true},
-                {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
-                {["name"] = "⚡ Performance", ["value"] = "FPS: " .. fpsStr .. " | RAM: " .. memStr, ["inline"] = false},
-            },
-            ["footer"] = {["text"] = "V58.6 Cloud Optimized • " .. os.date("%X")},
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
-        }}
-    }
-    local payload = HttpService:JSONEncode(data)
-    local function executeRequest()
-        pcall(function()
-            if httpRequest then
-                httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
-            else
-                HttpService:PostAsync(url, payload)
-            end
-        end)
-    end
-    if isOffline then executeRequest() else task.spawn(executeRequest) end
-end
-
+-- SHUTDOWN HANDLER
 local function onShutdown() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end
 Players.PlayerRemoving:Connect(function(player) if player == LP then onShutdown() end end)
 game:BindToClose(onShutdown)
 
--- FIX: WEBHOOK PROFIT MONITOR
-task.spawn(function()
-    local lastRacesReported = 0
-    while task.wait(5) do
-        if sessionRaces > lastRacesReported then
-            local reportGain = _G.LastRaceGain or 0
-            sendWebhook(MAIN_WEBHOOK, reportGain, totalMoneyEarned, sessionRaces, false)
-            lastRacesReported = sessionRaces
-            _G.LastRaceGain = 0 -- Reset setelah lapor
-        end
-    end
-end)
-
--- [[ NEW: STUCK DETECTION SYSTEM (4 MINUTES) ]]
+-- STUCK DETECTION
 task.spawn(function()
     local lastMoney = getPlayerMoney()
     local lastTimeMoneyChanged = tick()
     local stuckReported = false
-
     while task.wait(10) do
         if running then
             local currentMoney = getPlayerMoney()
-            
             if currentMoney > lastMoney then
                 lastMoney = currentMoney
                 lastTimeMoneyChanged = tick()
