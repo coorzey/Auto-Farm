@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: STABLE DUAL WEBHOOK + CLOUD OPTIMIZED
--- FIX: BUTTON INTERACTION + TOTAL PROFIT RESTORE
+-- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING)
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -234,12 +234,24 @@ task.spawn(function()
                 
                 applyDeepClean()
                 closePrizePopup()
+                
+                -- [[ FIX: FORCE STOP BEFORE TELEPORT ]]
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
+                -- [[ FIX: DOUBLE RESET AFTER TELEPORT ]]
+                task.wait(0.05)
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 
                 status.Text = "● WAITING RIVAL..."
                 local rivalFound = false
                 repeat 
                     task.wait(1)
+                    if seat then
+                        seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                        seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                    end
                     for _, p in pairs(Players:GetPlayers()) do 
                         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                             local rHum = p.Character:FindFirstChildOfClass("Humanoid")
@@ -255,6 +267,11 @@ task.spawn(function()
                     for i = 18, 1, -1 do 
                         if not running then break end
                         status.Text = "● START IN: "..i.."s"
+                        -- Force diam selama countdown
+                        if seat then
+                            seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                        end
                         task.wait(1) 
                     end
                     
@@ -264,6 +281,7 @@ task.spawn(function()
                             status.Text = "● RACING: " .. i .. "/41"
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                             car:PivotTo(cf)
                             task.wait(0.05)
                             seat.AssemblyLinearVelocity = cf.LookVector * 165
@@ -294,7 +312,7 @@ task.spawn(function()
     end
 end)
 
--- BUTTON LOGIC (FIXED)
+-- BUTTON LOGIC
 toggleBtn.MouseButton1Click:Connect(function()   
     isMinimized = not isMinimized
     content.Visible = not isMinimized
@@ -316,7 +334,6 @@ end)
 
 purgeBtn.MouseButton1Click:Connect(function() applyDeepClean() end)
 
--- FPS SYNC
 task.spawn(function()
     while task.wait(1) do
         fpsLabel.Text = "FPS: " .. (renderingEnabled and "Active" or "Reduced")
