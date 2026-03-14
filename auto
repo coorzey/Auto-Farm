@@ -198,14 +198,23 @@ rtSpeedInput.FocusLost:Connect(function() rtSpeed = tonumber(rtSpeedInput.Text) 
 local rtBtn = createBtn("AUTO FARM", rtContent)
 local rtInfo = Instance.new("TextLabel", rtContent); rtInfo.Size = UDim2.new(1, 0, 0, 15); rtInfo.Text = "STATUS: IDLE"; rtInfo.TextColor3 = Color3.new(0.6, 0.6, 0.6); rtInfo.BackgroundTransparency = 1; rtInfo.Font = "GothamBold"; rtInfo.TextSize = 9
 
+-- VARIABEL TARGET GLOBAL UNTUK TRACKING
+local currentTarget = rtEndPos
+
 rtBtn.MouseButton1Click:Connect(function()
-    rtRunning = not rtRunning; rtBtn.Text = rtRunning and "STOP FARM" or "AUTO FARM"; rtBtn.BackgroundColor3 = rtRunning and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35)
+    rtRunning = not rtRunning
+    rtBtn.Text = rtRunning and "STOP FARM" or "AUTO FARM"
+    rtBtn.BackgroundColor3 = rtRunning and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35)
+    
     if rtRunning then 
         pcall(function()
-            local hum = LP.Character:FindFirstChildOfClass("Humanoid"); local seat = hum.SeatPart
+            local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+            local seat = hum and hum.SeatPart
             if seat then
                 local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
+                -- TELEPORT INSTAN KE START SAAT DITEKAN
                 car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0), rtEndPos))
+                currentTarget = rtEndPos -- Set target awal ke ujung
             end
         end)
     end
@@ -213,7 +222,6 @@ end)
 
 -- [[ SEAMLESS AUTO FARM LOGIC ]]
 task.spawn(function()
-    local target = rtEndPos
     while true do
         task.wait(0.01)
         if rtRunning then
@@ -224,14 +232,14 @@ task.spawn(function()
                     local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                     
                     rtStatus.Text = "● ACTIVE"
-                    rtInfo.Text = (target == rtEndPos) and "GOING TO END..." or "GOING TO START..."
+                    rtInfo.Text = (currentTarget == rtEndPos) and "GOING TO END..." or "GOING TO START..."
                     
-                    local direction = (target - seat.Position).Unit
+                    local direction = (currentTarget - seat.Position).Unit
                     seat.AssemblyLinearVelocity = direction * rtSpeed
-                    car:PivotTo(CFrame.new(seat.Position, target))
+                    car:PivotTo(CFrame.new(seat.Position, currentTarget))
                     
-                    if (seat.Position - target).Magnitude < 35 then
-                        target = (target == rtEndPos) and rtStartPos or rtEndPos
+                    if (seat.Position - currentTarget).Magnitude < 35 then
+                        currentTarget = (currentTarget == rtEndPos) and rtStartPos or rtEndPos
                     end
                 else 
                     rtStatus.Text = "● SIT IN CAR!" 
