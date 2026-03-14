@@ -1,5 +1,6 @@
 -- ==========================================  
--- V59.2 FINAL REBORN - VOID WORLD OPTIMIZATION
+-- V59.2 FINAL REBORN - OPTIMIZED VOID
+-- MOBIL TETAP UTUH & TERLIHAT JELAS
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -39,62 +40,49 @@ local function sendReport(gain, total, races)
     pcall(function() if httpRequest then httpRequest({Url = MAIN_WEBHOOK, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end end)
 end
 
--- [[ FIXED: VOID WORLD LOGIC - ONLY KEEP ROADS & CARS ]]
+-- [[ UPDATED: SUPER LOW GRAPHICS - ONLY CARS & ROADS VISIBLE ]]
 local function applySuperLowGraphics()
     pcall(function()
         settings().Rendering.QualityLevel = 1
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 9e9
-        Lighting.EnvironmentDiffuseScale = 0
-        Lighting.EnvironmentSpecularScale = 0
         
-        -- Mengubah langit menjadi hitam agar terasa seperti Void
-        local sky = Lighting:FindFirstChildOfClass("Sky")
-        if not sky then sky = Instance.new("Sky", Lighting) end
-        sky.SkyboxBk = "rbxassetid://0"
-        sky.SkyboxDn = "rbxassetid://0"
-        sky.SkyboxFt = "rbxassetid://0"
-        sky.SkyboxLf = "rbxassetid://0"
-        sky.SkyboxRt = "rbxassetid://0"
-        sky.SkyboxUp = "rbxassetid://0"
-        sky.SunTextureId = "rbxassetid://0"
-        sky.MoonTextureId = "rbxassetid://0"
-
         for _, v in pairs(Workspace:GetDescendants()) do
-            -- PROTEKSI: Jangan menyentuh karakter pemain
+            -- Abaikan karakter pemain agar tidak hilang
             if v:IsDescendantOf(LP.Character) then continue end
 
-            -- Deteksi apakah objek adalah Mobil (berdasarkan VehicleSeat atau struktur Model)
-            local isCarModel = v:IsA("Model") and (v:FindFirstChildOfClass("VehicleSeat") or v:FindFirstChild("Wheels") or v:FindFirstChild("Body"))
-            local isPartInCar = v:IsA("BasePart") and (v:FindFirstAncestorOfClass("Model") and (v:FindFirstAncestorOfClass("Model"):FindFirstChildOfClass("VehicleSeat")))
+            -- Deteksi apakah ini bagian dari Mobil (punya VehicleSeat di modelnya)
+            local isCarPart = false
+            local parentModel = v:FindFirstAncestorOfClass("Model")
+            if parentModel then
+                if parentModel:FindFirstChildOfClass("VehicleSeat") or parentModel:FindFirstChild("Body") or parentModel:FindFirstChild("Wheels") then
+                    isCarPart = true
+                end
+            end
 
             if v:IsA("BasePart") then
-                -- JANGAN sembunyikan part mobil
-                if isPartInCar then 
-                    v.Material = Enum.Material.SmoothPlastic -- Sederhanakan material mobil agar ringan
-                    continue 
+                if isCarPart then
+                    -- MOBIL: Tetap utuh dan terlihat jelas
+                    v.Transparency = 0
+                    v.Material = Enum.Material.SmoothPlastic
+                    continue
                 end
 
-                -- Deteksi Jalanan/Dasar (menggunakan filter nama umum)
+                -- JALANAN/DASAR: Tetap ada agar tidak jatuh
                 local name = v.Name:lower()
-                local isGround = name:find("road") or name:find("street") or name:find("track") or name:find("asphalt") or name:find("concrete") or name:find("floor") or name:find("base") or name:find("ground")
+                local isGround = name:find("road") or name:find("street") or name:find("track") or name:find("floor") or name:find("base")
                 
                 if isGround then
-                    -- Biarkan jalanan terlihat, tapi buat sangat sederhana
-                    v.Material = Enum.Material.SmoothPlastic
-                    v.Color = Color3.fromRGB(50, 50, 50) -- Abu-abu gelap
                     v.Transparency = 0
+                    v.Material = Enum.Material.SmoothPlastic
+                    v.Color = Color3.fromRGB(50, 50, 50)
                     v.CanCollide = true
                 else
-                    -- SEMBUNYIKAN SEMUA YANG LAIN (Gedung, Pohon, dll)
+                    -- LAINNYA: Gedung, pohon, rumput dibuat transparan 100%
                     v.Transparency = 1
-                    v.CanCollide = false -- Matikan tabrakan agar tidak tersangkut objek tak terlihat
+                    v.CanCollide = false
                 end
-            elseif v:IsA("Model") and isCarModel then
-                -- Biarkan model mobil utuh
-                continue
-            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("PostEffect") then
-                -- Hapus efek visual dan dekorasi
+            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") then
                 v:Destroy()
             end
         end
@@ -206,7 +194,7 @@ end)
 rtBtn.MouseButton1Click:Connect(function()
     if not rtRunning then 
         stopAutoRace() 
-        applySuperLowGraphics() -- DIPICU SAAT AKTIF
+        applySuperLowGraphics() 
     end
     rtRunning = not rtRunning
     rtBtn.Text = rtRunning and "STOP FARM" or "AUTO FARM"
