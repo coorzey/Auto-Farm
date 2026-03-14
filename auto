@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: STABLE DUAL WEBHOOK + CLOUD OPTIMIZED
--- OPTIMIZED: STABLE FOR 24/7 WITHOUT CRASHING
+-- FIX: WEBHOOK PROFIT CALCULATION
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -45,6 +45,7 @@ end)
 
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
+_G.LastRaceGain = 0 -- Global variable untuk menangkap profit terakhir
 local running, isMinimized = false, false
 
 -- FUNGSI SUPER LOW GRAPHIC + PURGE
@@ -272,7 +273,7 @@ farmBtn.MouseButton1Click:Connect(function()
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
 end)
 
--- MAIN LOOP (TIDAK DIUBAH)
+-- MAIN LOOP (TIDAK DIUBAH PATHNYA)
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -343,6 +344,7 @@ task.spawn(function()
                         task.wait(2)
                         local gain = getPlayerMoney() - moneyBeforeRace
                         if gain > 0 then 
+                            _G.LastRaceGain = gain -- UPDATE DISINI
                             totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
                         end
@@ -355,7 +357,7 @@ task.spawn(function()
     end
 end)
 
--- WEBHOOK SYSTEM (TIDAK DIUBAH)
+-- WEBHOOK SYSTEM (OPTIMIZED)
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
 
@@ -396,14 +398,16 @@ end
 local function onShutdown() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end
 Players.PlayerRemoving:Connect(function(player) if player == LP then onShutdown() end end)
 game:BindToClose(onShutdown)
+
+-- FIX: WEBHOOK PROFIT MONITOR
 task.spawn(function()
-    local lastRaces = 0
+    local lastRacesReported = 0
     while task.wait(5) do
-        if sessionRaces > lastRaces then
-            local currentGain = getPlayerMoney() - moneyBeforeRace
-            if currentGain <= 0 then currentGain = "Update" end
-            sendWebhook(MAIN_WEBHOOK, currentGain, totalMoneyEarned, sessionRaces, false)
-            lastRaces = sessionRaces
+        if sessionRaces > lastRacesReported then
+            local reportGain = _G.LastRaceGain or 0
+            sendWebhook(MAIN_WEBHOOK, reportGain, totalMoneyEarned, sessionRaces, false)
+            lastRacesReported = sessionRaces
+            _G.LastRaceGain = 0 -- Reset setelah lapor
         end
     end
 end)
@@ -421,10 +425,10 @@ task.spawn(function()
             if currentMoney > lastMoney then
                 lastMoney = currentMoney
                 lastTimeMoneyChanged = tick()
-                stuckReported = false -- Reset status jika uang bertambah
+                stuckReported = false 
             else
                 local duration = tick() - lastTimeMoneyChanged
-                if duration >= 240 then -- 4 Menit tanpa perubahan uang
+                if duration >= 240 then 
                     if not stuckReported then
                         status.Text = "● STATUS: STUCK!"
                         status.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -434,7 +438,6 @@ task.spawn(function()
                 end
             end
         else
-            -- Reset timer jika farm dalam posisi OFF
             lastTimeMoneyChanged = tick()
             lastMoney = getPlayerMoney()
             stuckReported = false
