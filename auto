@@ -1,6 +1,5 @@
 -- ==========================================  
--- V59.2 FINAL REBORN - COMPLETE RESTORED
--- ALL FEATURES + FIX MINIMIZE + REALTIME HUD
+-- V59.2 FINAL REBORN - OPTIMIZED WORLD
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -40,36 +39,34 @@ local function sendReport(gain, total, races)
     pcall(function() if httpRequest then httpRequest({Url = MAIN_WEBHOOK, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end end)
 end
 
--- [ULTRA LOW GRAPHICS - STRIP DOWN WORLD]
+-- [OPTIMIZED LOW GRAPHICS - KEEP CARS & BUILDINGS VISIBLE]
 local function applySuperLowGraphics()
     pcall(function()
         settings().Rendering.QualityLevel = 1
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 9e9
         
-        -- Menghapus objek berat tapi menyisakan jalanan
         for _, v in pairs(Workspace:GetDescendants()) do
-            if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
-                -- Cek apakah objek adalah jalan (biasanya mengandung nama "Road", "Street", "Track" atau "Floor")
-                local isRoad = v.Name:lower():find("road") or v.Name:lower():find("street") or v.Name:lower():find("track") or v.Name:lower():find("floor") or v.Name:lower():find("base")
+            -- PROTEKSI: Jangan hilangkan mobil (VehicleSeat / Car Models)
+            local isCar = v:IsA("Model") and (v:FindFirstChildOfClass("VehicleSeat") or v:FindFirstChild("Body") or v:FindFirstChild("Wheels"))
+            local isPartInCar = v:IsA("BasePart") and (v:FindFirstAncestorOfClass("Model") and (v:FindFirstAncestorOfClass("Model"):FindFirstChildOfClass("VehicleSeat")))
+
+            if v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) and not isCar and not isPartInCar then
+                -- Cek apakah ini jalanan
+                local isRoad = v.Name:lower():find("road") or v.Name:lower():find("street") or v.Name:lower():find("track")
                 
-                if not isRoad then
-                    -- Jika bukan jalan/dasar, hilangkan atau buat transparan & non-collide
-                    v.Transparency = 1
-                    v.CanCollide = false
-                else
-                    -- Jika jalan, buat sangat ringan
+                if isRoad then
                     v.Material = Enum.Material.SmoothPlastic
-                    v.Color = Color3.fromRGB(50, 50, 50) -- Gelap agar nyaman di mata
+                    v.Color = Color3.fromRGB(40, 40, 40)
+                else
+                    -- Gedung & Objek lain tetap ada tapi dibuat transparan & ringan
+                    v.Material = Enum.Material.SmoothPlastic
+                    v.Transparency = 0.5 -- Tetap terlihat tapi tembus pandang (ringan)
+                    v.CanCollide = true -- Tetap bisa menapak jika perlu
                 end
             elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                -- Hapus hiasan yang bikin lag
                 v:Destroy()
-            elseif v:IsA("Model") then
-                -- Hapus model yang terindikasi gedung/pohon/rumput
-                local name = v.Name:lower()
-                if name:find("tree") or name:find("grass") or name:find("building") or name:find("house") or name:find("prop") or name:find("flower") then
-                    v:Destroy()
-                end
             end
         end
     end)
@@ -180,7 +177,7 @@ end)
 rtBtn.MouseButton1Click:Connect(function()
     if not rtRunning then 
         stopAutoRace() 
-        applySuperLowGraphics() -- DIPICU SAAT AKTIF
+        applySuperLowGraphics() 
     end
     rtRunning = not rtRunning
     rtBtn.Text = rtRunning and "STOP FARM" or "AUTO FARM"
@@ -197,7 +194,7 @@ rtBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- [REMAINING FUNCTIONALITY]
+-- [REMAINING LOGIC]
 purgeBtn.MouseButton1Click:Connect(applyDeepClean)
 cpuBtn.MouseButton1Click:Connect(function() renderingEnabled = not renderingEnabled; RunService:Set3dRenderingEnabled(renderingEnabled); cpuBtn.Text = renderingEnabled and "NEON DARK: OFF" or "NEON DARK: ON" end)
 
