@@ -1,6 +1,5 @@
 -- ==========================================  
--- V59.2 FINAL REBORN - OPTIMIZED VOID
--- MOBIL TETAP UTUH & TERLIHAT JELAS
+-- V59.2 FINAL REBORN - GRAPHIC SWITCHER
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -40,7 +39,29 @@ local function sendReport(gain, total, races)
     pcall(function() if httpRequest then httpRequest({Url = MAIN_WEBHOOK, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end end)
 end
 
--- [[ UPDATED: SUPER LOW GRAPHICS - ONLY CARS & ROADS VISIBLE ]]
+-- [[ RESET GRAPHICS TO NORMAL ]]
+local function resetGraphics()
+    pcall(function()
+        settings().Rendering.QualityLevel = 3 -- Balikkan ke standar (bisa disesuaikan)
+        Lighting.GlobalShadows = true
+        Lighting.FogEnd = 10000 -- Normal fog
+        
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v:IsA("BasePart") then
+                -- Jangan ganggu part pemain
+                if v:IsDescendantOf(LP.Character) then continue end
+                
+                v.Transparency = 0
+                v.CanCollide = true
+                -- Biarkan material kembali ke default (biasanya Plastic atau sesuai aslinya)
+                -- Karena kita tidak simpan material awal, SmoothPlastic adalah pilihan paling aman/bagus
+                v.Material = Enum.Material.Plastic 
+            end
+        end
+    end)
+end
+
+-- [[ SUPER LOW GRAPHICS - VOID MODE ]]
 local function applySuperLowGraphics()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -48,10 +69,8 @@ local function applySuperLowGraphics()
         Lighting.FogEnd = 9e9
         
         for _, v in pairs(Workspace:GetDescendants()) do
-            -- Abaikan karakter pemain agar tidak hilang
             if v:IsDescendantOf(LP.Character) then continue end
 
-            -- Deteksi apakah ini bagian dari Mobil (punya VehicleSeat di modelnya)
             local isCarPart = false
             local parentModel = v:FindFirstAncestorOfClass("Model")
             if parentModel then
@@ -62,13 +81,11 @@ local function applySuperLowGraphics()
 
             if v:IsA("BasePart") then
                 if isCarPart then
-                    -- MOBIL: Tetap utuh dan terlihat jelas
                     v.Transparency = 0
                     v.Material = Enum.Material.SmoothPlastic
                     continue
                 end
 
-                -- JALANAN/DASAR: Tetap ada agar tidak jatuh
                 local name = v.Name:lower()
                 local isGround = name:find("road") or name:find("street") or name:find("track") or name:find("floor") or name:find("base")
                 
@@ -78,18 +95,14 @@ local function applySuperLowGraphics()
                     v.Color = Color3.fromRGB(50, 50, 50)
                     v.CanCollide = true
                 else
-                    -- LAINNYA: Gedung, pohon, rumput dibuat transparan 100%
                     v.Transparency = 1
                     v.CanCollide = false
                 end
-            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") then
-                v:Destroy()
             end
         end
     end)
 end
 
--- [UTILITY FUNCTIONS]
 local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -122,7 +135,7 @@ task.spawn(function() while task.wait(20) do VirtualUser:CaptureController() Vir
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local path = {{pos = {3353.99, -15.28, 883.01}, rot = 68.97}, {pos = {3048.26, -15.26, 680.38}, rot = 68.89}, {pos = {2739.67, -15.11, 570.12}, rot = 70.95}, {pos = {2271.23, -1.68, 411.61}, rot = 73.02}, {pos = {1946.53, 14.22, 306.79}, rot = 71.72}, {pos = {1570.71, 20.61, 186.11}, rot = 74.46}, {pos = {1033.94, 20.61, 92.19}, rot = 87.54}, {pos = {688.36, 20.60, 85.04}, rot = 92.30}, {pos = {-24.31, 20.63, 84.78}, rot = 90.45}, {pos = {-583.41, 20.61, 88.00}, rot = 90.43}, {pos = {-1247.06, 16.11, 121.99}, rot = 101.03}, {pos = {-1910.41, -11.95, 276.76}, rot = 103.87}, {pos = {-2580.79, -8.75, 417.36}, rot = 101.97}, {pos = {-3175.10, 18.31, 542.23}, rot = 101.76}, {pos = {-3916.48, 23.47, 701.48}, rot = 101.44}, {pos = {-4630.57, 31.07, 839.62}, rot = 102.08}, {pos = {-5534.23, 19.75, 1038.44}, rot = 102.18}, {pos = {-6557.41, 9.80, 1251.38}, rot = 101.13}, {pos = {-7277.41, 9.80, 1406.79}, rot = 106.41}, {pos = {-7794.60, 9.80, 1579.01}, rot = 111.81}, {pos = {-8263.78, 9.56, 1777.35}, rot = 112.83}, {pos = {-8805.38, -8.88, 2007.14}, rot = 117.64}, {pos = {-9503.49, -69.46, 2303.26}, rot = 113.14}, {pos = {-10147.54, -111.81, 2578.72}, rot = 112.52}, {pos = {-10895.69, -105.88, 2903.48}, rot = 115.66}, {pos = {-11552.18, -54.42, 3172.93}, rot = 112.78}, {pos = {-12169.96, -17.11, 3435.86}, rot = 112.92}, {pos = {-12767.61, -1.50, 3748.61}, rot = 124.95}, {pos = {-13135.41, -0.86, 4062.97}, rot = 135.41}, {pos = {-13366.22, -0.84, 4319.31}, rot = 146.03}, {pos = {-13670.72, -2.93, 4750.70}, rot = 143.42}, {pos = {-14030.56, -13.39, 5288.52}, rot = 146.34}, {pos = {-14500.27, 3.01, 5985.70}, rot = 145.91}, {pos = {-14892.54, 6.83, 6582.37}, rot = 151.69}, {pos = {-15236.35, 6.83, 7290.60}, rot = 160.16}, {pos = {-15482.54, 3.89, 8031.16}, rot = 165.65}, {pos = {-15675.67, -7.72, 8668.23}, rot = 162.54}, {pos = {-15927.57, -20.54, 9489.28}, rot = 162.16}, {pos = {-16199.67, -2.75, 10369.70}, rot = 162.77}, {pos = {-16348.46, 8.41, 11025.66}, rot = 171.59}, {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}}
 
--- [[ UI SYSTEM - LEFT (AUTO RACE) ]]
+-- [[ UI SYSTEM ]]
 if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 local clr_bg, clr_stroke, clr_accent = Color3.fromRGB(18, 18, 18), Color3.fromRGB(40, 40, 40), Color3.fromRGB(255, 215, 0)
@@ -149,19 +162,16 @@ local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", content)
 local cpuBtn = createBtn("NEON DARK: OFF", content)
 local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 15); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = "GothamBold"; dtStatusLabel.TextSize = 9
 
--- [[ HUD MONEY ]]
 local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Active = true; miniHud.Draggable = true; Instance.new("UIStroke", miniHud).Color = clr_accent; Instance.new("UICorner", miniHud)
 local moneyLabel = Instance.new("TextLabel", miniHud); moneyLabel.Size = UDim2.new(1, -20, 0, 20); moneyLabel.Position = UDim2.new(0, 10, 0, 5); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = clr_accent; moneyLabel.BackgroundTransparency = 1; moneyLabel.Font = "GothamBold"; moneyLabel.TextSize = 10; moneyLabel.TextXAlignment = "Left"
 local raceLabel = Instance.new("TextLabel", miniHud); raceLabel.Size = UDim2.new(1, -20, 0, 20); raceLabel.Position = UDim2.new(0, 10, 0, 23); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.BackgroundTransparency = 1; raceLabel.Font = "GothamBold"; raceLabel.TextSize = 10; raceLabel.TextXAlignment = "Left"
 local fpsLabel = Instance.new("TextLabel", miniHud); fpsLabel.Size = UDim2.new(1, -20, 0, 20); fpsLabel.Position = UDim2.new(0, 10, 0, 41); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.BackgroundTransparency = 1; fpsLabel.Font = "GothamBold"; fpsLabel.TextSize = 10; fpsLabel.TextXAlignment = "Left"
 
--- [[ UI SYSTEM - RIGHT (AUTO FARM) ]]
 if PlayerGui:FindFirstChild("RoundTripGui") then PlayerGui.RoundTripGui:Destroy() end
 local rtg = Instance.new("ScreenGui", PlayerGui); rtg.Name = "RoundTripGui"; rtg.ResetOnSpawn = false
 local rtStartPos, rtEndPos = Vector3.new(-5300, -15, -1175), Vector3.new(-4109, -15, 4423)
 
-local rtFrame = Instance.new("Frame", rtg); rtFrame.Size = UDim2.new(0, 240, 0, 185); rtFrame.Position = UDim2.new(0.5, 10, 0.4, 0); rtFrame.BackgroundColor3 = clr_bg; rtFrame.Active = true; rtFrame.Draggable = true; rtFrame.ClipsDescendants = true; Instance.new("UICorner", rtFrame)
-Instance.new("UIStroke", rtFrame).Color = clr_stroke 
+local rtFrame = Instance.new("Frame", rtg); rtFrame.Size = UDim2.new(0, 240, 0, 185); rtFrame.Position = UDim2.new(0.5, 10, 0.4, 0); rtFrame.BackgroundColor3 = clr_bg; rtFrame.Active = true; rtFrame.Draggable = true; rtFrame.ClipsDescendants = true; Instance.new("UICorner", rtFrame); Instance.new("UIStroke", rtFrame).Color = clr_stroke 
 
 local rtHeader = Instance.new("Frame", rtFrame); rtHeader.Size = UDim2.new(1, 0, 0, 35); rtHeader.BackgroundTransparency = 1
 local rtStatus = Instance.new("TextLabel", rtHeader); rtStatus.Size = UDim2.new(0.5, 0, 1, 0); rtStatus.Position = UDim2.new(0, 12, 0, 0); rtStatus.Text = "● READY"; rtStatus.TextColor3 = Color3.fromRGB(0, 255, 150); rtStatus.BackgroundTransparency = 1; rtStatus.Font = "GothamBold"; rtStatus.TextSize = 11; rtStatus.TextXAlignment = "Left"
@@ -180,12 +190,31 @@ rtSpeedInput.FocusLost:Connect(function() rtSpeed = tonumber(rtSpeedInput.Text) 
 local rtBtn = createBtn("AUTO FARM", rtContent)
 local rtInfo = Instance.new("TextLabel", rtContent); rtInfo.Size = UDim2.new(1, 0, 0, 15); rtInfo.Text = "STATUS: IDLE"; rtInfo.TextColor3 = Color3.new(0.6, 0.6, 0.6); rtInfo.BackgroundTransparency = 1; rtInfo.Font = "GothamBold"; rtInfo.TextSize = 9
 
--- [[ SWITCH LOGIC ]]
-local function stopAutoFarm() rtRunning = false; rtBtn.Text = "AUTO FARM"; rtBtn.BackgroundColor3 = Color3.fromRGB(35,35,35); rtStatus.Text = "● READY"; rtInfo.Text = "STATUS: IDLE" end
-local function stopAutoRace() running = false; farmBtn.Text = "AUTO RACE (1-41)"; farmBtn.BackgroundColor3 = Color3.fromRGB(35,35,35); status.Text = "● READY" end
+-- [[ SWITCH LOGIC WITH GRAPHIC RESET ]]
+local function stopAutoFarm() 
+    rtRunning = false 
+    rtBtn.Text = "AUTO FARM"
+    rtBtn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    rtStatus.Text = "● READY"
+    rtInfo.Text = "STATUS: IDLE"
+    resetGraphics() -- KEMBALIKAN GRAFIK
+end
+
+local function stopAutoRace() 
+    running = false 
+    farmBtn.Text = "AUTO RACE (1-41)"
+    farmBtn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    status.Text = "● READY"
+    resetGraphics() -- KEMBALIKAN GRAFIK
+end
 
 farmBtn.MouseButton1Click:Connect(function() 
-    if not running then stopAutoFarm() end
+    if not running then 
+        stopAutoFarm() 
+        applySuperLowGraphics() -- AKTIFKAN VOID
+    else 
+        stopAutoRace() 
+    end
     running = not running
     farmBtn.Text = running and "STOP RACE" or "AUTO RACE (1-41)"
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35) 
@@ -194,7 +223,9 @@ end)
 rtBtn.MouseButton1Click:Connect(function()
     if not rtRunning then 
         stopAutoRace() 
-        applySuperLowGraphics() 
+        applySuperLowGraphics() -- AKTIFKAN VOID
+    else
+        stopAutoFarm()
     end
     rtRunning = not rtRunning
     rtBtn.Text = rtRunning and "STOP FARM" or "AUTO FARM"
@@ -211,7 +242,6 @@ rtBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- [REMAINING FUNCTIONALITY]
 purgeBtn.MouseButton1Click:Connect(applyDeepClean)
 cpuBtn.MouseButton1Click:Connect(function() renderingEnabled = not renderingEnabled; RunService:Set3dRenderingEnabled(renderingEnabled); cpuBtn.Text = renderingEnabled and "NEON DARK: OFF" or "NEON DARK: ON" end)
 
