@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: STABLE DUAL WEBHOOK + CLOUD OPTIMIZED
--- FIX: RESTORE TOTAL PROFIT + SYNC REPORT
+-- FIX: BUTTON INTERACTION + TOTAL PROFIT RESTORE
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -156,7 +156,7 @@ frame.Size = UDim2.new(0, 240, 0, 155); frame.Position = UDim2.new(0.5, -120, 0.
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1
+local header = Instance.new("Frame", frame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1; header.ZIndex = 2
 local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.5, 0, 1, 0); status.Position = UDim2.new(0, 12, 0, 0); status.Text = "● READY"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = Enum.Font.GothamBold; status.TextSize = 11; status.TextXAlignment = Enum.TextXAlignment.Left
 
 local rgbLabel = Instance.new("TextLabel", header); rgbLabel.Size = UDim2.new(0, 80, 1, 0); rgbLabel.Position = UDim2.new(1, -115, 0, 0); rgbLabel.Text = "CORRZEY HUB"; rgbLabel.BackgroundTransparency = 1; rgbLabel.Font = Enum.Font.GothamBold; rgbLabel.TextSize = 10; rgbLabel.TextXAlignment = Enum.TextXAlignment.Right
@@ -164,7 +164,7 @@ task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = 
 
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 
-local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 110); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
+local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 110); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
 local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local function createBtn(txt, color, parent)
@@ -198,23 +198,21 @@ local httpRequest = (syn and syn.request) or (http and http.request) or http_req
 
 local function sendWebhook(url, gain, total, races, isOffline)
     if not url or url == "" then return end
-    local fpsStr = fpsLabel.Text:gsub("FPS: ", "")
-    local data = {
-        ["embeds"] = {{
-            ["title"] = isOffline and "⚠️ STUCK DETECTED" or "🚀 CORRZEY HUB - REPORT",
-            ["color"] = isOffline and 16711680 or 65430,
-            ["fields"] = {
-                {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
-                {["name"] = "💰 Race Profit", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
-                {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
-                {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
-                {["name"] = "⚡ FPS", ["value"] = fpsStr, ["inline"] = true},
-            },
-            ["footer"] = {["text"] = "V58.6 • " .. os.date("%X")},
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
-        }}
-    }
     pcall(function()
+        local data = {
+            ["embeds"] = {{
+                ["title"] = isOffline and "⚠️ STUCK DETECTED" or "🚀 CORRZEY HUB - REPORT",
+                ["color"] = isOffline and 16711680 or 65430,
+                ["fields"] = {
+                    {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
+                    {["name"] = "💰 Race Profit", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
+                    {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
+                    {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
+                },
+                ["footer"] = {["text"] = "V58.6 • " .. os.date("%X")},
+                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }}
+        }
         local payload = HttpService:JSONEncode(data)
         if httpRequest then
             httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
@@ -273,15 +271,15 @@ task.spawn(function()
                         end
                         
                         status.Text = "● FINISHING..."
-                        task.wait(3) -- Delay agar server update uang
+                        task.wait(3)
                         
                         local currentMoney = getPlayerMoney()
                         local gain = currentMoney - moneyBeforeRace
                         
                         if gain > 0 then 
-                            totalMoneyEarned = totalMoneyEarned + gain -- Menambah total profit
+                            totalMoneyEarned = totalMoneyEarned + gain
                             sessionRaces = sessionRaces + 1
-                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned -- Update UI Profit
+                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned
                             raceLabel.Text = "Races: " .. sessionRaces
                             
                             task.spawn(function()
@@ -296,10 +294,7 @@ task.spawn(function()
     end
 end)
 
--- SHUTDOWN HANDLER
-game:BindToClose(function() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end)
-
--- BUTTON EVENTS
+-- BUTTON LOGIC (FIXED)
 toggleBtn.MouseButton1Click:Connect(function()   
     isMinimized = not isMinimized
     content.Visible = not isMinimized
@@ -321,9 +316,11 @@ end)
 
 purgeBtn.MouseButton1Click:Connect(function() applyDeepClean() end)
 
+-- FPS SYNC
 task.spawn(function()
     while task.wait(1) do
-        local fps = math.floor(Stats.WorkspaceHttpFetchFinished:GetValue()) -- Dummy FPS jika RenderStepped off
         fpsLabel.Text = "FPS: " .. (renderingEnabled and "Active" or "Reduced")
     end
 end)
+
+game:BindToClose(function() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end)
