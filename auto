@@ -78,7 +78,8 @@ if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destro
 local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 local clr_bg, clr_stroke, clr_accent = Color3.fromRGB(18, 18, 18), Color3.fromRGB(40, 40, 40), Color3.fromRGB(255, 215, 0)
 
-local mainFrame = Instance.new("Frame", sg); mainFrame.Size = UDim2.new(0, 240, 0, 185); mainFrame.Position = UDim2.new(0.05, 0, 0.4, 0); mainFrame.BackgroundColor3 = clr_bg; mainFrame.Active = true; mainFrame.Draggable = true; mainFrame.ClipsDescendants = true; Instance.new("UICorner", mainFrame); Instance.new("UIStroke", mainFrame).Color = clr_stroke
+-- POSISI TENGAH AGAR TIDAK DEMPET
+local mainFrame = Instance.new("Frame", sg); mainFrame.Size = UDim2.new(0, 240, 0, 185); mainFrame.Position = UDim2.new(0.5, -250, 0.4, 0); mainFrame.BackgroundColor3 = clr_bg; mainFrame.Active = true; mainFrame.Draggable = true; mainFrame.ClipsDescendants = true; Instance.new("UICorner", mainFrame); Instance.new("UIStroke", mainFrame).Color = clr_stroke
 
 local header = Instance.new("Frame", mainFrame); header.Size = UDim2.new(1, 0, 0, 35); header.BackgroundTransparency = 1
 local status = Instance.new("TextLabel", header); status.Size = UDim2.new(0.5, 0, 1, 0); status.Position = UDim2.new(0, 12, 0, 0); status.Text = "● READY"; status.TextColor3 = Color3.fromRGB(0, 255, 150); status.BackgroundTransparency = 1; status.Font = "GothamBold"; status.TextSize = 11; status.TextXAlignment = "Left"
@@ -91,15 +92,6 @@ local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new
 local content = Instance.new("Frame", mainFrame); content.Size = UDim2.new(1, -20, 0, 140); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1
 Instance.new("UIListLayout", content).Padding = UDim.new(0, 5)
 
--- LOGIKA MINIMIZE UTAMA
-local isMainMinimized = false
-toggleBtn.MouseButton1Click:Connect(function()
-    isMainMinimized = not isMainMinimized
-    content.Visible = not isMainMinimized
-    mainFrame:TweenSize(isMainMinimized and UDim2.new(0, 240, 0, 35) or UDim2.new(0, 240, 0, 185), "Out", "Quad", 0.3, true)
-    toggleBtn.Text = isMainMinimized and "+" or "−"
-end)
-
 local function createBtn(txt, parent)
     local b = Instance.new("TextButton", parent); b.Size = UDim2.new(1, 0, 0, 30); b.BackgroundColor3 = Color3.fromRGB(35,35,35); b.TextColor3 = Color3.new(1,1,1); b.Font = "GothamBold"; b.TextSize = 9; b.Text = txt; Instance.new("UICorner", b); return b
 end
@@ -109,33 +101,83 @@ local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", content)
 local cpuBtn = createBtn("NEON DARK: OFF", content)
 local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 15); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = "GothamBold"; dtStatusLabel.TextSize = 9
 
--- [[ HUD MONEY - DRAGGABLE & REALTIME ]]
-local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Active = true; miniHud.Draggable = true; Instance.new("UIStroke", miniHud).Color = clr_accent; Instance.new("UICorner", miniHud)
+-- [[ HUD MONEY ]]
+local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0.5, -65, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Active = true; miniHud.Draggable = true; Instance.new("UIStroke", miniHud).Color = clr_accent; Instance.new("UICorner", miniHud)
 local moneyLabel = Instance.new("TextLabel", miniHud); moneyLabel.Size = UDim2.new(1, -20, 0, 20); moneyLabel.Position = UDim2.new(0, 10, 0, 5); moneyLabel.Text = "Profit: $0"; moneyLabel.TextColor3 = clr_accent; moneyLabel.BackgroundTransparency = 1; moneyLabel.Font = "GothamBold"; moneyLabel.TextSize = 10; moneyLabel.TextXAlignment = "Left"
 local raceLabel = Instance.new("TextLabel", miniHud); raceLabel.Size = UDim2.new(1, -20, 0, 20); raceLabel.Position = UDim2.new(0, 10, 0, 23); raceLabel.Text = "Races: 0"; raceLabel.TextColor3 = Color3.new(1,1,1); raceLabel.BackgroundTransparency = 1; raceLabel.Font = "GothamBold"; raceLabel.TextSize = 10; raceLabel.TextXAlignment = "Left"
 local fpsLabel = Instance.new("TextLabel", miniHud); fpsLabel.Size = UDim2.new(1, -20, 0, 20); fpsLabel.Position = UDim2.new(0, 10, 0, 41); fpsLabel.Text = "FPS: 0"; fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 255); fpsLabel.BackgroundTransparency = 1; fpsLabel.Font = "GothamBold"; fpsLabel.TextSize = 10; fpsLabel.TextXAlignment = "Left"
 
--- REAL-TIME MONEY TRACKER
-task.spawn(function()
-    local initialMoney = getPlayerMoney()
-    while task.wait(1) do
-        local currentMoney = getPlayerMoney()
-        if currentMoney > initialMoney then
-            local gain = currentMoney - initialMoney
-            totalMoneyEarned = totalMoneyEarned + gain
-            initialMoney = currentMoney
-            moneyLabel.Text = "Profit: $" .. totalMoneyEarned
-        elseif currentMoney < initialMoney then
-            initialMoney = currentMoney
-        end
+-- [[ UI SYSTEM - RIGHT (AUTO FARM) ]]
+if PlayerGui:FindFirstChild("RoundTripGui") then PlayerGui.RoundTripGui:Destroy() end
+local rtg = Instance.new("ScreenGui", PlayerGui); rtg.Name = "RoundTripGui"; rtg.ResetOnSpawn = false
+local rtStartPos, rtEndPos = Vector3.new(-5300, -15, -1175), Vector3.new(-4109, -15, 4423)
+
+-- POSISI TENGAH AGAR TIDAK DEMPET
+local rtFrame = Instance.new("Frame", rtg); rtFrame.Size = UDim2.new(0, 240, 0, 185); rtFrame.Position = UDim2.new(0.5, 10, 0.4, 0); rtFrame.BackgroundColor3 = clr_bg; rtFrame.Active = true; rtFrame.Draggable = true; rtFrame.ClipsDescendants = true; Instance.new("UIStroke", rtFrame).Color = clr_accent; Instance.new("UICorner", rtFrame)
+
+local rtHeader = Instance.new("Frame", rtFrame); rtHeader.Size = UDim2.new(1, 0, 0, 35); rtHeader.BackgroundTransparency = 1
+local rtStatus = Instance.new("TextLabel", rtHeader); rtStatus.Size = UDim2.new(0.5, 0, 1, 0); rtStatus.Position = UDim2.new(0, 12, 0, 0); rtStatus.Text = "● READY"; rtStatus.TextColor3 = Color3.fromRGB(0, 255, 150); rtStatus.BackgroundTransparency = 1; rtStatus.Font = "GothamBold"; rtStatus.TextSize = 11; rtStatus.TextXAlignment = "Left"
+
+local rtRgbLabel = Instance.new("TextLabel", rtHeader); rtRgbLabel.Size = UDim2.new(0, 80, 1, 0); rtRgbLabel.Position = UDim2.new(1, -115, 0, 0); rtRgbLabel.Text = "CORRZEY HUB"; rtRgbLabel.BackgroundTransparency = 1; rtRgbLabel.Font = "GothamBold"; rtRgbLabel.TextSize = 10; rtRgbLabel.TextXAlignment = "Right"
+task.spawn(function() while true do for i = 0, 1, 0.01 do rtRgbLabel.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.03) end end end)
+
+local rtToggleBtn = Instance.new("TextButton", rtHeader); rtToggleBtn.Size = UDim2.new(0, 24, 0, 24); rtToggleBtn.Position = UDim2.new(1, -30, 0, 5); rtToggleBtn.Text = "−"; rtToggleBtn.TextColor3 = Color3.new(1,1,1); rtToggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", rtToggleBtn)
+
+local rtContent = Instance.new("Frame", rtFrame); rtContent.Size = UDim2.new(1, -20, 0, 140); rtContent.Position = UDim2.new(0, 10, 0, 40); rtContent.BackgroundTransparency = 1
+Instance.new("UIListLayout", rtContent).Padding = UDim.new(0, 5)
+
+local rtSpeedInput = Instance.new("TextBox", rtContent); rtSpeedInput.Size = UDim2.new(1, 0, 0, 30); rtSpeedInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35); rtSpeedInput.Text = "180"; rtSpeedInput.TextColor3 = Color3.new(1,1,1); rtSpeedInput.Font = "GothamBold"; rtSpeedInput.TextSize = 9; rtSpeedInput.PlaceholderText = "SPEED"; Instance.new("UICorner", rtSpeedInput)
+rtSpeedInput.FocusLost:Connect(function() rtSpeed = tonumber(rtSpeedInput.Text) or 180 end)
+
+local rtBtn = createBtn("AUTO FARM", rtContent)
+local rtInfo = Instance.new("TextLabel", rtContent); rtInfo.Size = UDim2.new(1, 0, 0, 15); rtInfo.Text = "STATUS: IDLE"; rtInfo.TextColor3 = Color3.new(0.6, 0.6, 0.6); rtInfo.BackgroundTransparency = 1; rtInfo.Font = "GothamBold"; rtInfo.TextSize = 9
+
+-- [[ LOGIKA AUTO SWITCH & BUTTON UPDATE ]]
+local function stopAutoFarm()
+    rtRunning = false
+    rtBtn.Text = "AUTO FARM"
+    rtBtn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    rtStatus.Text = "● READY"
+    rtInfo.Text = "STATUS: IDLE"
+end
+
+local function stopAutoRace()
+    running = false
+    farmBtn.Text = "AUTO RACE (1-41)"
+    farmBtn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    status.Text = "● READY"
+end
+
+farmBtn.MouseButton1Click:Connect(function() 
+    if not running then stopAutoFarm() end -- Matikan Farm jika Race dinyalakan
+    running = not running
+    farmBtn.Text = running and "STOP RACE" or "AUTO RACE (1-41)"
+    farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35) 
+end)
+
+rtBtn.MouseButton1Click:Connect(function()
+    if not rtRunning then stopAutoRace() end -- Matikan Race jika Farm dinyalakan
+    rtRunning = not rtRunning
+    rtBtn.Text = rtRunning and "STOP FARM" or "AUTO FARM"
+    rtBtn.BackgroundColor3 = rtRunning and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35)
+    if rtRunning then 
+        pcall(function()
+            local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+            local seat = hum and hum.SeatPart
+            if seat then
+                local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
+                car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0), rtEndPos))
+            end
+        end)
     end
 end)
 
--- [RACE LOGIC]
-farmBtn.MouseButton1Click:Connect(function() running = not running; farmBtn.Text = running and "STOP RACE" or "AUTO RACE (1-41)"; farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35) end)
+-- [ANTI LAG / CPU BUTTONS]
 purgeBtn.MouseButton1Click:Connect(applyDeepClean)
 cpuBtn.MouseButton1Click:Connect(function() renderingEnabled = not renderingEnabled; RunService:Set3dRenderingEnabled(renderingEnabled); cpuBtn.Text = renderingEnabled and "NEON DARK: OFF" or "NEON DARK: ON" end)
 
+-- [REMAINING LOGIC (RACE, FARM, HUD, ETC)]
+local currentTarget = rtEndPos
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -165,62 +207,6 @@ task.spawn(function()
     end
 end)
 
--- [[ UI SYSTEM - RIGHT (AUTO FARM / ROAD TRIP) ]]
-if PlayerGui:FindFirstChild("RoundTripGui") then PlayerGui.RoundTripGui:Destroy() end
-local rtg = Instance.new("ScreenGui", PlayerGui); rtg.Name = "RoundTripGui"; rtg.ResetOnSpawn = false
-local rtStartPos, rtEndPos = Vector3.new(-5300, -15, -1175), Vector3.new(-4109, -15, 4423)
-
-local rtFrame = Instance.new("Frame", rtg); rtFrame.Size = UDim2.new(0, 240, 0, 185); rtFrame.Position = UDim2.new(1, -250, 0.4, 0); rtFrame.BackgroundColor3 = clr_bg; rtFrame.Active = true; rtFrame.Draggable = true; rtFrame.ClipsDescendants = true; Instance.new("UIStroke", rtFrame).Color = clr_accent; Instance.new("UICorner", rtFrame)
-
-local rtHeader = Instance.new("Frame", rtFrame); rtHeader.Size = UDim2.new(1, 0, 0, 35); rtHeader.BackgroundTransparency = 1
-local rtStatus = Instance.new("TextLabel", rtHeader); rtStatus.Size = UDim2.new(0.5, 0, 1, 0); rtStatus.Position = UDim2.new(0, 12, 0, 0); rtStatus.Text = "● READY"; rtStatus.TextColor3 = Color3.fromRGB(0, 255, 150); rtStatus.BackgroundTransparency = 1; rtStatus.Font = "GothamBold"; rtStatus.TextSize = 11; rtStatus.TextXAlignment = "Left"
-
-local rtRgbLabel = Instance.new("TextLabel", rtHeader); rtRgbLabel.Size = UDim2.new(0, 80, 1, 0); rtRgbLabel.Position = UDim2.new(1, -115, 0, 0); rtRgbLabel.Text = "CORRZEY HUB"; rtRgbLabel.BackgroundTransparency = 1; rtRgbLabel.Font = "GothamBold"; rtRgbLabel.TextSize = 10; rtRgbLabel.TextXAlignment = "Right"
-task.spawn(function() while true do for i = 0, 1, 0.01 do rtRgbLabel.TextColor3 = Color3.fromHSV(i, 1, 1) task.wait(0.03) end end end)
-
-local rtToggleBtn = Instance.new("TextButton", rtHeader); rtToggleBtn.Size = UDim2.new(0, 24, 0, 24); rtToggleBtn.Position = UDim2.new(1, -30, 0, 5); rtToggleBtn.Text = "−"; rtToggleBtn.TextColor3 = Color3.new(1,1,1); rtToggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", rtToggleBtn)
-
-local rtContent = Instance.new("Frame", rtFrame); rtContent.Size = UDim2.new(1, -20, 0, 140); rtContent.Position = UDim2.new(0, 10, 0, 40); rtContent.BackgroundTransparency = 1
-Instance.new("UIListLayout", rtContent).Padding = UDim.new(0, 5)
-
--- LOGIKA MINIMIZE AUTO FARM
-local isRTMinimized = false
-rtToggleBtn.MouseButton1Click:Connect(function()
-    isRTMinimized = not isRTMinimized
-    rtContent.Visible = not isRTMinimized
-    rtFrame:TweenSize(isRTMinimized and UDim2.new(0, 240, 0, 35) or UDim2.new(0, 240, 0, 185), "Out", "Quad", 0.3, true)
-    rtToggleBtn.Text = isRTMinimized and "+" or "−"
-end)
-
-local rtSpeedInput = Instance.new("TextBox", rtContent); rtSpeedInput.Size = UDim2.new(1, 0, 0, 30); rtSpeedInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35); rtSpeedInput.Text = "180"; rtSpeedInput.TextColor3 = Color3.new(1,1,1); rtSpeedInput.Font = "GothamBold"; rtSpeedInput.TextSize = 9; rtSpeedInput.PlaceholderText = "SPEED"; Instance.new("UICorner", rtSpeedInput)
-rtSpeedInput.FocusLost:Connect(function() rtSpeed = tonumber(rtSpeedInput.Text) or 180 end)
-
-local rtBtn = createBtn("AUTO FARM", rtContent)
-local rtInfo = Instance.new("TextLabel", rtContent); rtInfo.Size = UDim2.new(1, 0, 0, 15); rtInfo.Text = "STATUS: IDLE"; rtInfo.TextColor3 = Color3.new(0.6, 0.6, 0.6); rtInfo.BackgroundTransparency = 1; rtInfo.Font = "GothamBold"; rtInfo.TextSize = 9
-
--- VARIABEL TARGET GLOBAL UNTUK TRACKING
-local currentTarget = rtEndPos
-
-rtBtn.MouseButton1Click:Connect(function()
-    rtRunning = not rtRunning
-    rtBtn.Text = rtRunning and "STOP FARM" or "AUTO FARM"
-    rtBtn.BackgroundColor3 = rtRunning and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(35,35,35)
-    
-    if rtRunning then 
-        pcall(function()
-            local hum = LP.Character:FindFirstChildOfClass("Humanoid")
-            local seat = hum and hum.SeatPart
-            if seat then
-                local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
-                -- TELEPORT INSTAN KE START SAAT DITEKAN
-                car:PivotTo(CFrame.new(rtStartPos + Vector3.new(0, 5, 0), rtEndPos))
-                currentTarget = rtEndPos -- Set target awal ke ujung
-            end
-        end)
-    end
-end)
-
--- [[ SEAMLESS AUTO FARM LOGIC ]]
 task.spawn(function()
     while true do
         task.wait(0.01)
@@ -230,27 +216,39 @@ task.spawn(function()
                 local seat = hum and hum.SeatPart
                 if seat and seat:IsA("VehicleSeat") then
                     local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
-                    
-                    rtStatus.Text = "● ACTIVE"
-                    rtInfo.Text = (currentTarget == rtEndPos) and "GOING TO END..." or "GOING TO START..."
-                    
+                    rtStatus.Text = "● ACTIVE"; rtInfo.Text = (currentTarget == rtEndPos) and "GOING TO END..." or "GOING TO START..."
                     local direction = (currentTarget - seat.Position).Unit
-                    seat.AssemblyLinearVelocity = direction * rtSpeed
-                    car:PivotTo(CFrame.new(seat.Position, currentTarget))
-                    
-                    if (seat.Position - currentTarget).Magnitude < 35 then
-                        currentTarget = (currentTarget == rtEndPos) and rtStartPos or rtEndPos
-                    end
-                else 
-                    rtStatus.Text = "● SIT IN CAR!" 
-                    rtInfo.Text = "SIT IN CAR!" 
-                end
+                    seat.AssemblyLinearVelocity = direction * rtSpeed; car:PivotTo(CFrame.new(seat.Position, currentTarget))
+                    if (seat.Position - currentTarget).Magnitude < 35 then currentTarget = (currentTarget == rtEndPos) and rtStartPos or rtEndPos end
+                else rtStatus.Text = "● SIT IN CAR!"; rtInfo.Text = "SIT IN CAR!" end
             end)
-        else
-            rtStatus.Text = "● READY"
         end
     end
 end)
 
--- [FPS TRACKER]
+-- MINIMIZE LOGIC
+local function setupMinimize(btn, frame, cnt, sizeOpen, sizeClose)
+    local closed = false
+    btn.MouseButton1Click:Connect(function()
+        closed = not closed
+        cnt.Visible = not closed
+        frame:TweenSize(closed and sizeClose or sizeOpen, "Out", "Quad", 0.3, true)
+        btn.Text = closed and "+" or "−"
+    end)
+end
+setupMinimize(toggleBtn, mainFrame, content, UDim2.new(0, 240, 0, 185), UDim2.new(0, 240, 0, 35))
+setupMinimize(rtToggleBtn, rtFrame, rtContent, UDim2.new(0, 240, 0, 185), UDim2.new(0, 240, 0, 35))
+
+task.spawn(function()
+    local initialMoney = getPlayerMoney()
+    while task.wait(1) do
+        local currentMoney = getPlayerMoney()
+        if currentMoney > initialMoney then
+            totalMoneyEarned = totalMoneyEarned + (currentMoney - initialMoney)
+            initialMoney = currentMoney
+            moneyLabel.Text = "Profit: $" .. totalMoneyEarned
+        elseif currentMoney < initialMoney then initialMoney = currentMoney end
+    end
+end)
+
 task.spawn(function() local lastUpdate, frames = tick(), 0 RunService.RenderStepped:Connect(function() frames = frames + 1 if tick() - lastUpdate >= 1 then fpsLabel.Text = "FPS: " .. frames; frames = 0; lastUpdate = tick() end end) end)
