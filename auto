@@ -285,7 +285,7 @@ task.spawn(function()
                             car:PivotTo(cf)
                             task.wait(0.05)
                             seat.AssemblyLinearVelocity = cf.LookVector * 165
-                            task.wait(12) 
+                            task.wait(math.random(12, 18)/10) 
                         end
                         
                         status.Text = "● FINISHING..."
