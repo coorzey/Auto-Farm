@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
--- UPDATE: STABLE DUAL WEBHOOK + CLOUD OPTIMIZED
+-- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED
 -- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING)
 -- ==========================================  
 local Players = game:GetService("Players")   
@@ -143,8 +143,9 @@ local path = {
 }
 
 -- [[ UI SYSTEM ]]
-if PlayerGui:FindFirstChild("DeltaAutoFarm") then PlayerGui.DeltaAutoFarm:Destroy() end   
-local sg = Instance.new("ScreenGui", PlayerGui); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
+local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGui
+if targetUI:FindFirstChild("DeltaAutoFarm") then targetUI.DeltaAutoFarm:Destroy() end   
+local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
 
 local clr_bg = Color3.fromRGB(18, 18, 18)
 local clr_stroke = Color3.fromRGB(40, 40, 40)
@@ -173,7 +174,7 @@ local function createBtn(txt, color, parent)
     return b
 end
 
-local farmBtn = createBtn("START FARMING", clr_btn_off, content)
+local farmBtn = createBtn("AUTO RACE", clr_btn_off, content)
 local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
@@ -205,7 +206,7 @@ local function sendWebhook(url, gain, total, races, isOffline)
                 ["color"] = isOffline and 16711680 or 65430,
                 ["fields"] = {
                     {["name"] = "👤 Player", ["value"] = "||" .. tostring(LP.Name) .. "||", ["inline"] = true},
-                    {["name"] = "💰 Race Profit", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
+                    {["name"] = "💰 Batch Profit", ["value"] = "```$" .. tostring(gain) .. "```", ["inline"] = true},
                     {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
                     {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
                 },
@@ -232,14 +233,11 @@ task.spawn(function()
             if seat and seat:IsA("VehicleSeat") then
                 local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                 
-                applyDeepClean()
                 closePrizePopup()
                 
-                -- [[ FIX: FORCE STOP BEFORE TELEPORT ]]
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                 seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
-                -- [[ FIX: DOUBLE RESET AFTER TELEPORT ]]
                 task.wait(0.05)
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                 seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
@@ -257,17 +255,19 @@ task.spawn(function()
                             local rHum = p.Character:FindFirstChildOfClass("Humanoid")
                             if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 25 and (rHum and rHum.SeatPart) then 
                                 rivalFound = true 
+                                break 
                             end 
                         end
                     end
                 until not running or rivalFound
                 
                 if running and rivalFound then
+                    applyDeepClean() 
+                    
                     moneyBeforeRace = getPlayerMoney()
                     for i = 18, 1, -1 do 
                         if not running then break end
                         status.Text = "● START IN: "..i.."s"
-                        -- Force diam selama countdown
                         if seat then
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                             seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
@@ -300,9 +300,12 @@ task.spawn(function()
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned
                             raceLabel.Text = "Races: " .. sessionRaces
                             
-                            task.spawn(function()
-                                sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false)
-                            end)
+                            -- [UPDATE] Laporan dikirim setiap kelipatan 10 balapan
+                            if sessionRaces % 10 == 0 then
+                                task.spawn(function()
+                                    sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false)
+                                end)
+                            end
                         end
                         task.wait(2)
                     end
@@ -322,8 +325,9 @@ end)
 
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
-    farmBtn.Text = running and "STOP FARM" or "START FARMING"
+    farmBtn.Text = running and "STOP AUTO RACE" or "AUTO RACE"
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
+    if running then applyDeepClean() end 
 end)
 
 cpuBtn.MouseButton1Click:Connect(function()
