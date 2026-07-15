@@ -232,40 +232,34 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- ==== FUNGSI AUTO SPAWN MOBIL UNIVERSAL (UPDATE TARGET) ====
-local TARGET_CAR_NAME = "2025 Hover Nebula R" -- Target nama mobil yang akan di-spawn
-
+-- ==== FUNGSI AUTO SPAWN 2 TAHAP ====
 local function autoSpawnCar()
     pcall(function()
+        -- TAHAP 1: Cari tombol "spawn" dan tekan
         for _, gui in pairs(PlayerGui:GetDescendants()) do
             if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
-                local btnText = (gui:IsA("TextButton") and gui.Text:lower()) or ""
                 local btnName = gui.Name:lower()
-                
-                -- Deteksi tombol berdasarkan nama atau teks umumnya
-                local isSpawnBtn = btnText:find("spawn") or btnText:find("drive") or btnText:find("deploy") or btnName:find("spawn") or btnName:find("drive")
-                
-                -- Deteksi apakah tombol tersebut adalah mobil yang ditargetkan
-                local isCorrectCar = (TARGET_CAR_NAME == "") or (btnText:find(TARGET_CAR_NAME:lower()) or btnName:find(TARGET_CAR_NAME:lower()))
-                
-                if isSpawnBtn and isCorrectCar then
-                    if gui.AbsoluteSize.X > 0 then
-                        -- Fire All Connections
-                        for _, conn in pairs(getconnections(gui.MouseButton1Click)) do conn:Fire() end
-                        for _, conn in pairs(getconnections(gui.MouseButton1Down)) do conn:Fire() end
-                        for _, conn in pairs(getconnections(gui.Activated)) do conn:Fire() end
-                        
-                        -- Alternatif Virtual Click jika UI butuh Mouse event
-                        local pos = gui.AbsolutePosition
-                        local size = gui.AbsoluteSize
-                        VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
-                    end
+                if btnName:find("spawn") then
+                    local pos = gui.AbsolutePosition
+                    VirtualUser:ClickButton1(Vector2.new(pos.X + (gui.AbsoluteSize.X/2), pos.Y + (gui.AbsoluteSize.Y/2) + 45))
+                    task.wait(1) -- Tunggu 1 detik setelah tombol spawn ditekan
+                    break 
+                end
+            end
+        end
+
+        -- TAHAP 2: Klik apa saja di sisi kanan layar
+        local screenSize = workspace.CurrentCamera.ViewportSize
+        for _, gui in pairs(PlayerGui:GetDescendants()) do
+            if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
+                local pos = gui.AbsolutePosition
+                if pos.X > (screenSize.X / 2) then
+                    VirtualUser:ClickButton1(Vector2.new(pos.X + (gui.AbsoluteSize.X/2), pos.Y + (gui.AbsoluteSize.Y/2) + 45))
                 end
             end
         end
     end)
 end
--- ===========================================
 
 -- KOORDINAT (PATH 1-41)
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
@@ -524,7 +518,7 @@ openBtn.Font = Enum.Font.GothamBold
 openBtn.TextSize = 11
 openBtn.Visible = false 
 openBtn.AutoButtonColor = true
-Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", openBtn).CornerRadius = UDim2.new(0, 8)
 
 local openStroke = Instance.new("UIStroke", openBtn)
 openStroke.Color = clr_stroke
