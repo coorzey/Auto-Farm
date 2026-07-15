@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
--- UPDATE: WEBHOOK BATCHING + OPTIMIZED MEMORY & BLACK SCREEN
--- FIX: ANCHOR-LIKE POSITIONING + NEW MINIMIZE UI
+-- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN
+-- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -17,7 +17,7 @@ local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGu
 if targetUI:FindFirstChild("DeltaAutoFarm") then targetUI.DeltaAutoFarm:Destroy() end   
 if targetUI:FindFirstChild("CorrzeyBlackScreen") then targetUI.CorrzeyBlackScreen:Destroy() end
 
--- [NEW] BLACK SCREEN GUI FOR NEON DARK
+-- [TAMBAHAN] BLACK SCREEN GUI FOR NEON DARK
 local blackScreenGui = Instance.new("ScreenGui")
 blackScreenGui.Name = "CorrzeyBlackScreen"
 blackScreenGui.IgnoreGuiInset = true
@@ -34,31 +34,24 @@ bsBg.Parent = blackScreenGui
 local bsText = Instance.new("TextLabel")
 bsText.Size = UDim2.new(1, 0, 1, 0)
 bsText.BackgroundTransparency = 1
-bsText.Text = "RENDERING 3D DINONAKTIFKAN\n(Mode Auto-Farm Berjalan)\n\nKlik 'NEON DARK' di Hub untuk menampilkan game."
+bsText.Text = "LOADING..."
 bsText.TextColor3 = Color3.new(0, 1, 0)
 bsText.Font = Enum.Font.Code
 bsText.TextSize = 20
 bsText.Parent = bsBg
 
--- [UPDATED] OPTIMIZATION GLOBALS (ENGINE + BLACK SCREEN + FPS CAP)
+-- [MODIFIKASI] OPTIMIZATION GLOBALS
 local renderingEnabled = true
 local function toggle3DRender(mode)
     renderingEnabled = mode
-    -- 1. Matikan dari Engine
     pcall(function() RunService:Set3dRenderingEnabled(mode) end)
-    -- 2. Tampilkan Layar Hitam
-    blackScreenGui.Enabled = not mode
-    -- 3. Limit FPS
+    blackScreenGui.Enabled = not mode -- Tampilkan Layar Hitam
     pcall(function()
-        if not mode then
-            setfpscap(10) -- CPU Rileks
-        else
-            setfpscap(60) -- Normal
-        end
+        if not mode then setfpscap(10) else setfpscap(60) end -- Limit FPS
     end)
 end
 
--- [NEW] ADVANCED MEMORY CACHE CLEANER
+-- [TAMBAHAN] ADVANCED MEMORY CACHE CLEANER
 local function ClearMemoryCache()
     pcall(function()
         local Terrain = Workspace:WaitForChild("Terrain")
@@ -68,18 +61,13 @@ local function ClearMemoryCache()
         Terrain.WaterTransparency = 0
         
         for _, effect in pairs(Lighting:GetChildren()) do
-            if effect:IsA("PostEffect") or effect:IsA("BlurEffect") or effect:IsA("SunRaysEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("BloomEffect") or effect:IsA("DepthOfFieldEffect") then
-                effect:Destroy()
-            end
+            if effect:IsA("PostEffect") then effect:Destroy() end
         end
-        
-        if type(gcinfo) == "function" then
-            collectgarbage("collect")
-        end
+        if type(gcinfo) == "function" then collectgarbage("collect") end
     end)
 end
 
--- [UPDATED] AUTO MEMORY CLEANER LOOP (Setiap 3 menit untuk cegah lag spike)
+-- [MODIFIKASI] AUTO MEMORY CLEANER (Ubah jadi 180 detik agar tidak stutter)
 task.spawn(function()
     while task.wait(180) do
         ClearMemoryCache()
@@ -107,7 +95,7 @@ local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
 local running = false
 
--- FUNGSI SUPER LOW GRAPHIC + PURGE
+-- [MODIFIKASI] FUNGSI SUPER LOW GRAPHIC + PURGE
 local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -132,7 +120,7 @@ local function applyDeepClean()
                 v.MeshId = ""
             end
         end
-        -- Panggil ClearMemoryCache setiap kali DeepClean dijalankan
+        -- Disisipkan fungsi pembersihan RAM
         ClearMemoryCache()
     end)
 end
@@ -205,11 +193,8 @@ local path = {
 }
 
 -- [[ UI SYSTEM ]]
-local sg = Instance.new("ScreenGui", targetUI); 
-sg.Name = "DeltaAutoFarm"; 
-sg.ResetOnSpawn = false; 
-sg.IgnoreGuiInset = true
-sg.DisplayOrder = 100 -- Pastikan Hub selalu di atas Black Screen
+local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false; sg.IgnoreGuiInset = true
+sg.DisplayOrder = 100 -- Menjamin UI Hub di atas Black Screen
 
 local clr_bg = Color3.fromRGB(18, 18, 18)
 local clr_stroke = Color3.fromRGB(40, 40, 40)
@@ -260,7 +245,7 @@ local moneyLabel = createHudLbl("Profit: $0", clr_accent, 5)
 local raceLabel = createHudLbl("Races: 0", Color3.new(1,1,1), 23)
 local fpsLabel = createHudLbl("FPS: 0", Color3.fromRGB(0, 255, 255), 41)
 
--- WEBHOOK CORE
+-- WEBHOOK CORE (Dikembalikan seperti versi asli Anda)
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
 
@@ -385,10 +370,9 @@ task.spawn(function()
 end)
 
 -- BUTTON LOGIC
-
 local openBtn = Instance.new("TextButton", sg)
 openBtn.Size = UDim2.new(0, 130, 0, 35)
-openBtn.Position = UDim2.new(0.5, -65, 0, 0)
+openBtn.Position = UDim2.new(0.5, -65, 0, 0) 
 openBtn.BackgroundColor3 = clr_bg
 openBtn.Text = "CORRZEY HUB"
 openBtn.TextColor3 = clr_accent
@@ -403,7 +387,6 @@ openStroke.Color = clr_stroke
 openStroke.Thickness = 1.8
 openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- LOGIC MINIMIZE / MAXIMIZE
 toggleBtn.MouseButton1Click:Connect(function()   
     frame.Visible = false
     openBtn.Visible = true
@@ -429,9 +412,20 @@ end)
 
 purgeBtn.MouseButton1Click:Connect(function() applyDeepClean() end)
 
+-- [TAMBAHAN] LIVE UPDATER LOOP
 task.spawn(function()
     while task.wait(1) do
         fpsLabel.Text = "FPS: " .. (renderingEnabled and "Normal" or "Capped (10)")
+        
+        -- Update UI Layar Hitam secara LIVE
+        if not renderingEnabled then
+            local currentCash = getPlayerMoney()
+            bsText.Text = "RENDERING 3D DINONAKTIFKAN\n(Mode Auto-Farm Berjalan)\n\n" ..
+                          "💰 Uang Saat Ini : $" .. tostring(currentCash) .. "\n" ..
+                          "📈 Profit Sesi   : $" .. tostring(totalMoneyEarned) .. "\n" ..
+                          "🏁 Total Balapan : " .. tostring(sessionRaces) .. "\n\n" ..
+                          "Klik 'NEON DARK' di Hub untuk menampilkan game."
+        end
     end
 end)
 
