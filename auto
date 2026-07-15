@@ -145,7 +145,6 @@ local path = {
 -- [[ UI SYSTEM ]]
 local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGui
 if targetUI:FindFirstChild("DeltaAutoFarm") then targetUI.DeltaAutoFarm:Destroy() end   
--- [UPDATE] Menambahkan IgnoreGuiInset agar menembus topbar mentok ke atas
 local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false; sg.IgnoreGuiInset = true
 
 local clr_bg = Color3.fromRGB(18, 18, 18)
@@ -181,7 +180,14 @@ local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
 
 -- MINI HUD
-local miniHud = Instance.new("Frame", sg); miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0.02, 0); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Draggable = true; miniHud.Active = true; Instance.new("UICorner", miniHud)
+local miniHud = Instance.new("Frame", sg)
+miniHud.Size = UDim2.new(0, 130, 0, 65)
+-- [UPDATE] Posisi Y diubah ke 45 agar tidak menabrak topbar Roblox
+miniHud.Position = UDim2.new(0, 10, 0, 45)
+miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10)
+miniHud.Draggable = true
+miniHud.Active = true
+Instance.new("UICorner", miniHud)
 local hs = Instance.new("UIStroke", miniHud); hs.Color = clr_accent; hs.Thickness = 1.2
 
 local function createHudLbl(txt, col, pos)
@@ -321,10 +327,9 @@ end)
 -- [NEW] BUTTON OPEN HUB (Muncul di tengah atas saat diminimize)
 local openBtn = Instance.new("TextButton", sg)
 openBtn.Size = UDim2.new(0, 130, 0, 35)
--- [UPDATE] Y-Offset diubah ke 0 agar mentok di atas layar
-openBtn.Position = UDim2.new(0.5, -65, 0, 0)
+openBtn.Position = UDim2.new(0.5, -65, 0, 0) -- Mentok di atas layar
 openBtn.BackgroundColor3 = clr_bg
-openBtn.Text = "🚀 OPEN HUB"
+openBtn.Text = "CORRZEY HUB"
 openBtn.TextColor3 = clr_accent
 openBtn.Font = Enum.Font.GothamBold
 openBtn.TextSize = 11
