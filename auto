@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED
--- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING)
+-- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -45,7 +45,7 @@ end)
 
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
-local running, isMinimized = false, false
+local running = false
 
 -- FUNGSI SUPER LOW GRAPHIC + PURGE
 local function applyDeepClean()
@@ -316,11 +316,34 @@ task.spawn(function()
 end)
 
 -- BUTTON LOGIC
+
+-- [NEW] BUTTON OPEN HUB (Muncul di tengah atas saat diminimize)
+local openBtn = Instance.new("TextButton", sg)
+openBtn.Size = UDim2.new(0, 130, 0, 35)
+openBtn.Position = UDim2.new(0.5, -65, 0, 15) -- Di tengah atas layar
+openBtn.BackgroundColor3 = clr_bg
+openBtn.Text = "🚀 OPEN HUB"
+openBtn.TextColor3 = clr_accent
+openBtn.Font = Enum.Font.GothamBold
+openBtn.TextSize = 11
+openBtn.Visible = false -- Disembunyikan dari awal
+openBtn.AutoButtonColor = true
+Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 8)
+
+local openStroke = Instance.new("UIStroke", openBtn)
+openStroke.Color = clr_stroke
+openStroke.Thickness = 1.8
+openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- LOGIC MINIMIZE / MAXIMIZE
 toggleBtn.MouseButton1Click:Connect(function()   
-    isMinimized = not isMinimized
-    content.Visible = not isMinimized
-    frame:TweenSize(isMinimized and UDim2.new(0, 240, 0, 35) or UDim2.new(0, 240, 0, 155), "Out", "Quad", 0.3, true)
-    toggleBtn.Text = isMinimized and "+" or "−"
+    frame.Visible = false
+    openBtn.Visible = true
+end)
+
+openBtn.MouseButton1Click:Connect(function()
+    openBtn.Visible = false
+    frame.Visible = true
 end)
 
 farmBtn.MouseButton1Click:Connect(function()
