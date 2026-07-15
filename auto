@@ -2,6 +2,7 @@
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
 -- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
+-- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -94,6 +95,9 @@ end)
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
 local running = false
+
+-- [TAMBAHAN AUTO DAILY] VARIABEL AUTO DAILY
+local autoDaily = false
 
 -- [MODIFIKASI] FUNGSI SUPER LOW GRAPHIC + PURGE
 local function applyDeepClean()
@@ -202,7 +206,8 @@ local clr_accent = Color3.fromRGB(255, 215, 0)
 local clr_btn_off = Color3.fromRGB(35, 35, 35)
 
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 240, 0, 155); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
+-- [MODIFIKASI AUTO DAILY] Tinggi frame ditambah dari 155 jadi 195 agar muat tombol baru
+frame.Size = UDim2.new(0, 240, 0, 195); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
@@ -214,7 +219,9 @@ task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = 
 
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 
-local content = Instance.new("Frame", frame); content.Size = UDim2.new(1, -20, 0, 110); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
+local content = Instance.new("Frame", frame); 
+-- [MODIFIKASI AUTO DAILY] Tinggi content area ditambah dari 110 jadi 145
+content.Size = UDim2.new(1, -20, 0, 145); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
 local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local function createBtn(txt, color, parent)
@@ -226,6 +233,9 @@ end
 local farmBtn = createBtn("AUTO RACE", clr_btn_off, content)
 local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
+-- [TAMBAHAN AUTO DAILY] Tombol baru ditambahkan ke HUB
+local dailyBtn = createBtn("AUTO DAILY REWARD", clr_btn_off, content)
+
 local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
 
 -- MINI HUD
@@ -277,6 +287,43 @@ local function sendWebhook(url, gain, total, races, isOffline)
         end
     end)
 end
+
+-- [TAMBAHAN AUTO DAILY] SISTEM AUTO CLAIM 
+task.spawn(function()
+    while true do
+        task.wait(5) -- Scan setiap 5 detik
+        if autoDaily then
+            pcall(function()
+                -- OPSI 1: Jika kamu tahu nama Remote Event-nya, uncomment dan ganti ini:
+                -- game:GetService("ReplicatedStorage").Remotes.ClaimDailyReward:FireServer()
+                
+                -- OPSI 2 (Universal): Mencari dan menekan tombol 'Claim' di layar secara otomatis
+                for _, gui in pairs(PlayerGui:GetChildren()) do
+                    if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "DeltaAutoFarm" then
+                        for _, btn in pairs(gui:GetDescendants()) do
+                            if btn:IsA("TextButton") or btn:IsA("ImageButton") then
+                                local btnText = (btn:IsA("TextButton") and btn.Text:lower()) or ""
+                                local btnName = btn.Name:lower()
+                                
+                                -- Mencari kata kunci hadiah
+                                if btnText:find("claim") or btnText:find("daily") or btnText:find("reward") or 
+                                   btnName:find("claim") or btnName:find("daily") then
+                                    
+                                    if btn.Visible and btn.AbsoluteSize.X > 0 then
+                                        -- Menggunakan bypass signal untuk klik instan tanpa menggerakkan mouse
+                                        for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
+                                        for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
+                                        for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
 
 -- MAIN LOOP
 task.spawn(function()
@@ -411,6 +458,13 @@ cpuBtn.MouseButton1Click:Connect(function()
 end)
 
 purgeBtn.MouseButton1Click:Connect(function() applyDeepClean() end)
+
+-- [TAMBAHAN AUTO DAILY] EVENT LISTENER UNTUK TOMBOL BARU
+dailyBtn.MouseButton1Click:Connect(function()
+    autoDaily = not autoDaily
+    dailyBtn.Text = autoDaily and "STOP AUTO DAILY" or "AUTO DAILY REWARD"
+    dailyBtn.BackgroundColor3 = autoDaily and Color3.fromRGB(180, 0, 0) or clr_btn_off
+end)
 
 -- [TAMBAHAN] LIVE UPDATER LOOP
 task.spawn(function()
