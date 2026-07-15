@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
--- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN
+-- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
 -- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
 -- ==========================================  
 local Players = game:GetService("Players")   
@@ -35,7 +35,7 @@ local bsText = Instance.new("TextLabel")
 bsText.Size = UDim2.new(1, 0, 1, 0)
 bsText.BackgroundTransparency = 1
 bsText.Text = "LOADING..."
-bsText.TextColor3 = Color3.new(0, 1, 0)
+bsText.TextColor3 = Color3.new(1, 1, 1) -- SUDAH DIUBAH KE PUTIH
 bsText.Font = Enum.Font.Code
 bsText.TextSize = 20
 bsText.Parent = bsBg
@@ -245,7 +245,7 @@ local moneyLabel = createHudLbl("Profit: $0", clr_accent, 5)
 local raceLabel = createHudLbl("Races: 0", Color3.new(1,1,1), 23)
 local fpsLabel = createHudLbl("FPS: 0", Color3.fromRGB(0, 255, 255), 41)
 
--- WEBHOOK CORE (Dikembalikan seperti versi asli Anda)
+-- WEBHOOK CORE
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
 local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
 
