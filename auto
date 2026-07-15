@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED
--- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI
+-- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -145,7 +145,8 @@ local path = {
 -- [[ UI SYSTEM ]]
 local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGui
 if targetUI:FindFirstChild("DeltaAutoFarm") then targetUI.DeltaAutoFarm:Destroy() end   
-local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false
+-- [UPDATE] Menambahkan IgnoreGuiInset agar menembus topbar mentok ke atas
+local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false; sg.IgnoreGuiInset = true
 
 local clr_bg = Color3.fromRGB(18, 18, 18)
 local clr_stroke = Color3.fromRGB(40, 40, 40)
@@ -320,7 +321,8 @@ end)
 -- [NEW] BUTTON OPEN HUB (Muncul di tengah atas saat diminimize)
 local openBtn = Instance.new("TextButton", sg)
 openBtn.Size = UDim2.new(0, 130, 0, 35)
-openBtn.Position = UDim2.new(0.5, -65, 0, 15) -- Di tengah atas layar
+-- [UPDATE] Y-Offset diubah ke 0 agar mentok di atas layar
+openBtn.Position = UDim2.new(0.5, -65, 0, 0)
 openBtn.BackgroundColor3 = clr_bg
 openBtn.Text = "🚀 OPEN HUB"
 openBtn.TextColor3 = clr_accent
