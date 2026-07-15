@@ -232,7 +232,9 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- ==== FUNGSI AUTO SPAWN MOBIL UNIVERSAL ====
+-- ==== FUNGSI AUTO SPAWN MOBIL UNIVERSAL (UPDATE TARGET) ====
+local TARGET_CAR_NAME = "2025 Hover Nebula R" -- Target nama mobil yang akan di-spawn
+
 local function autoSpawnCar()
     pcall(function()
         for _, gui in pairs(PlayerGui:GetDescendants()) do
@@ -241,7 +243,12 @@ local function autoSpawnCar()
                 local btnName = gui.Name:lower()
                 
                 -- Deteksi tombol berdasarkan nama atau teks umumnya
-                if btnText:find("spawn") or btnText:find("drive") or btnText:find("deploy") or btnName:find("spawn") or btnName:find("drive") then
+                local isSpawnBtn = btnText:find("spawn") or btnText:find("drive") or btnText:find("deploy") or btnName:find("spawn") or btnName:find("drive")
+                
+                -- Deteksi apakah tombol tersebut adalah mobil yang ditargetkan
+                local isCorrectCar = (TARGET_CAR_NAME == "") or (btnText:find(TARGET_CAR_NAME:lower()) or btnName:find(TARGET_CAR_NAME:lower()))
+                
+                if isSpawnBtn and isCorrectCar then
                     if gui.AbsoluteSize.X > 0 then
                         -- Fire All Connections
                         for _, conn in pairs(getconnections(gui.MouseButton1Click)) do conn:Fire() end
@@ -604,3 +611,4 @@ task.spawn(function()
 end)
 
 game:BindToClose(function() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end)
+
