@@ -2,7 +2,7 @@
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
 -- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
--- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS
+-- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS + AUTO SPAWN
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -26,7 +26,7 @@ NotifGui.Name = "CorrzeyNotifications"
 NotifGui.ResetOnSpawn = false
 NotifGui.IgnoreGuiInset = true
 NotifGui.Parent = targetUI
-NotifGui.DisplayOrder = 101 -- Paling atas
+NotifGui.DisplayOrder = 101 
 
 local NotifLayout = Instance.new("Frame", NotifGui)
 NotifLayout.Size = UDim2.new(0, 240, 1, -50) 
@@ -89,15 +89,14 @@ local function SendNotification(title, text, duration, color)
     end)
 end
 
--- Panggil notifikasi selamat datang
 SendNotification("CORRZEY HUB V58.6", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
 
--- BLACK SCREEN GUI FOR NEON DARK
+-- BLACK SCREEN GUI
 local blackScreenGui = Instance.new("ScreenGui")
 blackScreenGui.Name = "CorrzeyBlackScreen"
 blackScreenGui.IgnoreGuiInset = true
 blackScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-blackScreenGui.DisplayOrder = 99 -- Di bawah Hub UI
+blackScreenGui.DisplayOrder = 99 
 blackScreenGui.Enabled = false
 blackScreenGui.Parent = targetUI
 
@@ -112,7 +111,7 @@ bsText.BackgroundTransparency = 1
 bsText.Text = "LOADING..."
 bsText.TextColor3 = Color3.new(1, 1, 1) 
 bsText.Font = Enum.Font.Code
-bsText.TextSize = 18 -- Sedikit dikecilkan agar teks muat banyak
+bsText.TextSize = 18 
 bsText.Parent = bsBg
 
 -- OPTIMIZATION GLOBALS
@@ -142,11 +141,8 @@ local function ClearMemoryCache()
     end)
 end
 
--- AUTO MEMORY CLEANER
 task.spawn(function()
-    while task.wait(180) do
-        ClearMemoryCache()
-    end
+    while task.wait(180) do ClearMemoryCache() end
 end)
 
 -- SUPER ANTI-AFK
@@ -166,14 +162,12 @@ task.spawn(function()
     end
 end)
 
--- [TAMBAHAN ANALYTICS] Tracker Waktu & Data
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
 local running = false
 local autoDaily = false
-local sessionStartTime = os.time() -- Waktu script dieksekusi
+local sessionStartTime = os.time() 
 
--- FUNGSI SUPER LOW GRAPHIC + PURGE
 local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -202,7 +196,6 @@ local function applyDeepClean()
     end)
 end
 
--- FUNGSI CLOSE PRIZE POPUP
 local function closePrizePopup()
     pcall(function()
         for _, gui in pairs(PlayerGui:GetChildren()) do
@@ -211,13 +204,11 @@ local function closePrizePopup()
                     if btn:IsA("ImageButton") or btn:IsA("TextButton") then
                         local n = btn.Name:lower()
                         local t = (btn:IsA("TextButton") and btn.Text:lower()) or ""
-                        
                         if n == "x" or n:find("close") or t == "x" or t:find("close") or n:find("exit") then
                             if btn.Visible and btn.AbsoluteSize.X > 0 then
                                 local pos = btn.AbsolutePosition
                                 local size = btn.AbsoluteSize
                                 VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
-                                
                                 pcall(function()
                                     for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
                                     for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
@@ -240,6 +231,34 @@ local function getPlayerMoney()
     end   
     return 0   
 end   
+
+-- ==== FUNGSI AUTO SPAWN MOBIL UNIVERSAL ====
+local function autoSpawnCar()
+    pcall(function()
+        for _, gui in pairs(PlayerGui:GetDescendants()) do
+            if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
+                local btnText = (gui:IsA("TextButton") and gui.Text:lower()) or ""
+                local btnName = gui.Name:lower()
+                
+                -- Deteksi tombol berdasarkan nama atau teks umumnya
+                if btnText:find("spawn") or btnText:find("drive") or btnText:find("deploy") or btnName:find("spawn") or btnName:find("drive") then
+                    if gui.AbsoluteSize.X > 0 then
+                        -- Fire All Connections
+                        for _, conn in pairs(getconnections(gui.MouseButton1Click)) do conn:Fire() end
+                        for _, conn in pairs(getconnections(gui.MouseButton1Down)) do conn:Fire() end
+                        for _, conn in pairs(getconnections(gui.Activated)) do conn:Fire() end
+                        
+                        -- Alternatif Virtual Click jika UI butuh Mouse event
+                        local pos = gui.AbsolutePosition
+                        local size = gui.AbsoluteSize
+                        VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
+                    end
+                end
+            end
+        end
+    end)
+end
+-- ===========================================
 
 -- KOORDINAT (PATH 1-41)
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
@@ -305,8 +324,6 @@ local farmBtn = createBtn("AUTO RACE", clr_btn_off, content)
 local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dailyBtn = createBtn("AUTO DAILY REWARD", clr_btn_off, content)
-
-local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
 
 -- MINI HUD
 local miniHud = Instance.new("Frame", sg)
@@ -378,8 +395,6 @@ task.spawn(function()
                                         for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
                                         for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
                                         for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end
-                                        
-                                        SendNotification("AUTO DAILY", "Attempted to claim a reward!", 3, Color3.fromRGB(0, 150, 255))
                                     end
                                 end
                             end
@@ -398,6 +413,8 @@ task.spawn(function()
         if running then
             local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
             local seat = hum and hum.SeatPart
+            
+            -- Cek Jika Player Di Dalam Mobil
             if seat and seat:IsA("VehicleSeat") then
                 local car = seat.Parent; while car and not car:IsA("Model") do car = car.Parent end
                 
@@ -479,7 +496,12 @@ task.spawn(function()
                         task.wait(2)
                     end
                 end
-            else status.Text = "● SIT IN CAR!" end
+            else 
+                -- JIKA TIDAK DI DALAM MOBIL -> JALANKAN AUTO SPAWN
+                status.Text = "● AUTO SPAWNING CAR..."
+                autoSpawnCar()
+                task.wait(2.5) -- Delay agar script tidak spam tombol secara brutal
+            end
         end
     end
 end)
@@ -518,13 +540,15 @@ farmBtn.MouseButton1Click:Connect(function()
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
     
     if running then 
+        SendNotification("AUTO SPAWN", "Mencoba men-spawn kendaraan...", 3, Color3.fromRGB(0, 200, 255))
+        autoSpawnCar() -- Mengeksekusi Spawn saat dihidupkan
+        task.wait(1.5) -- Beri waktu sistem memuat mobil
+        
         applyDeepClean() 
-        -- Otomatis masuk ke mode Neon Dark saat Auto Farm menyala
         renderingEnabled = false
         toggle3DRender(renderingEnabled)
         cpuBtn.Text = "NEON DARK: ON"
     else
-        -- Kembali ke mode normal (3D) saat Auto Farm dimatikan
         renderingEnabled = true
         toggle3DRender(renderingEnabled)
         cpuBtn.Text = "NEON DARK: OFF"
@@ -545,7 +569,7 @@ dailyBtn.MouseButton1Click:Connect(function()
     dailyBtn.BackgroundColor3 = autoDaily and Color3.fromRGB(180, 0, 0) or clr_btn_off
 end)
 
--- [MODIFIKASI ANALYTICS] LIVE UPDATER LOOP
+-- LIVE UPDATER LOOP
 task.spawn(function()
     while task.wait(1) do
         fpsLabel.Text = "FPS: " .. (renderingEnabled and "Normal" or "Capped (10)")
@@ -553,7 +577,6 @@ task.spawn(function()
         if not renderingEnabled then
             local currentCash = getPlayerMoney()
             
-            -- Kalkulasi Live Analytics (Waktu & Profit Per Jam)
             local elapsedTime = os.time() - sessionStartTime
             local mph = 0
             local rph = 0
@@ -562,13 +585,11 @@ task.spawn(function()
                 rph = math.floor((sessionRaces / elapsedTime) * 3600)
             end
             
-            -- Format Waktu menjadi HH:MM:SS
             local h = math.floor(elapsedTime / 3600)
             local m = math.floor((elapsedTime % 3600) / 60)
             local s = elapsedTime % 60
             local timeString = string.format("%02d:%02d:%02d", h, m, s)
             
-            -- Update Teks Black Screen
             bsText.Text = "RENDERING 3D DINONAKTIFKAN\n(Mode Auto-Farm Berjalan)\n\n" ..
                           "💰 Uang Saat Ini : $" .. tostring(currentCash) .. "\n" ..
                           "📈 Profit Sesi   : $" .. tostring(totalMoneyEarned) .. "\n" ..
@@ -583,4 +604,3 @@ task.spawn(function()
 end)
 
 game:BindToClose(function() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end)
-
