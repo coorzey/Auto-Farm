@@ -2,7 +2,7 @@
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
 -- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
--- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD
+-- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -12,11 +12,85 @@ local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
+local TweenService = game:GetService("TweenService") -- [TAMBAHAN]
 
 -- [[ TARGET UI SYSTEM ]]
 local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGui
 if targetUI:FindFirstChild("DeltaAutoFarm") then targetUI.DeltaAutoFarm:Destroy() end   
 if targetUI:FindFirstChild("CorrzeyBlackScreen") then targetUI.CorrzeyBlackScreen:Destroy() end
+if targetUI:FindFirstChild("CorrzeyNotifications") then targetUI.CorrzeyNotifications:Destroy() end -- [TAMBAHAN]
+
+-- [[ NOTIFICATION SYSTEM (TAMBAHAN) ]]
+local NotifGui = Instance.new("ScreenGui")
+NotifGui.Name = "CorrzeyNotifications"
+NotifGui.ResetOnSpawn = false
+NotifGui.IgnoreGuiInset = true
+NotifGui.Parent = targetUI
+NotifGui.DisplayOrder = 101 -- Paling atas
+
+local NotifLayout = Instance.new("Frame", NotifGui)
+NotifLayout.Size = UDim2.new(0, 240, 1, -50) 
+NotifLayout.Position = UDim2.new(1, -250, 0, 0) 
+NotifLayout.BackgroundTransparency = 1
+
+local UIListLayout = Instance.new("UIListLayout", NotifLayout)
+UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local function SendNotification(title, text, duration, color)
+    duration = duration or 3
+    color = color or Color3.fromRGB(0, 255, 150)
+
+    local NotifFrame = Instance.new("Frame", NotifLayout)
+    NotifFrame.Size = UDim2.new(0, 0, 0, 55) 
+    NotifFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    NotifFrame.BorderSizePixel = 0
+    NotifFrame.ClipsDescendants = true
+    Instance.new("UICorner", NotifFrame).CornerRadius = UDim.new(0, 6)
+    
+    local UIStroke = Instance.new("UIStroke", NotifFrame)
+    UIStroke.Color = color
+    UIStroke.Thickness = 1.5
+
+    local TitleLbl = Instance.new("TextLabel", NotifFrame)
+    TitleLbl.Size = UDim2.new(1, -10, 0, 20)
+    TitleLbl.Position = UDim2.new(0, 10, 0, 5)
+    TitleLbl.Text = title
+    TitleLbl.TextColor3 = color
+    TitleLbl.Font = Enum.Font.GothamBold
+    TitleLbl.TextSize = 11
+    TitleLbl.BackgroundTransparency = 1
+    TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+    local TextLbl = Instance.new("TextLabel", NotifFrame)
+    TextLbl.Size = UDim2.new(1, -10, 0, 30)
+    TextLbl.Position = UDim2.new(0, 10, 0, 20)
+    TextLbl.Text = text
+    TextLbl.TextColor3 = Color3.new(0.9, 0.9, 0.9)
+    TextLbl.Font = Enum.Font.Gotham
+    TextLbl.TextSize = 10
+    TextLbl.BackgroundTransparency = 1
+    TextLbl.TextXAlignment = Enum.TextXAlignment.Left
+    TextLbl.TextWrapped = true
+
+    local tweenIn = TweenService:Create(NotifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 55)})
+    tweenIn:Play()
+
+    task.spawn(function()
+        task.wait(duration)
+        local tweenOut = TweenService:Create(NotifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 55)})
+        tweenOut:Play()
+        TitleLbl.TextTransparency = 1
+        TextLbl.TextTransparency = 1
+        UIStroke.Transparency = 1
+        tweenOut.Completed:Wait()
+        NotifFrame:Destroy()
+    end)
+end
+
+-- Panggil notifikasi selamat datang
+SendNotification("CORRZEY HUB V58.6", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
 
 -- [TAMBAHAN] BLACK SCREEN GUI FOR NEON DARK
 local blackScreenGui = Instance.new("ScreenGui")
@@ -68,7 +142,7 @@ local function ClearMemoryCache()
     end)
 end
 
--- [MODIFIKASI] AUTO MEMORY CLEANER (Ubah jadi 180 detik agar tidak stutter)
+-- [MODIFIKASI] AUTO MEMORY CLEANER
 task.spawn(function()
     while task.wait(180) do
         ClearMemoryCache()
@@ -124,7 +198,6 @@ local function applyDeepClean()
                 v.MeshId = ""
             end
         end
-        -- Disisipkan fungsi pembersihan RAM
         ClearMemoryCache()
     end)
 end
@@ -206,7 +279,6 @@ local clr_accent = Color3.fromRGB(255, 215, 0)
 local clr_btn_off = Color3.fromRGB(35, 35, 35)
 
 local frame = Instance.new("Frame", sg)   
--- [MODIFIKASI AUTO DAILY] Tinggi frame ditambah dari 155 jadi 195 agar muat tombol baru
 frame.Size = UDim2.new(0, 240, 0, 195); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -220,7 +292,6 @@ task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = 
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 
 local content = Instance.new("Frame", frame); 
--- [MODIFIKASI AUTO DAILY] Tinggi content area ditambah dari 110 jadi 145
 content.Size = UDim2.new(1, -20, 0, 145); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
 local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
 
@@ -233,7 +304,6 @@ end
 local farmBtn = createBtn("AUTO RACE", clr_btn_off, content)
 local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
--- [TAMBAHAN AUTO DAILY] Tombol baru ditambahkan ke HUB
 local dailyBtn = createBtn("AUTO DAILY REWARD", clr_btn_off, content)
 
 local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
@@ -291,13 +361,9 @@ end
 -- [TAMBAHAN AUTO DAILY] SISTEM AUTO CLAIM 
 task.spawn(function()
     while true do
-        task.wait(5) -- Scan setiap 5 detik
+        task.wait(5) 
         if autoDaily then
             pcall(function()
-                -- OPSI 1: Jika kamu tahu nama Remote Event-nya, uncomment dan ganti ini:
-                -- game:GetService("ReplicatedStorage").Remotes.ClaimDailyReward:FireServer()
-                
-                -- OPSI 2 (Universal): Mencari dan menekan tombol 'Claim' di layar secara otomatis
                 for _, gui in pairs(PlayerGui:GetChildren()) do
                     if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "DeltaAutoFarm" then
                         for _, btn in pairs(gui:GetDescendants()) do
@@ -305,15 +371,16 @@ task.spawn(function()
                                 local btnText = (btn:IsA("TextButton") and btn.Text:lower()) or ""
                                 local btnName = btn.Name:lower()
                                 
-                                -- Mencari kata kunci hadiah
                                 if btnText:find("claim") or btnText:find("daily") or btnText:find("reward") or 
                                    btnName:find("claim") or btnName:find("daily") then
                                     
                                     if btn.Visible and btn.AbsoluteSize.X > 0 then
-                                        -- Menggunakan bypass signal untuk klik instan tanpa menggerakkan mouse
                                         for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
                                         for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
                                         for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end
+                                        
+                                        -- [TAMBAHAN] Panggil Notifikasi saat dicoba diklaim
+                                        SendNotification("AUTO DAILY", "Attempted to claim a reward!", 3, Color3.fromRGB(0, 150, 255))
                                     end
                                 end
                             end
@@ -402,6 +469,9 @@ task.spawn(function()
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned
                             raceLabel.Text = "Races: " .. sessionRaces
                             
+                            -- [TAMBAHAN] Panggil Notifikasi saat Race Finish
+                            SendNotification("RACE FINISHED!", "You earned +$" .. gain, 4, Color3.fromRGB(0, 255, 150))
+                            
                             if sessionRaces % 10 == 0 then
                                 task.spawn(function()
                                     sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false)
@@ -459,19 +529,17 @@ end)
 
 purgeBtn.MouseButton1Click:Connect(function() applyDeepClean() end)
 
--- [TAMBAHAN AUTO DAILY] EVENT LISTENER UNTUK TOMBOL BARU
 dailyBtn.MouseButton1Click:Connect(function()
     autoDaily = not autoDaily
     dailyBtn.Text = autoDaily and "STOP AUTO DAILY" or "AUTO DAILY REWARD"
     dailyBtn.BackgroundColor3 = autoDaily and Color3.fromRGB(180, 0, 0) or clr_btn_off
 end)
 
--- [TAMBAHAN] LIVE UPDATER LOOP
+-- LIVE UPDATER LOOP
 task.spawn(function()
     while task.wait(1) do
         fpsLabel.Text = "FPS: " .. (renderingEnabled and "Normal" or "Capped (10)")
         
-        -- Update UI Layar Hitam secara LIVE
         if not renderingEnabled then
             local currentCash = getPlayerMoney()
             bsText.Text = "RENDERING 3D DINONAKTIFKAN\n(Mode Auto-Farm Berjalan)\n\n" ..
