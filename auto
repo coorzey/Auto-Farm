@@ -1,7 +1,8 @@
 -- ==========================================  
--- V58.7 FINAL REBORN - RGB CORRZEY HUB EDITION
--- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN
--- FIX: 2-STEP AUTO SPAWN (DIRECT INPUT VERSION)
+-- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
+-- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
+-- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
+-- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS + AUTO SPAWN
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -88,7 +89,7 @@ local function SendNotification(title, text, duration, color)
     end)
 end
 
-SendNotification("CORRZEY HUB V58.7", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
+SendNotification("CORRZEY HUB V58.6", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
 
 -- BLACK SCREEN GUI
 local blackScreenGui = Instance.new("ScreenGui")
@@ -145,7 +146,10 @@ task.spawn(function()
 end)
 
 -- SUPER ANTI-AFK
-for _, v in pairs(getconnections(LP.Idled)) do v:Disable() end
+for _, v in pairs(getconnections(LP.Idled)) do
+    v:Disable()
+end
+
 task.spawn(function()
     while task.wait(20) do
         pcall(function()
@@ -179,7 +183,9 @@ local function applyDeepClean()
                 v.Material = Enum.Material.SmoothPlastic
                 v.Reflectance = 0
                 v.CastShadow = false
-                if name:find("tree") or name:find("grass") or name:find("bush") or name:find("leaf") then v:Destroy() end
+                if name:find("tree") or name:find("grass") or name:find("bush") or name:find("leaf") then
+                    v:Destroy()
+                end
             elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Sky") or v:IsA("Explosion") then
                 v:Destroy()
             elseif v:IsA("MeshPart") then
@@ -226,51 +232,33 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- ==== FUNGSI AUTO SPAWN MOBIL (DIRECT INPUT VERSION) ====
+-- ==== FUNGSI AUTO SPAWN MOBIL UNIVERSAL ====
 local function autoSpawnCar()
     pcall(function()
-        local function triggerClick(target)
-            pcall(function() target.MouseButton1Click:Fire() end)
-            pcall(function() target.MouseButton1Down:Fire() end)
-            pcall(function() target.Activated:Fire() end)
-            local pos = target.AbsolutePosition + (target.AbsoluteSize / 2)
-            VirtualUser:ClickButton1(Vector2.new(pos.X, pos.Y))
-        end
-
-        -- 1. Cari & Klik "Spawn"
-        local found = false
-        for _, obj in pairs(PlayerGui:GetDescendants()) do
-            if (obj:IsA("TextButton") or obj:IsA("ImageButton")) and obj.Visible then
-                local txt = obj:IsA("TextButton") and obj.Text:lower() or ""
-                if txt:find("spawn") then
-                    triggerClick(obj)
-                    found = true
-                    break
-                end
-            end
-        end
-
-        if not found then return end
-
-        task.wait(3)
-
-        -- 2. Cari & Klik Mobil (Mencari tombol di sisi kanan layar)
-        local screenX = Workspace.CurrentCamera.ViewportSize.X
-        for _, obj in pairs(PlayerGui:GetDescendants()) do
-            if (obj:IsA("TextButton") or obj:IsA("ImageButton")) and obj.Visible then
-                if obj.AbsolutePosition.X > (screenX / 2) then
-                    local name = obj.Name:lower()
-                    if not name:find("close") and not name:find("x") and not name:find("back") then
-                        if obj.AbsoluteSize.X > 50 and obj.AbsoluteSize.Y > 50 then
-                            triggerClick(obj)
-                            break
-                        end
+        for _, gui in pairs(PlayerGui:GetDescendants()) do
+            if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
+                local btnText = (gui:IsA("TextButton") and gui.Text:lower()) or ""
+                local btnName = gui.Name:lower()
+                
+                -- Deteksi tombol berdasarkan nama atau teks umumnya
+                if btnText:find("spawn") or btnText:find("drive") or btnText:find("deploy") or btnName:find("spawn") or btnName:find("drive") then
+                    if gui.AbsoluteSize.X > 0 then
+                        -- Fire All Connections
+                        for _, conn in pairs(getconnections(gui.MouseButton1Click)) do conn:Fire() end
+                        for _, conn in pairs(getconnections(gui.MouseButton1Down)) do conn:Fire() end
+                        for _, conn in pairs(getconnections(gui.Activated)) do conn:Fire() end
+                        
+                        -- Alternatif Virtual Click jika UI butuh Mouse event
+                        local pos = gui.AbsolutePosition
+                        local size = gui.AbsoluteSize
+                        VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
                     end
                 end
             end
         end
     end)
 end
+-- ===========================================
 
 -- KOORDINAT (PATH 1-41)
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
@@ -374,7 +362,7 @@ local function sendWebhook(url, gain, total, races, isOffline)
                     {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
                     {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
                 },
-                ["footer"] = {["text"] = "V58.7 • " .. os.date("%X")},
+                ["footer"] = {["text"] = "V58.6 • " .. os.date("%X")},
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }}
         }
@@ -384,7 +372,7 @@ local function sendWebhook(url, gain, total, races, isOffline)
         else
             HttpService:PostAsync(url, payload)
         end
-    end
+    end)
 end
 
 -- SISTEM AUTO CLAIM 
@@ -500,7 +488,9 @@ task.spawn(function()
                             SendNotification("RACE FINISHED!", "You earned +$" .. gain, 4, Color3.fromRGB(0, 255, 150))
                             
                             if sessionRaces % 10 == 0 then
-                                task.spawn(function() sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false) end)
+                                task.spawn(function()
+                                    sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false)
+                                end)
                             end
                         end
                         task.wait(2)
@@ -510,7 +500,7 @@ task.spawn(function()
                 -- JIKA TIDAK DI DALAM MOBIL -> JALANKAN AUTO SPAWN
                 status.Text = "● AUTO SPAWNING CAR..."
                 autoSpawnCar()
-                task.wait(3) -- Delay agar script tidak spam tombol terlalu agresif
+                task.wait(2.5) -- Delay agar script tidak spam tombol secara brutal
             end
         end
     end
@@ -528,7 +518,11 @@ openBtn.TextSize = 11
 openBtn.Visible = false 
 openBtn.AutoButtonColor = true
 Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 8)
-local openStroke = Instance.new("UIStroke", openBtn); openStroke.Color = clr_stroke; openStroke.Thickness = 1.8; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+local openStroke = Instance.new("UIStroke", openBtn)
+openStroke.Color = clr_stroke
+openStroke.Thickness = 1.8
+openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 toggleBtn.MouseButton1Click:Connect(function()   
     frame.Visible = false
@@ -547,8 +541,8 @@ farmBtn.MouseButton1Click:Connect(function()
     
     if running then 
         SendNotification("AUTO SPAWN", "Mencoba men-spawn kendaraan...", 3, Color3.fromRGB(0, 200, 255))
-        autoSpawnCar() 
-        task.wait(2) 
+        autoSpawnCar() -- Mengeksekusi Spawn saat dihidupkan
+        task.wait(1.5) -- Beri waktu sistem memuat mobil
         
         applyDeepClean() 
         renderingEnabled = false
@@ -582,8 +576,10 @@ task.spawn(function()
         
         if not renderingEnabled then
             local currentCash = getPlayerMoney()
+            
             local elapsedTime = os.time() - sessionStartTime
-            local mph, rph = 0, 0
+            local mph = 0
+            local rph = 0
             if elapsedTime > 0 then
                 mph = math.floor((totalMoneyEarned / elapsedTime) * 3600)
                 rph = math.floor((sessionRaces / elapsedTime) * 3600)
@@ -608,4 +604,3 @@ task.spawn(function()
 end)
 
 game:BindToClose(function() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end)
-
