@@ -1,7 +1,7 @@
 -- ==========================================  
 -- V58.7 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN
--- FIX: 2-STEP AUTO SPAWN (DEEP UI TEXT DETECTION RESOLVED)
+-- FIX: 2-STEP AUTO SPAWN (BRUTE FORCE VERSION)
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -239,72 +239,41 @@ local function clickUI(gui)
     end)
 end
 
--- ==== FUNGSI AUTO SPAWN MOBIL (DIPERBAIKI) ====
+-- ==== FUNGSI AUTO SPAWN MOBIL (BRUTE FORCE) ====
 local function autoSpawnCar()
     pcall(function()
         local screenX = Workspace.CurrentCamera.ViewportSize.X
         
-        -- TAHAP 1: Klik tombol "Spawn" utama di kiri layar
-        local spawnFound = false
+        -- 1. Klik Tombol "Spawn" di Kiri
         for _, gui in pairs(PlayerGui:GetDescendants()) do
             if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
-                local btnName = gui.Name:lower()
                 local btnText = (gui:IsA("TextButton") and gui.Text:lower()) or ""
-                
-                -- DEEP SCAN: Baca text di dalam label (karena tombol sering berupa Image dengan TextLabel di dalamnya)
-                for _, child in pairs(gui:GetDescendants()) do
-                    if child:IsA("TextLabel") then
-                        btnText = btnText .. " " .. child.Text:lower()
-                    end
-                end
-                
-                -- Deteksi kata Spawn tapi bukan Despawn
-                if (btnText:find("spawn") or btnName:find("spawn")) and not btnText:find("despawn") and not btnName:find("despawn") then
-                    if gui.AbsolutePosition.X < (screenX / 2) then
-                        clickUI(gui)
-                        spawnFound = true
-                        break 
-                    end
+                -- Cek apakah ada teks "spawn" di tombol tersebut
+                if btnText:find("spawn") and gui.AbsolutePosition.X < (screenX / 2) then
+                    clickUI(gui)
+                    break 
                 end
             end
         end
 
-        if not spawnFound then return end -- Jangan lanjut ke tahap 2 jika tombol spawn kiri tidak ketemu/tidak ditekan
+        -- 2. Tunggu menu mobil kanan muncul
+        task.wait(2.5) 
 
-        task.wait(1.5) -- Beri waktu agar menu kanan muncul
-
-        -- TAHAP 2: Pilih dan klik kotak mobil di dalam menu kanan
+        -- 3. Klik Mobil di Kanan (Kita klik tombol apa saja yang ada di area kanan)
         for _, gui in pairs(PlayerGui:GetDescendants()) do
             if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
-                local btnName = gui.Name:lower()
-                local btnText = (gui:IsA("TextButton") and gui.Text:lower()) or ""
-                
-                for _, child in pairs(gui:GetDescendants()) do
-                    if child:IsA("TextLabel") then
-                        btnText = btnText .. " " .. child.Text:lower()
-                    end
-                end
-                
+                -- Kita targetkan tombol yang berada di sisi kanan layar
                 if gui.AbsolutePosition.X > (screenX / 2) then
-                    -- Filter tombol merah/tombol lain
-                    if not btnText:find("sell") and not btnText:find("despawn") and not btnName:find("sell") and not btnName:find("despawn") and not btnText:find("get vehicles") and not btnText:find("close") and btnText ~= "x" then
-                        -- Syarat: Kotak harus cukup besar (menghindari klik yang bukan kotak mobil)
-                        if gui.AbsoluteSize.X > 50 and gui.AbsoluteSize.Y > 50 then
+                    -- Hindari klik tombol "Despawn" atau tombol "Close/X"
+                    local btnText = (gui:IsA("TextButton") and gui.Text:lower()) or ""
+                    if not btnText:find("despawn") and not btnText:find("close") and btnText ~= "x" then
+                        -- Kita klik tombol yang ukurannya masuk akal untuk sebuah mobil
+                        if gui.AbsoluteSize.X > 60 and gui.AbsoluteSize.Y > 60 then
                             clickUI(gui)
+                            -- Setelah klik mobil, kita break agar tidak klik semua mobil
                             break 
                         end
                     end
-                end
-            end
-        end
-        
-        -- TAHAP 3: Tutup UI silang 'X' (Opsional)
-        task.wait(0.5)
-        for _, gui in pairs(PlayerGui:GetDescendants()) do
-            if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
-                local text = (gui:IsA("TextButton") and gui.Text:lower()) or ""
-                if text == "x" or gui.Name:lower():find("close") then
-                    clickUI(gui)
                 end
             end
         end
@@ -648,4 +617,3 @@ task.spawn(function()
 end)
 
 game:BindToClose(function() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end)
-
