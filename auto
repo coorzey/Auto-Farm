@@ -1,8 +1,8 @@
 -- ==========================================  
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
--- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
--- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
--- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS
+-- UPDATE: WEBHOOK BATCHING + LIVE BLACK SCREEN + AUTO SPAWN CAR
+-- FIX: ANCHOR-LIKE POSITIONING + MINIMIZE UI
+-- ADDED: UNIVERSAL AUTO DAILY + POP-UP NOTIFS + LIVE ANALYTICS
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -11,8 +11,8 @@ local Lighting = game:GetService("Lighting")
 local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
-local Stats = game:GetService("Stats")
 local TweenService = game:GetService("TweenService") 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- [[ TARGET UI SYSTEM ]]
 local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGui
@@ -26,7 +26,7 @@ NotifGui.Name = "CorrzeyNotifications"
 NotifGui.ResetOnSpawn = false
 NotifGui.IgnoreGuiInset = true
 NotifGui.Parent = targetUI
-NotifGui.DisplayOrder = 101 -- Paling atas
+NotifGui.DisplayOrder = 101 
 
 local NotifLayout = Instance.new("Frame", NotifGui)
 NotifLayout.Size = UDim2.new(0, 240, 1, -50) 
@@ -89,15 +89,14 @@ local function SendNotification(title, text, duration, color)
     end)
 end
 
--- Panggil notifikasi selamat datang
 SendNotification("CORRZEY HUB V58.6", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
 
--- BLACK SCREEN GUI FOR NEON DARK
+-- [[ BLACK SCREEN GUI ]]
 local blackScreenGui = Instance.new("ScreenGui")
 blackScreenGui.Name = "CorrzeyBlackScreen"
 blackScreenGui.IgnoreGuiInset = true
 blackScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-blackScreenGui.DisplayOrder = 99 -- Di bawah Hub UI
+blackScreenGui.DisplayOrder = 99 
 blackScreenGui.Enabled = false
 blackScreenGui.Parent = targetUI
 
@@ -112,29 +111,22 @@ bsText.BackgroundTransparency = 1
 bsText.Text = "LOADING..."
 bsText.TextColor3 = Color3.new(1, 1, 1) 
 bsText.Font = Enum.Font.Code
-bsText.TextSize = 18 -- Sedikit dikecilkan agar teks muat banyak
+bsText.TextSize = 18 
 bsText.Parent = bsBg
 
--- OPTIMIZATION GLOBALS
+-- [[ CORE FUNCTIONS ]]
 local renderingEnabled = true
 local function toggle3DRender(mode)
     renderingEnabled = mode
     pcall(function() RunService:Set3dRenderingEnabled(mode) end)
     blackScreenGui.Enabled = not mode 
-    pcall(function()
-        if not mode then setfpscap(10) else setfpscap(60) end 
-    end)
+    pcall(function() if not mode then setfpscap(10) else setfpscap(60) end end)
 end
 
--- ADVANCED MEMORY CACHE CLEANER
 local function ClearMemoryCache()
     pcall(function()
         local Terrain = Workspace:WaitForChild("Terrain")
-        Terrain.WaterWaveSize = 0
-        Terrain.WaterWaveSpeed = 0
-        Terrain.WaterReflectance = 0
-        Terrain.WaterTransparency = 0
-        
+        Terrain.WaterWaveSize = 0; Terrain.WaterWaveSpeed = 0; Terrain.WaterReflectance = 0; Terrain.WaterTransparency = 0
         for _, effect in pairs(Lighting:GetChildren()) do
             if effect:IsA("PostEffect") then effect:Destroy() end
         end
@@ -142,85 +134,89 @@ local function ClearMemoryCache()
     end)
 end
 
--- AUTO MEMORY CLEANER
-task.spawn(function()
-    while task.wait(180) do
-        ClearMemoryCache()
-    end
-end)
+task.spawn(function() while task.wait(180) do ClearMemoryCache() end end)
 
--- SUPER ANTI-AFK
-for _, v in pairs(getconnections(LP.Idled)) do
-    v:Disable()
-end
-
+for _, v in pairs(getconnections(LP.Idled)) do v:Disable() end
 task.spawn(function()
     while task.wait(20) do
         pcall(function()
             VirtualUser:CaptureController()
             VirtualUser:ClickButton2(Vector2.new())
-            VirtualUser:SetKeyDown("w")
-            task.wait(0.1)
-            VirtualUser:SetKeyUp("w")
+            VirtualUser:SetKeyDown("w"); task.wait(0.1); VirtualUser:SetKeyUp("w")
         end)
     end
 end)
 
--- [TAMBAHAN ANALYTICS] Tracker Waktu & Data
+-- [[ ANALYTICS & STATE ]]
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
-local running = false
-local autoDaily = false
-local sessionStartTime = os.time() -- Waktu script dieksekusi
+local running, autoDaily = false, false
+local sessionStartTime = os.time() 
 
--- FUNGSI SUPER LOW GRAPHIC + PURGE
 local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
-        Lighting.GlobalShadows = false
-        Lighting.FogEnd = 9e9
-        Lighting.Brightness = 1
-        
+        Lighting.GlobalShadows = false; Lighting.FogEnd = 9e9; Lighting.Brightness = 1
         for _, v in pairs(Workspace:GetDescendants()) do
-            local name = v.Name:lower()
-            if name:find("traffic") or name:find("npc") or name:find("bot") or name:find("car_") then
+            local n = v.Name:lower()
+            if n:find("traffic") or n:find("npc") or n:find("bot") or n:find("car_") then
                 if not v:IsDescendantOf(LP.Character) then v:Destroy() end
             elseif v:IsA("BasePart") and not v:IsDescendantOf(LP.Character) then
-                v.Material = Enum.Material.SmoothPlastic
-                v.Reflectance = 0
-                v.CastShadow = false
-                if name:find("tree") or name:find("grass") or name:find("bush") or name:find("leaf") then
-                    v:Destroy()
-                end
-            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Sky") or v:IsA("Explosion") then
+                v.Material = Enum.Material.SmoothPlastic; v.Reflectance = 0; v.CastShadow = false
+                if n:find("tree") or n:find("grass") or n:find("bush") or n:find("leaf") then v:Destroy() end
+            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Sky") then
                 v:Destroy()
-            elseif v:IsA("MeshPart") then
-                v.MeshId = ""
             end
         end
         ClearMemoryCache()
     end)
 end
 
--- FUNGSI CLOSE PRIZE POPUP
+-- [[ AUTO SPAWN CAR LOGIC ]]
+local function SpawnCar(partialName)
+    partialName = string.lower(partialName)
+    local exactFullName = partialName
+    
+    -- Mencari nama asli di ReplicatedStorage (Sistem Partial Match)
+    pcall(function()
+        for _, v in pairs(ReplicatedStorage:GetDescendants()) do
+            if v:IsA("Model") and (v:FindFirstChild("DriveSeat") or v:FindFirstChild("Body")) then
+                if string.find(string.lower(v.Name), partialName) then
+                    exactFullName = v.Name
+                    break
+                end
+            end
+        end
+    end)
+
+    -- Eksekusi Spawn via RemoteEvent
+    pcall(function()
+        local remotes = {
+            ReplicatedStorage:FindFirstChild("SpawnVehicle", true),
+            ReplicatedStorage:FindFirstChild("Spawn", true),
+            ReplicatedStorage:FindFirstChild("VehicleSpawn", true)
+        }
+        for _, r in pairs(remotes) do
+            if r and r:IsA("RemoteEvent") then r:FireServer(exactFullName) return
+            elseif r and r:IsA("RemoteFunction") then r:InvokeServer(exactFullName) return end
+        end
+    end)
+    return exactFullName
+end
+
 local function closePrizePopup()
     pcall(function()
         for _, gui in pairs(PlayerGui:GetChildren()) do
             if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "DeltaAutoFarm" then
                 for _, btn in pairs(gui:GetDescendants()) do
                     if btn:IsA("ImageButton") or btn:IsA("TextButton") then
-                        local n = btn.Name:lower()
-                        local t = (btn:IsA("TextButton") and btn.Text:lower()) or ""
-                        
+                        local n, t = btn.Name:lower(), (btn:IsA("TextButton") and btn.Text:lower()) or ""
                         if n == "x" or n:find("close") or t == "x" or t:find("close") or n:find("exit") then
                             if btn.Visible and btn.AbsoluteSize.X > 0 then
-                                local pos = btn.AbsolutePosition
-                                local size = btn.AbsoluteSize
+                                local pos, size = btn.AbsolutePosition, btn.AbsoluteSize
                                 VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
-                                
                                 pcall(function()
                                     for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
-                                    for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
                                     for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end
                                 end)
                             end
@@ -233,15 +229,14 @@ local function closePrizePopup()
 end
 
 local function getPlayerMoney()   
-    local leaderstats = LP:FindFirstChild("leaderstats")   
-    if leaderstats then   
-        local m = leaderstats:FindFirstChild("Money") or leaderstats:FindFirstChild("Cash")   
+    local stats = LP:FindFirstChild("leaderstats")   
+    if stats then   
+        local m = stats:FindFirstChild("Money") or stats:FindFirstChild("Cash")   
         if m then return m.Value end   
-    end   
-    return 0   
+    end; return 0   
 end   
 
--- KOORDINAT (PATH 1-41)
+-- [[ KOORDINAT BALAPAN ]]
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -253,33 +248,30 @@ local path = {
     {pos = {-1247.06, 16.11, 121.99}, rot = 101.03}, {pos = {-1910.41, -11.95, 276.76}, rot = 103.87},
     {pos = {-2580.79, -8.75, 417.36}, rot = 101.97}, {pos = {-3175.10, 18.31, 542.23}, rot = 101.76},
     {pos = {-3916.48, 23.47, 701.48}, rot = 101.44}, {pos = {-4630.57, 31.07, 839.62}, rot = 102.08},
-    {pos = {-5534.23, 19.75, 1038.44}, rot = 102.18}, 
-    {pos = {-6557.41, 9.80, 1251.38}, rot = 101.13}, {pos = {-7277.41, 9.80, 1406.79}, rot = 106.41}, 
-    {pos = {-7794.60, 9.80, 1579.01}, rot = 111.81}, {pos = {-8263.78, 9.56, 1777.35}, rot = 112.83}, 
-    {pos = {-8805.38, -8.88, 2007.14}, rot = 117.64}, {pos = {-9503.49, -69.46, 2303.26}, rot = 113.14}, 
-    {pos = {-10147.54, -111.81, 2578.72}, rot = 112.52}, {pos = {-10895.69, -105.88, 2903.48}, rot = 115.66}, 
-    {pos = {-11552.18, -54.42, 3172.93}, rot = 112.78}, {pos = {-12169.96, -17.11, 3435.86}, rot = 112.92}, 
-    {pos = {-12767.61, -1.50, 3748.61}, rot = 124.95}, {pos = {-13135.41, -0.86, 4062.97}, rot = 135.41}, 
-    {pos = {-13366.22, -0.84, 4319.31}, rot = 146.03}, {pos = {-13670.72, -2.93, 4750.70}, rot = 143.42}, 
-    {pos = {-14030.56, -13.39, 5288.52}, rot = 146.34}, {pos = {-14500.27, 3.01, 5985.70}, rot = 145.91}, 
-    {pos = {-14892.54, 6.83, 6582.37}, rot = 151.69}, {pos = {-15236.35, 6.83, 7290.60}, rot = 160.16}, 
-    {pos = {-15482.54, 3.89, 8031.16}, rot = 165.65}, {pos = {-15675.67, -7.72, 8668.23}, rot = 162.54}, 
-    {pos = {-15927.57, -20.54, 9489.28}, rot = 162.16}, {pos = {-16199.67, -2.75, 10369.70}, rot = 162.77}, 
-    {pos = {-16348.46, 8.41, 11025.66}, rot = 171.59}, {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, 
-    {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
+    {pos = {-5534.23, 19.75, 1038.44}, rot = 102.18}, {pos = {-6557.41, 9.80, 1251.38}, rot = 101.13}, 
+    {pos = {-7277.41, 9.80, 1406.79}, rot = 106.41}, {pos = {-7794.60, 9.80, 1579.01}, rot = 111.81}, 
+    {pos = {-8263.78, 9.56, 1777.35}, rot = 112.83}, {pos = {-8805.38, -8.88, 2007.14}, rot = 117.64}, 
+    {pos = {-9503.49, -69.46, 2303.26}, rot = 113.14}, {pos = {-10147.54, -111.81, 2578.72}, rot = 112.52}, 
+    {pos = {-10895.69, -105.88, 2903.48}, rot = 115.66}, {pos = {-11552.18, -54.42, 3172.93}, rot = 112.78}, 
+    {pos = {-12169.96, -17.11, 3435.86}, rot = 112.92}, {pos = {-12767.61, -1.50, 3748.61}, rot = 124.95}, 
+    {pos = {-13135.41, -0.86, 4062.97}, rot = 135.41}, {pos = {-13366.22, -0.84, 4319.31}, rot = 146.03}, 
+    {pos = {-13670.72, -2.93, 4750.70}, rot = 143.42}, {pos = {-14030.56, -13.39, 5288.52}, rot = 146.34}, 
+    {pos = {-14500.27, 3.01, 5985.70}, rot = 145.91}, {pos = {-14892.54, 6.83, 6582.37}, rot = 151.69}, 
+    {pos = {-15236.35, 6.83, 7290.60}, rot = 160.16}, {pos = {-15482.54, 3.89, 8031.16}, rot = 165.65}, 
+    {pos = {-15675.67, -7.72, 8668.23}, rot = 162.54}, {pos = {-15927.57, -20.54, 9489.28}, rot = 162.16}, 
+    {pos = {-16199.67, -2.75, 10369.70}, rot = 162.77}, {pos = {-16348.46, 8.41, 11025.66}, rot = 171.59}, 
+    {pos = {-16377.87, 8.41, 11227.66}, rot = 171.48}, {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
 -- [[ UI SYSTEM ]]
 local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false; sg.IgnoreGuiInset = true
 sg.DisplayOrder = 100 
 
-local clr_bg = Color3.fromRGB(18, 18, 18)
-local clr_stroke = Color3.fromRGB(40, 40, 40)
-local clr_accent = Color3.fromRGB(255, 215, 0)
-local clr_btn_off = Color3.fromRGB(35, 35, 35)
+local clr_bg = Color3.fromRGB(18, 18, 18); local clr_stroke = Color3.fromRGB(40, 40, 40); local clr_accent = Color3.fromRGB(255, 215, 0); local clr_btn_off = Color3.fromRGB(35, 35, 35)
 
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 240, 0, 195); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
+frame.Size = UDim2.new(0, 240, 0, 235); -- Ukuran frame ditambah agar muat TextBox
+frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
@@ -292,8 +284,22 @@ task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = 
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 
 local content = Instance.new("Frame", frame); 
-content.Size = UDim2.new(1, -20, 0, 145); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
+content.Size = UDim2.new(1, -20, 0, 185); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
 local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- [TAMBAHAN] TextBox Input Mobil
+local carInput = Instance.new("TextBox", content)
+carInput.Size = UDim2.new(1, 0, 0, 32)
+carInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+carInput.Text = ""
+carInput.PlaceholderText = "Ketik Nama Mobil (Contoh: GTR)"
+carInput.TextColor3 = Color3.new(1,1,1)
+carInput.Font = Enum.Font.Gotham
+carInput.TextSize = 10
+carInput.BorderSizePixel = 0
+Instance.new("UICorner", carInput).CornerRadius = UDim.new(0, 6)
+local strokeInput = Instance.new("UIStroke", carInput)
+strokeInput.Color = clr_stroke; strokeInput.Thickness = 1.2
 
 local function createBtn(txt, color, parent)
     local b = Instance.new("TextButton", parent)
@@ -306,16 +312,9 @@ local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dailyBtn = createBtn("AUTO DAILY REWARD", clr_btn_off, content)
 
-local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
-
 -- MINI HUD
 local miniHud = Instance.new("Frame", sg)
-miniHud.Size = UDim2.new(0, 130, 0, 65)
-miniHud.Position = UDim2.new(0, 10, 0, 90)
-miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10)
-miniHud.Draggable = true
-miniHud.Active = true
-Instance.new("UICorner", miniHud)
+miniHud.Size = UDim2.new(0, 130, 0, 65); miniHud.Position = UDim2.new(0, 10, 0, 90); miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10); miniHud.Draggable = true; miniHud.Active = true; Instance.new("UICorner", miniHud)
 local hs = Instance.new("UIStroke", miniHud); hs.Color = clr_accent; hs.Thickness = 1.2
 
 local function createHudLbl(txt, col, pos)
@@ -327,8 +326,6 @@ local fpsLabel = createHudLbl("FPS: 0", Color3.fromRGB(0, 255, 255), 41)
 
 -- WEBHOOK CORE
 local MAIN_WEBHOOK = "https://discord.com/api/webhooks/1481553892113125437/9oPjRIpVq7AJYqTeGqweWZ5YpocFigu3zXUV-tv09l6ZnMo8qC96yHJ-HJnU18NMTsgo"
-local STATUS_WEBHOOK = "https://discord.com/api/webhooks/1481623547804647495/YZ72cByqWxrq0xHQpgsbiYC4PmRzJrWf5z51XWkPB1C6x5_gOQi_1PIXa97jV96kzrTr"
-
 local HttpService = game:GetService("HttpService")
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request
 
@@ -345,20 +342,15 @@ local function sendWebhook(url, gain, total, races, isOffline)
                     {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
                     {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
                 },
-                ["footer"] = {["text"] = "V58.6 • " .. os.date("%X")},
-                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                ["footer"] = {["text"] = "V58.6 • " .. os.date("%X")}
             }}
         }
         local payload = HttpService:JSONEncode(data)
-        if httpRequest then
-            httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload})
-        else
-            HttpService:PostAsync(url, payload)
-        end
+        if httpRequest then httpRequest({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = payload}) else HttpService:PostAsync(url, payload) end
     end)
 end
 
--- SISTEM AUTO CLAIM 
+-- AUTO CLAIM DAILY
 task.spawn(function()
     while true do
         task.wait(5) 
@@ -370,15 +362,10 @@ task.spawn(function()
                             if btn:IsA("TextButton") or btn:IsA("ImageButton") then
                                 local btnText = (btn:IsA("TextButton") and btn.Text:lower()) or ""
                                 local btnName = btn.Name:lower()
-                                
-                                if btnText:find("claim") or btnText:find("daily") or btnText:find("reward") or 
-                                   btnName:find("claim") or btnName:find("daily") then
-                                    
+                                if btnText:find("claim") or btnText:find("daily") or btnName:find("claim") or btnName:find("daily") then
                                     if btn.Visible and btn.AbsoluteSize.X > 0 then
                                         for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
-                                        for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
                                         for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end
-                                        
                                         SendNotification("AUTO DAILY", "Attempted to claim a reward!", 3, Color3.fromRGB(0, 150, 255))
                                     end
                                 end
@@ -403,27 +390,21 @@ task.spawn(function()
                 
                 closePrizePopup()
                 
-                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
-                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0); seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 car:PivotTo(CFrame.new(startPos + Vector3.new(0,5,0)) * CFrame.Angles(0, math.rad(startRot), 0))
                 task.wait(0.05)
-                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
-                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0); seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                 
                 status.Text = "● WAITING RIVAL..."
                 local rivalFound = false
                 repeat 
                     task.wait(1)
-                    if seat then
-                        seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
-                        seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
-                    end
+                    if seat then seat.AssemblyLinearVelocity = Vector3.new(0,0,0); seat.AssemblyAngularVelocity = Vector3.new(0,0,0) end
                     for _, p in pairs(Players:GetPlayers()) do 
                         if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                             local rHum = p.Character:FindFirstChildOfClass("Humanoid")
                             if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 25 and (rHum and rHum.SeatPart) then 
-                                rivalFound = true 
-                                break 
+                                rivalFound = true; break 
                             end 
                         end
                     end
@@ -431,15 +412,11 @@ task.spawn(function()
                 
                 if running and rivalFound then
                     applyDeepClean() 
-                    
                     moneyBeforeRace = getPlayerMoney()
                     for i = 18, 1, -1 do 
                         if not running then break end
                         status.Text = "● START IN: "..i.."s"
-                        if seat then
-                            seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
-                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
-                        end
+                        if seat then seat.AssemblyLinearVelocity = Vector3.new(0,0,0); seat.AssemblyAngularVelocity = Vector3.new(0,0,0) end
                         task.wait(1) 
                     end
                     
@@ -448,10 +425,8 @@ task.spawn(function()
                             if not running or not seat.Parent then break end
                             status.Text = "● RACING: " .. i .. "/41"
                             local cf = CFrame.new(d.pos[1], d.pos[2]+5, d.pos[3]) * CFrame.Angles(0, math.rad(d.rot), 0)
-                            seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
-                            seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
-                            car:PivotTo(cf)
-                            task.wait(0.05)
+                            seat.AssemblyLinearVelocity = Vector3.new(0,0,0); seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                            car:PivotTo(cf); task.wait(0.05)
                             seat.AssemblyLinearVelocity = cf.LookVector * 165
                             task.wait(math.random(15, 18)/10) 
                         end
@@ -459,22 +434,12 @@ task.spawn(function()
                         status.Text = "● FINISHING..."
                         task.wait(3)
                         
-                        local currentMoney = getPlayerMoney()
-                        local gain = currentMoney - moneyBeforeRace
-                        
+                        local gain = getPlayerMoney() - moneyBeforeRace
                         if gain > 0 then 
-                            totalMoneyEarned = totalMoneyEarned + gain
-                            sessionRaces = sessionRaces + 1
-                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned
-                            raceLabel.Text = "Races: " .. sessionRaces
-                            
+                            totalMoneyEarned = totalMoneyEarned + gain; sessionRaces = sessionRaces + 1
+                            moneyLabel.Text = "Profit: $" .. totalMoneyEarned; raceLabel.Text = "Races: " .. sessionRaces
                             SendNotification("RACE FINISHED!", "You earned +$" .. gain, 4, Color3.fromRGB(0, 255, 150))
-                            
-                            if sessionRaces % 10 == 0 then
-                                task.spawn(function()
-                                    sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false)
-                                end)
-                            end
+                            if sessionRaces % 10 == 0 then task.spawn(function() sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false) end) end
                         end
                         task.wait(2)
                     end
@@ -484,39 +449,32 @@ task.spawn(function()
     end
 end)
 
--- BUTTON LOGIC
+-- BUTTON LOGIC & SPAWN INTEGRATION
 local openBtn = Instance.new("TextButton", sg)
-openBtn.Size = UDim2.new(0, 130, 0, 35)
-openBtn.Position = UDim2.new(0.5, -65, 0, 0) 
-openBtn.BackgroundColor3 = clr_bg
-openBtn.Text = "CORRZEY HUB"
-openBtn.TextColor3 = clr_accent
-openBtn.Font = Enum.Font.GothamBold
-openBtn.TextSize = 11
-openBtn.Visible = false 
-openBtn.AutoButtonColor = true
-Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 8)
+openBtn.Size = UDim2.new(0, 130, 0, 35); openBtn.Position = UDim2.new(0.5, -65, 0, 0); openBtn.BackgroundColor3 = clr_bg; openBtn.Text = "CORRZEY HUB"; openBtn.TextColor3 = clr_accent; openBtn.Font = Enum.Font.GothamBold; openBtn.TextSize = 11; openBtn.Visible = false; openBtn.AutoButtonColor = true; Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0, 8)
+local openStroke = Instance.new("UIStroke", openBtn); openStroke.Color = clr_stroke; openStroke.Thickness = 1.8; openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-local openStroke = Instance.new("UIStroke", openBtn)
-openStroke.Color = clr_stroke
-openStroke.Thickness = 1.8
-openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-toggleBtn.MouseButton1Click:Connect(function()   
-    frame.Visible = false
-    openBtn.Visible = true
-end)
-
-openBtn.MouseButton1Click:Connect(function()
-    openBtn.Visible = false
-    frame.Visible = true
-end)
+toggleBtn.MouseButton1Click:Connect(function() frame.Visible = false; openBtn.Visible = true end)
+openBtn.MouseButton1Click:Connect(function() openBtn.Visible = false; frame.Visible = true end)
 
 farmBtn.MouseButton1Click:Connect(function()
     running = not running
     farmBtn.Text = running and "STOP AUTO RACE" or "AUTO RACE"
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
-    if running then applyDeepClean() end 
+    
+    if running then 
+        local hum = LP.Character and LP.Character:FindFirstChildOfClass("Humanoid")
+        local seat = hum and hum.SeatPart
+        
+        -- Mengeksekusi Auto Spawn jika belum di mobil dan TextBox diisi
+        if not seat and carInput.Text ~= "" then
+            SendNotification("AUTO SPAWN", "Mencari & Spawn: " .. carInput.Text, 3, Color3.fromRGB(255, 215, 0))
+            local foundName = SpawnCar(carInput.Text)
+            task.wait(2.5) -- Memberi waktu agar game memunculkan mobil dan karakter otomatis duduk
+        end
+        
+        applyDeepClean() 
+    end 
 end)
 
 cpuBtn.MouseButton1Click:Connect(function()
@@ -526,37 +484,29 @@ cpuBtn.MouseButton1Click:Connect(function()
 end)
 
 purgeBtn.MouseButton1Click:Connect(function() applyDeepClean() end)
-
 dailyBtn.MouseButton1Click:Connect(function()
     autoDaily = not autoDaily
     dailyBtn.Text = autoDaily and "STOP AUTO DAILY" or "AUTO DAILY REWARD"
     dailyBtn.BackgroundColor3 = autoDaily and Color3.fromRGB(180, 0, 0) or clr_btn_off
 end)
 
--- [MODIFIKASI ANALYTICS] LIVE UPDATER LOOP
+-- LIVE UPDATER LOOP
 task.spawn(function()
     while task.wait(1) do
         fpsLabel.Text = "FPS: " .. (renderingEnabled and "Normal" or "Capped (10)")
         
         if not renderingEnabled then
             local currentCash = getPlayerMoney()
-            
-            -- Kalkulasi Live Analytics (Waktu & Profit Per Jam)
             local elapsedTime = os.time() - sessionStartTime
-            local mph = 0
-            local rph = 0
+            local mph, rph = 0, 0
             if elapsedTime > 0 then
                 mph = math.floor((totalMoneyEarned / elapsedTime) * 3600)
                 rph = math.floor((sessionRaces / elapsedTime) * 3600)
             end
             
-            -- Format Waktu menjadi HH:MM:SS
-            local h = math.floor(elapsedTime / 3600)
-            local m = math.floor((elapsedTime % 3600) / 60)
-            local s = elapsedTime % 60
+            local h, m, s = math.floor(elapsedTime / 3600), math.floor((elapsedTime % 3600) / 60), elapsedTime % 60
             local timeString = string.format("%02d:%02d:%02d", h, m, s)
             
-            -- Update Teks Black Screen
             bsText.Text = "RENDERING 3D DINONAKTIFKAN\n(Mode Auto-Farm Berjalan)\n\n" ..
                           "💰 Uang Saat Ini : $" .. tostring(currentCash) .. "\n" ..
                           "📈 Profit Sesi   : $" .. tostring(totalMoneyEarned) .. "\n" ..
@@ -569,5 +519,3 @@ task.spawn(function()
         end
     end
 end)
-
-game:BindToClose(function() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end)
