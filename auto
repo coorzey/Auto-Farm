@@ -182,8 +182,8 @@ local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = U
 -- MINI HUD
 local miniHud = Instance.new("Frame", sg)
 miniHud.Size = UDim2.new(0, 130, 0, 65)
--- [UPDATE] Posisi Y diubah ke 45 agar tidak menabrak topbar Roblox
-miniHud.Position = UDim2.new(0, 10, 0, 45)
+-- [UPDATE] Posisi Y diturunkan jauh ke 90 agar tidak nabrak safe area / chat icon
+miniHud.Position = UDim2.new(0, 10, 0, 90)
 miniHud.BackgroundColor3 = Color3.fromRGB(10,10,10)
 miniHud.Draggable = true
 miniHud.Active = true
