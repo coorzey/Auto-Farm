@@ -2,7 +2,8 @@
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
 -- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
--- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS + AUTO SPAWN
+-- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS
+-- FIXED: 2-STEP AUTO SPAWN CAR (LEFT MENU -> RIGHT MENU CAR SELECT)
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -232,27 +233,67 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- ==== FUNGSI AUTO SPAWN MOBIL UNIVERSAL ====
+-- ==== FUNGSI SIMULASI KLIK ====
+local function clickUI(gui)
+    pcall(function()
+        for _, conn in pairs(getconnections(gui.MouseButton1Click)) do conn:Fire() end
+        for _, conn in pairs(getconnections(gui.MouseButton1Down)) do conn:Fire() end
+        for _, conn in pairs(getconnections(gui.Activated)) do conn:Fire() end
+        
+        local pos = gui.AbsolutePosition
+        local size = gui.AbsoluteSize
+        VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
+    end)
+end
+
+-- ==== FUNGSI AUTO SPAWN MOBIL UNIVERSAL (2-STEP) ====
 local function autoSpawnCar()
     pcall(function()
+        local screenX = Workspace.CurrentCamera.ViewportSize.X
+        
+        -- TAHAP 1: Klik tombol "Spawn" utama di kiri layar
         for _, gui in pairs(PlayerGui:GetDescendants()) do
             if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
-                local btnText = (gui:IsA("TextButton") and gui.Text:lower()) or ""
+                local btnText = (gui:IsA("TextLabel") and gui.Text:lower()) or (gui:IsA("TextButton") and gui.Text:lower()) or ""
                 local btnName = gui.Name:lower()
                 
-                -- Deteksi tombol berdasarkan nama atau teks umumnya
-                if btnText:find("spawn") or btnText:find("drive") or btnText:find("deploy") or btnName:find("spawn") or btnName:find("drive") then
-                    if gui.AbsoluteSize.X > 0 then
-                        -- Fire All Connections
-                        for _, conn in pairs(getconnections(gui.MouseButton1Click)) do conn:Fire() end
-                        for _, conn in pairs(getconnections(gui.MouseButton1Down)) do conn:Fire() end
-                        for _, conn in pairs(getconnections(gui.Activated)) do conn:Fire() end
-                        
-                        -- Alternatif Virtual Click jika UI butuh Mouse event
-                        local pos = gui.AbsolutePosition
-                        local size = gui.AbsoluteSize
-                        VirtualUser:ClickButton1(Vector2.new(pos.X + (size.X/2), pos.Y + (size.Y/2) + 45))
+                -- Cari kata "spawn" dan pastikan posisinya ada di sisi kiri layar
+                if (btnText:find("spawn") or btnName:find("spawn")) and gui.AbsolutePosition.X < (screenX / 2) then
+                    clickUI(gui)
+                    break 
+                end
+            end
+        end
+
+        task.wait(1.5) -- Berikan jeda 1.5 detik agar panel "Vehicles" di kanan muncul
+
+        -- TAHAP 2: Pilih dan klik kotak mobil di dalam menu kanan
+        for _, gui in pairs(PlayerGui:GetDescendants()) do
+            if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
+                local btnText = (gui:IsA("TextLabel") and gui.Text:lower()) or (gui:IsA("TextButton") and gui.Text:lower()) or ""
+                local btnName = gui.Name:lower()
+                
+                -- Pastikan UI berada di sebelah kanan layar (menu Vehicles)
+                if gui.AbsolutePosition.X > (screenX / 2) then
+                    -- Filter 1: Hindari menekan tombol merah seperti "Sell" atau "Despawn" atau tombol "Get Vehicles"
+                    if not btnText:find("sell") and not btnText:find("despawn") and not btnName:find("sell") and not btnName:find("despawn") and not btnText:find("get vehicles") and not btnText:find("close") and btnText ~= "x" then
+                        -- Filter 2: Kotak mobil biasanya cukup besar, jadi pastikan ukurannya lebih besar dari sekadar tombol teks biasa
+                        if gui.AbsoluteSize.X > 50 and gui.AbsoluteSize.Y > 50 then
+                            clickUI(gui)
+                            break -- Klik mobil pertama yang memenuhi syarat lalu berhenti agar tidak klik banyak mobil sekaligus
+                        end
                     end
+                end
+            end
+        end
+        
+        -- TAHAP 3: Tutup UI jika game tidak menutupnya otomatis (Opsional)
+        task.wait(0.5)
+        for _, gui in pairs(PlayerGui:GetDescendants()) do
+            if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
+                local btnText = (gui:IsA("TextLabel") and gui.Text:lower()) or (gui:IsA("TextButton") and gui.Text:lower()) or ""
+                if btnText == "x" or gui.Name:lower():find("close") then
+                    clickUI(gui)
                 end
             end
         end
@@ -500,7 +541,7 @@ task.spawn(function()
                 -- JIKA TIDAK DI DALAM MOBIL -> JALANKAN AUTO SPAWN
                 status.Text = "● AUTO SPAWNING CAR..."
                 autoSpawnCar()
-                task.wait(2.5) -- Delay agar script tidak spam tombol secara brutal
+                task.wait(3) -- Delay agar script tidak spam tombol terlalu agresif
             end
         end
     end
@@ -541,8 +582,8 @@ farmBtn.MouseButton1Click:Connect(function()
     
     if running then 
         SendNotification("AUTO SPAWN", "Mencoba men-spawn kendaraan...", 3, Color3.fromRGB(0, 200, 255))
-        autoSpawnCar() -- Mengeksekusi Spawn saat dihidupkan
-        task.wait(1.5) -- Beri waktu sistem memuat mobil
+        autoSpawnCar() 
+        task.wait(2) 
         
         applyDeepClean() 
         renderingEnabled = false
@@ -604,3 +645,4 @@ task.spawn(function()
 end)
 
 game:BindToClose(function() sendWebhook(STATUS_WEBHOOK, 0, totalMoneyEarned, sessionRaces, true) end)
+
