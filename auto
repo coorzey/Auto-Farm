@@ -2,7 +2,7 @@
 -- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
 -- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
--- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS
+-- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -12,15 +12,15 @@ local VirtualUser = game:GetService("VirtualUser")
 local PlayerGui = LP:WaitForChild("PlayerGui")   
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
-local TweenService = game:GetService("TweenService") -- [TAMBAHAN]
+local TweenService = game:GetService("TweenService") 
 
 -- [[ TARGET UI SYSTEM ]]
 local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGui
 if targetUI:FindFirstChild("DeltaAutoFarm") then targetUI.DeltaAutoFarm:Destroy() end   
 if targetUI:FindFirstChild("CorrzeyBlackScreen") then targetUI.CorrzeyBlackScreen:Destroy() end
-if targetUI:FindFirstChild("CorrzeyNotifications") then targetUI.CorrzeyNotifications:Destroy() end -- [TAMBAHAN]
+if targetUI:FindFirstChild("CorrzeyNotifications") then targetUI.CorrzeyNotifications:Destroy() end 
 
--- [[ NOTIFICATION SYSTEM (TAMBAHAN) ]]
+-- [[ NOTIFICATION SYSTEM ]]
 local NotifGui = Instance.new("ScreenGui")
 NotifGui.Name = "CorrzeyNotifications"
 NotifGui.ResetOnSpawn = false
@@ -92,7 +92,7 @@ end
 -- Panggil notifikasi selamat datang
 SendNotification("CORRZEY HUB V58.6", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
 
--- [TAMBAHAN] BLACK SCREEN GUI FOR NEON DARK
+-- BLACK SCREEN GUI FOR NEON DARK
 local blackScreenGui = Instance.new("ScreenGui")
 blackScreenGui.Name = "CorrzeyBlackScreen"
 blackScreenGui.IgnoreGuiInset = true
@@ -110,23 +110,23 @@ local bsText = Instance.new("TextLabel")
 bsText.Size = UDim2.new(1, 0, 1, 0)
 bsText.BackgroundTransparency = 1
 bsText.Text = "LOADING..."
-bsText.TextColor3 = Color3.new(1, 1, 1) -- SUDAH DIUBAH KE PUTIH
+bsText.TextColor3 = Color3.new(1, 1, 1) 
 bsText.Font = Enum.Font.Code
-bsText.TextSize = 20
+bsText.TextSize = 18 -- Sedikit dikecilkan agar teks muat banyak
 bsText.Parent = bsBg
 
--- [MODIFIKASI] OPTIMIZATION GLOBALS
+-- OPTIMIZATION GLOBALS
 local renderingEnabled = true
 local function toggle3DRender(mode)
     renderingEnabled = mode
     pcall(function() RunService:Set3dRenderingEnabled(mode) end)
-    blackScreenGui.Enabled = not mode -- Tampilkan Layar Hitam
+    blackScreenGui.Enabled = not mode 
     pcall(function()
-        if not mode then setfpscap(10) else setfpscap(60) end -- Limit FPS
+        if not mode then setfpscap(10) else setfpscap(60) end 
     end)
 end
 
--- [TAMBAHAN] ADVANCED MEMORY CACHE CLEANER
+-- ADVANCED MEMORY CACHE CLEANER
 local function ClearMemoryCache()
     pcall(function()
         local Terrain = Workspace:WaitForChild("Terrain")
@@ -142,7 +142,7 @@ local function ClearMemoryCache()
     end)
 end
 
--- [MODIFIKASI] AUTO MEMORY CLEANER
+-- AUTO MEMORY CLEANER
 task.spawn(function()
     while task.wait(180) do
         ClearMemoryCache()
@@ -166,14 +166,14 @@ task.spawn(function()
     end
 end)
 
+-- [TAMBAHAN ANALYTICS] Tracker Waktu & Data
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
 local running = false
-
--- [TAMBAHAN AUTO DAILY] VARIABEL AUTO DAILY
 local autoDaily = false
+local sessionStartTime = os.time() -- Waktu script dieksekusi
 
--- [MODIFIKASI] FUNGSI SUPER LOW GRAPHIC + PURGE
+-- FUNGSI SUPER LOW GRAPHIC + PURGE
 local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -271,7 +271,7 @@ local path = {
 
 -- [[ UI SYSTEM ]]
 local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false; sg.IgnoreGuiInset = true
-sg.DisplayOrder = 100 -- Menjamin UI Hub di atas Black Screen
+sg.DisplayOrder = 100 
 
 local clr_bg = Color3.fromRGB(18, 18, 18)
 local clr_stroke = Color3.fromRGB(40, 40, 40)
@@ -358,7 +358,7 @@ local function sendWebhook(url, gain, total, races, isOffline)
     end)
 end
 
--- [TAMBAHAN AUTO DAILY] SISTEM AUTO CLAIM 
+-- SISTEM AUTO CLAIM 
 task.spawn(function()
     while true do
         task.wait(5) 
@@ -379,7 +379,6 @@ task.spawn(function()
                                         for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
                                         for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end
                                         
-                                        -- [TAMBAHAN] Panggil Notifikasi saat dicoba diklaim
                                         SendNotification("AUTO DAILY", "Attempted to claim a reward!", 3, Color3.fromRGB(0, 150, 255))
                                     end
                                 end
@@ -469,7 +468,6 @@ task.spawn(function()
                             moneyLabel.Text = "Profit: $" .. totalMoneyEarned
                             raceLabel.Text = "Races: " .. sessionRaces
                             
-                            -- [TAMBAHAN] Panggil Notifikasi saat Race Finish
                             SendNotification("RACE FINISHED!", "You earned +$" .. gain, 4, Color3.fromRGB(0, 255, 150))
                             
                             if sessionRaces % 10 == 0 then
@@ -535,17 +533,38 @@ dailyBtn.MouseButton1Click:Connect(function()
     dailyBtn.BackgroundColor3 = autoDaily and Color3.fromRGB(180, 0, 0) or clr_btn_off
 end)
 
--- LIVE UPDATER LOOP
+-- [MODIFIKASI ANALYTICS] LIVE UPDATER LOOP
 task.spawn(function()
     while task.wait(1) do
         fpsLabel.Text = "FPS: " .. (renderingEnabled and "Normal" or "Capped (10)")
         
         if not renderingEnabled then
             local currentCash = getPlayerMoney()
+            
+            -- Kalkulasi Live Analytics (Waktu & Profit Per Jam)
+            local elapsedTime = os.time() - sessionStartTime
+            local mph = 0
+            local rph = 0
+            if elapsedTime > 0 then
+                mph = math.floor((totalMoneyEarned / elapsedTime) * 3600)
+                rph = math.floor((sessionRaces / elapsedTime) * 3600)
+            end
+            
+            -- Format Waktu menjadi HH:MM:SS
+            local h = math.floor(elapsedTime / 3600)
+            local m = math.floor((elapsedTime % 3600) / 60)
+            local s = elapsedTime % 60
+            local timeString = string.format("%02d:%02d:%02d", h, m, s)
+            
+            -- Update Teks Black Screen
             bsText.Text = "RENDERING 3D DINONAKTIFKAN\n(Mode Auto-Farm Berjalan)\n\n" ..
                           "💰 Uang Saat Ini : $" .. tostring(currentCash) .. "\n" ..
                           "📈 Profit Sesi   : $" .. tostring(totalMoneyEarned) .. "\n" ..
                           "🏁 Total Balapan : " .. tostring(sessionRaces) .. "\n\n" ..
+                          "📊 LIVE ANALYTICS\n" ..
+                          "⏱️ Waktu Berjalan : " .. timeString .. "\n" ..
+                          "💸 Money/Hour     : $" .. tostring(mph) .. "\n" ..
+                          "🏎️ Races/Hour     : " .. tostring(rph) .. "\n\n" ..
                           "Klik 'NEON DARK' di Hub untuk menampilkan game."
         end
     end
