@@ -516,7 +516,19 @@ farmBtn.MouseButton1Click:Connect(function()
     running = not running
     farmBtn.Text = running and "STOP AUTO RACE" or "AUTO RACE"
     farmBtn.BackgroundColor3 = running and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 120, 255)
-    if running then applyDeepClean() end 
+    
+    if running then 
+        applyDeepClean() 
+        -- Otomatis masuk ke mode Neon Dark saat Auto Farm menyala
+        renderingEnabled = false
+        toggle3DRender(renderingEnabled)
+        cpuBtn.Text = "NEON DARK: ON"
+    else
+        -- Kembali ke mode normal (3D) saat Auto Farm dimatikan
+        renderingEnabled = true
+        toggle3DRender(renderingEnabled)
+        cpuBtn.Text = "NEON DARK: OFF"
+    end 
 end)
 
 cpuBtn.MouseButton1Click:Connect(function()
