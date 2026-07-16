@@ -122,7 +122,7 @@ local function toggle3DRender(mode)
     pcall(function() RunService:Set3dRenderingEnabled(mode) end)
     blackScreenGui.Enabled = not mode 
     pcall(function()
-        setfpscap(60) -- PERUBAHAN: Menjaga FPS tetap 60 baik saat Neon Dark mati atau menyala
+        setfpscap(60) -- Menjaga FPS tetap 60 baik saat Neon Dark mati atau menyala
     end)
 end
 
@@ -546,10 +546,16 @@ dailyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- [MODIFIKASI ANALYTICS] LIVE UPDATER LOOP
+local frameUpdate = 0
+RunService.RenderStepped:Connect(function()
+    frameUpdate = frameUpdate + 1
+end)
+
 task.spawn(function()
     while task.wait(1) do
-        -- PERUBAHAN: Teks HUD FPS diperbarui agar tetap relevan
-        fpsLabel.Text = "FPS: " .. (renderingEnabled and "Normal (60)" or "Neon Dark (60)")
+        -- Update Live FPS ke HUD
+        fpsLabel.Text = "FPS: " .. tostring(frameUpdate)
+        frameUpdate = 0 -- Reset frame untuk detik berikutnya
         
         if not renderingEnabled then
             local currentCash = getPlayerMoney()
