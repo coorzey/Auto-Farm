@@ -3,6 +3,7 @@
 -- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
 -- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
 -- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS
+-- ADDED: US-1 TELEPORT BUTTON (DIRECTLY BELOW AUTO RACE)
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -16,7 +17,7 @@ local TweenService = game:GetService("TweenService")
 
 -- [[ TARGET UI SYSTEM ]]
 local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGui
-if targetUI:FindFirstChild("DeltaAutoFarm") then targetUI.DeltaAutoFarm:Destroy() end   
+if targetUI:FindFirstChild("DeltaAutoFarm") then targetUI.DeltaAutoFarm:Destroy() end    
 if targetUI:FindFirstChild("CorrzeyBlackScreen") then targetUI.CorrzeyBlackScreen:Destroy() end
 if targetUI:FindFirstChild("CorrzeyNotifications") then targetUI.CorrzeyNotifications:Destroy() end 
 
@@ -112,7 +113,7 @@ bsText.BackgroundTransparency = 1
 bsText.Text = "LOADING..."
 bsText.TextColor3 = Color3.new(1, 1, 1) 
 bsText.Font = Enum.Font.Code
-bsText.TextSize = 18 -- Sedikit dikecilkan agar teks muat banyak
+bsText.TextSize = 18
 bsText.Parent = bsBg
 
 -- OPTIMIZATION GLOBALS
@@ -122,7 +123,7 @@ local function toggle3DRender(mode)
     pcall(function() RunService:Set3dRenderingEnabled(mode) end)
     blackScreenGui.Enabled = not mode 
     pcall(function()
-        setfpscap(60) -- Menjaga FPS tetap 60 baik saat Neon Dark mati atau menyala
+        setfpscap(60)
     end)
 end
 
@@ -166,12 +167,12 @@ task.spawn(function()
     end
 end)
 
--- [TAMBAHAN ANALYTICS] Tracker Waktu & Data
+-- ANALYTICS Tracker
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
 local running = false
 local autoDaily = false
-local sessionStartTime = os.time() -- Waktu script dieksekusi
+local sessionStartTime = os.time()
 
 -- FUNGSI SUPER LOW GRAPHIC + PURGE
 local function applyDeepClean()
@@ -241,7 +242,7 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- KOORDINAT (PATH 1-41)
+-- KOORDINAT PATH 1-41
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -269,6 +270,9 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
+-- KOORDINAT TELEPORT US-1
+local us1TargetPos = Vector3.new(2109.11, 7.95, 3633.01)[cite: 1]
+
 -- [[ UI SYSTEM ]]
 local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false; sg.IgnoreGuiInset = true
 sg.DisplayOrder = 100 
@@ -278,8 +282,9 @@ local clr_stroke = Color3.fromRGB(40, 40, 40)
 local clr_accent = Color3.fromRGB(255, 215, 0)
 local clr_btn_off = Color3.fromRGB(35, 35, 35)
 
+-- Tinggi frame diperbesar ke 260px agar semua 5 tombol muat sempurna
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 240, 0, 195); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
+frame.Size = UDim2.new(0, 240, 0, 260); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
@@ -291,8 +296,9 @@ task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = 
 
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 
+-- Tinggi Content diperbesar ke 210px
 local content = Instance.new("Frame", frame); 
-content.Size = UDim2.new(1, -20, 0, 145); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
+content.Size = UDim2.new(1, -20, 0, 210); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
 local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local function createBtn(txt, color, parent)
@@ -301,7 +307,9 @@ local function createBtn(txt, color, parent)
     return b
 end
 
+-- DIBUAT DENGAN URUTAN TERBARU: US-1 TEPAT DI BAWAH AUTO RACE
 local farmBtn = createBtn("AUTO RACE", clr_btn_off, content)
+local us1Btn = createBtn("US-1", clr_btn_off, content) -- Tombol US-1 dipindah tepat di bawah AUTO RACE
 local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dailyBtn = createBtn("AUTO DAILY REWARD", clr_btn_off, content)
@@ -519,16 +527,49 @@ farmBtn.MouseButton1Click:Connect(function()
     
     if running then 
         applyDeepClean() 
-        -- Otomatis masuk ke mode Neon Dark saat Auto Farm menyala
         renderingEnabled = false
         toggle3DRender(renderingEnabled)
         cpuBtn.Text = "NEON DARK: ON"
     else
-        -- Kembali ke mode normal (3D) saat Auto Farm dimatikan
         renderingEnabled = true
         toggle3DRender(renderingEnabled)
         cpuBtn.Text = "NEON DARK: OFF"
     end 
+end)
+
+-- LOGIKA TELEPORT US-1
+us1Btn.MouseButton1Click:Connect(function()
+    task.spawn(function()
+        SendNotification("TELEPORT US-1", "Teleporting to US-1 in 3s...", 3, Color3.fromRGB(255, 215, 0))
+        
+        for i = 3, 1, -1 do
+            status.Text = "● US-1 IN: " .. i .. "s"
+            task.wait(1)
+        end
+        
+        status.Text = "● TELEPORTING..."
+        local char = LP.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        local seat = hum and hum.SeatPart
+        
+        if seat and seat:IsA("VehicleSeat") then
+            local car = seat.Parent
+            while car and not car:IsA("Model") do car = car.Parent end
+            
+            seat.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            seat.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            car:PivotTo(CFrame.new(us1TargetPos + Vector3.new(0, 3, 0)))
+            task.wait(0.05)
+            seat.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            seat.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        elseif char and char:FindFirstChild("HumanoidRootPart") then
+            char:PivotTo(CFrame.new(us1TargetPos + Vector3.new(0, 3, 0)))
+        end
+        
+        task.wait(0.5)
+        status.Text = "● READY"
+        SendNotification("TELEPORT US-1", "Arrived at US-1!", 3, Color3.fromRGB(0, 255, 150))
+    end)
 end)
 
 cpuBtn.MouseButton1Click:Connect(function()
@@ -545,7 +586,7 @@ dailyBtn.MouseButton1Click:Connect(function()
     dailyBtn.BackgroundColor3 = autoDaily and Color3.fromRGB(180, 0, 0) or clr_btn_off
 end)
 
--- [MODIFIKASI ANALYTICS] LIVE UPDATER LOOP
+-- ANALYTICS LIVE UPDATER LOOP
 local frameUpdate = 0
 RunService.RenderStepped:Connect(function()
     frameUpdate = frameUpdate + 1
@@ -553,14 +594,12 @@ end)
 
 task.spawn(function()
     while task.wait(1) do
-        -- Update Live FPS ke HUD
         fpsLabel.Text = "FPS: " .. tostring(frameUpdate)
-        frameUpdate = 0 -- Reset frame untuk detik berikutnya
+        frameUpdate = 0
         
         if not renderingEnabled then
             local currentCash = getPlayerMoney()
             
-            -- Kalkulasi Live Analytics (Waktu & Profit Per Jam)
             local elapsedTime = os.time() - sessionStartTime
             local mph = 0
             local rph = 0
@@ -569,13 +608,11 @@ task.spawn(function()
                 rph = math.floor((sessionRaces / elapsedTime) * 3600)
             end
             
-            -- Format Waktu menjadi HH:MM:SS
             local h = math.floor(elapsedTime / 3600)
             local m = math.floor((elapsedTime % 3600) / 60)
             local s = elapsedTime % 60
             local timeString = string.format("%02d:%02d:%02d", h, m, s)
             
-            -- Update Teks Black Screen
             bsText.Text = "RENDERING 3D DINONAKTIFKAN\n(Mode Auto-Farm Berjalan)\n\n" ..
                           "💰 Uang Saat Ini : $" .. tostring(currentCash) .. "\n" ..
                           "📈 Profit Sesi   : $" .. tostring(totalMoneyEarned) .. "\n" ..
