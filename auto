@@ -1,9 +1,6 @@
 -- ==========================================  
--- V58.6 FINAL REBORN - RGB CORRZEY HUB EDITION
--- UPDATE: WEBHOOK BATCHING (10 RACES) + OPTIMIZED & LIVE BLACK SCREEN (WHITE TEXT)
--- FIX: ANCHOR-LIKE POSITIONING (NO SLIDING) + NEW MINIMIZE UI (TOP MENTOK)
--- ADDED: UNIVERSAL AUTO CLAIM DAILY REWARD + POP-UP NOTIFICATIONS + LIVE ANALYTICS
--- ADDED: US-1 TELEPORT BUTTON (DIRECTLY BELOW AUTO RACE)
+-- V58.8 FINAL REBORN - RGB CORRZEY HUB EDITION
+-- UPDATE: AUTO FARM 2 (FORMERLY US-1) WITH PROFIT TRACKING
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -27,7 +24,7 @@ NotifGui.Name = "CorrzeyNotifications"
 NotifGui.ResetOnSpawn = false
 NotifGui.IgnoreGuiInset = true
 NotifGui.Parent = targetUI
-NotifGui.DisplayOrder = 101 -- Paling atas
+NotifGui.DisplayOrder = 101
 
 local NotifLayout = Instance.new("Frame", NotifGui)
 NotifLayout.Size = UDim2.new(0, 240, 1, -50) 
@@ -90,7 +87,7 @@ local function SendNotification(title, text, duration, color)
     end)
 end
 
-SendNotification("CORRZEY HUB V58.6", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
+SendNotification("CORRZEY HUB V58.8", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
 
 -- BLACK SCREEN GUI FOR NEON DARK
 local blackScreenGui = Instance.new("ScreenGui")
@@ -169,6 +166,7 @@ end)
 local totalMoneyEarned, sessionRaces = 0, 0
 local moneyBeforeRace = 0
 local running = false
+local farm2Running = false
 local autoDaily = false
 local sessionStartTime = os.time()
 
@@ -240,7 +238,20 @@ local function getPlayerMoney()
     return 0   
 end   
 
--- KOORDINAT PATH 1-41
+-- [[ FUNGSI CEK LAWAN DI SEKITAR ]]
+local function CheckForRival(targetPos, radius)
+    for _, p in pairs(Players:GetPlayers()) do 
+        if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (p.Character.HumanoidRootPart.Position - targetPos).Magnitude
+            if dist <= radius then 
+                return true 
+            end 
+        end
+    end
+    return false
+end
+
+-- KOORDINAT PATH 1-41 (Auto Race)
 local startPos = Vector3.new(3259.74, -15.28, 1014.49)   
 local startRot = -95.3   
 local path = {   
@@ -268,8 +279,10 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- KOORDINAT TELEPORT US-1 (DIPERBAIKI)
-local us1TargetPos = Vector3.new(2109.11, 7.95, 3633.01)
+-- [[ KOORDINAT TELEPORT SEQUENCE AUTO FARM 2 ]]
+local farm2TargetPos = Vector3.new(2109.11, 7.95, 3633.01)
+local farm2Point1 = Vector3.new(2171.26, 7.45, 3717.09)
+local farm2Point2 = Vector3.new(2353.72, 7.45, 4328.61) 
 
 -- [[ UI SYSTEM ]]
 local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false; sg.IgnoreGuiInset = true
@@ -304,12 +317,10 @@ local function createBtn(txt, color, parent)
 end
 
 local farmBtn = createBtn("AUTO RACE", clr_btn_off, content)
-local us1Btn = createBtn("US-1", clr_btn_off, content) 
+local farm2Btn = createBtn("AUTO FARM 2", clr_btn_off, content) 
 local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dailyBtn = createBtn("AUTO DAILY REWARD", clr_btn_off, content)
-
-local dtStatusLabel = Instance.new("TextLabel", content); dtStatusLabel.Size = UDim2.new(1, 0, 0, 20); dtStatusLabel.Text = "DELAY: 0s"; dtStatusLabel.TextColor3 = Color3.new(0.6,0.6,0.6); dtStatusLabel.BackgroundTransparency = 1; dtStatusLabel.Font = Enum.Font.GothamBold; dtStatusLabel.TextSize = 10
 
 -- MINI HUD
 local miniHud = Instance.new("Frame", sg)
@@ -348,7 +359,7 @@ local function sendWebhook(url, gain, total, races, isOffline)
                     {["name"] = "📈 Total Profit", ["value"] = "```$" .. tostring(total) .. "```", ["inline"] = true},
                     {["name"] = "🏁 Total Races", ["value"] = tostring(races) .. " Races", ["inline"] = true},
                 },
-                ["footer"] = {["text"] = "V58.6 • " .. os.date("%X")},
+                ["footer"] = {["text"] = "V58.8 • " .. os.date("%X")},
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }}
         }
@@ -376,7 +387,7 @@ task.spawn(function()
                                 
                                 if btnText:find("claim") or btnText:find("daily") or btnText:find("reward") or 
                                    btnName:find("claim") or btnName:find("daily") then
-                                    
+                                   
                                     if btn.Visible and btn.AbsoluteSize.X > 0 then
                                         for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end
                                         for _, conn in pairs(getconnections(btn.MouseButton1Down)) do conn:Fire() end
@@ -394,7 +405,7 @@ task.spawn(function()
     end
 end)
 
--- MAIN LOOP
+-- MAIN LOOP AUTO RACE (Normal)
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -421,23 +432,26 @@ task.spawn(function()
                         seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
                         seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
                     end
-                    for _, p in pairs(Players:GetPlayers()) do 
-                        if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                            local rHum = p.Character:FindFirstChildOfClass("Humanoid")
-                            if (p.Character.HumanoidRootPart.Position - startPos).Magnitude < 25 and (rHum and rHum.SeatPart) then 
-                                rivalFound = true 
-                                break 
-                            end 
-                        end
-                    end
+                    rivalFound = CheckForRival(startPos, 25)
                 until not running or rivalFound
                 
                 if running and rivalFound then
                     applyDeepClean() 
                     
                     moneyBeforeRace = getPlayerMoney()
+                    local countdownSuccess = true
+
                     for i = 18, 1, -1 do 
-                        if not running then break end
+                        if not running then 
+                            countdownSuccess = false 
+                            break 
+                        end
+                        
+                        if not CheckForRival(startPos, 25) then
+                            countdownSuccess = false
+                            break
+                        end
+
                         status.Text = "● START IN: "..i.."s"
                         if seat then
                             seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
@@ -446,7 +460,7 @@ task.spawn(function()
                         task.wait(1) 
                     end
                     
-                    if running then
+                    if countdownSuccess and running then
                         for i, d in ipairs(path) do
                             if not running or not seat.Parent then break end
                             status.Text = "● RACING: " .. i .. "/41"
@@ -532,38 +546,147 @@ farmBtn.MouseButton1Click:Connect(function()
     end 
 end)
 
-us1Btn.MouseButton1Click:Connect(function()
-    task.spawn(function()
-        SendNotification("TELEPORT US-1", "Teleporting to US-1 in 3s...", 3, Color3.fromRGB(255, 215, 0))
-        
-        for i = 3, 1, -1 do
-            status.Text = "● US-1 IN: " .. i .. "s"
-            task.wait(1)
-        end
-        
-        status.Text = "● TELEPORTING..."
-        local char = LP.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        local seat = hum and hum.SeatPart
-        
-        if seat and seat:IsA("VehicleSeat") then
-            local car = seat.Parent
-            while car and not car:IsA("Model") do car = car.Parent end
+-- LOGIKA SEQUENCE AUTO FARM 2
+farm2Btn.MouseButton1Click:Connect(function()
+    farm2Running = not farm2Running
+    farm2Btn.Text = farm2Running and "STOP AUTO FARM 2" or "AUTO FARM 2"
+    farm2Btn.BackgroundColor3 = farm2Running and Color3.fromRGB(180, 0, 0) or clr_btn_off
+    
+    if farm2Running then
+        task.spawn(function()
+            -- Delay kecil untuk mematikan sisa proses sebelumnya (jika ada)
+            task.wait(0.2) 
             
-            seat.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            seat.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-            car:PivotTo(CFrame.new(us1TargetPos + Vector3.new(0, 3, 0)))
-            task.wait(0.05)
-            seat.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            seat.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-        elseif char and char:FindFirstChild("HumanoidRootPart") then
-            char:PivotTo(CFrame.new(us1TargetPos + Vector3.new(0, 3, 0)))
-        end
-        
-        task.wait(0.5)
+            while farm2Running do
+                local char = LP.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                local seat = hum and hum.SeatPart
+                
+                if not seat or not seat:IsA("VehicleSeat") then
+                    status.Text = "● SIT IN CAR FOR FARM 2!"
+                    task.wait(1)
+                    continue
+                end
+                
+                local car = seat.Parent
+                while car and not car:IsA("Model") do car = car.Parent end
+                
+                closePrizePopup()
+                
+                -- 1. Teleport ke Start 
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                car:PivotTo(CFrame.new(farm2TargetPos + Vector3.new(0, 5, 0)))
+                task.wait(0.05)
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+
+                if not farm2Running then break end
+
+                -- 2. Tunggu Lawan di sekitar
+                status.Text = "● WAITING RIVAL FARM 2..."
+                local rivalFound = false
+                repeat 
+                    task.wait(1)
+                    if seat then
+                        seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                        seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                    end
+                    rivalFound = CheckForRival(farm2TargetPos, 30)
+                until not farm2Running or rivalFound
+
+                if not farm2Running then break end
+                
+                -- Mencatat Uang Sebelum Balapan Dimulai
+                moneyBeforeRace = getPlayerMoney()
+
+                -- 3. Countdown 18 detik (TIDAK BISA DIBATALKAN KECUALI DITEKAN STOP)
+                for i = 18, 1, -1 do
+                    if not farm2Running then break end
+                    
+                    status.Text = "● START FARM 2 IN: " .. i .. "s"
+                    if seat then
+                        seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                        seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                    end
+                    task.wait(1)
+                end
+
+                if not farm2Running then break end
+
+                -- 4. Launch ke Koordinat Waypoint 1 (Posisi presisi asli)
+                status.Text = "● LAUNCHING WAYPOINT 1"
+                local cf1 = CFrame.lookAt(farm2Point1 + Vector3.new(0,5,0), farm2Point2 + Vector3.new(0,5,0))
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                car:PivotTo(cf1)
+                task.wait(0.05)
+                seat.AssemblyLinearVelocity = cf1.LookVector * 85 
+                
+                local t1 = 0
+                while t1 < 2 and farm2Running do
+                    task.wait(0.1)
+                    t1 = t1 + 0.1
+                end
+
+                if not farm2Running then break end
+
+                -- 5. Launch ke Koordinat Waypoint 2
+                status.Text = "● LAUNCHING WAYPOINT 2"
+                local dirVector = (farm2Point2 - farm2Point1).Unit
+                local cf2 = CFrame.lookAt(farm2Point2 + Vector3.new(0,5,0), farm2Point2 + Vector3.new(0,5,0) + (dirVector * 100))
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+                car:PivotTo(cf2)
+                task.wait(0.05)
+                seat.AssemblyLinearVelocity = cf2.LookVector * 85 
+
+                status.Text = "● FINISHING FARM 2..."
+                
+                -- Menunggu 8 detik
+                local t2 = 0
+                while t2 < 7 and farm2Running do
+                    task.wait(0.1)
+                    t2 = t2 + 0.1
+                end
+                
+                -- Sistem UI (Money, Race Count, dan Webhook)
+                if farm2Running then
+                    local currentMoney = getPlayerMoney()
+                    local gain = currentMoney - moneyBeforeRace
+                    
+                    if gain > 0 then 
+                        totalMoneyEarned = totalMoneyEarned + gain
+                        sessionRaces = sessionRaces + 1
+                        moneyLabel.Text = "Profit: $" .. totalMoneyEarned
+                        raceLabel.Text = "Races: " .. sessionRaces
+                        
+                        SendNotification("FARM 2 FINISHED!", "You earned +$" .. gain, 4, Color3.fromRGB(0, 255, 150))
+                        
+                        if sessionRaces % 10 == 0 then
+                            task.spawn(function()
+                                sendWebhook(MAIN_WEBHOOK, gain, totalMoneyEarned, sessionRaces, false)
+                            end)
+                        end
+                    end
+                end
+            end
+            
+            status.Text = "● READY"
+        end)
+    else
+        -- Jika tombol dimatikan (STOP), script akan langsung Force Break ke laju mobil 
+        pcall(function()
+            local char = LP.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            local seat = hum and hum.SeatPart
+            if seat and seat:IsA("VehicleSeat") then
+                seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
+                seat.AssemblyAngularVelocity = Vector3.new(0,0,0)
+            end
+        end)
         status.Text = "● READY"
-        SendNotification("TELEPORT US-1", "Arrived at US-1!", 3, Color3.fromRGB(0, 255, 150))
-    end)
+    end
 end)
 
 cpuBtn.MouseButton1Click:Connect(function()
