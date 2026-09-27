@@ -90,7 +90,6 @@ local function SendNotification(title, text, duration, color)
     end)
 end
 
--- Panggil notifikasi selamat datang
 SendNotification("CORRZEY HUB V58.6", "Script Loaded Successfully! Welcome " .. LP.Name, 5, Color3.fromRGB(255, 215, 0))
 
 -- BLACK SCREEN GUI FOR NEON DARK
@@ -98,7 +97,7 @@ local blackScreenGui = Instance.new("ScreenGui")
 blackScreenGui.Name = "CorrzeyBlackScreen"
 blackScreenGui.IgnoreGuiInset = true
 blackScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-blackScreenGui.DisplayOrder = 99 -- Di bawah Hub UI
+blackScreenGui.DisplayOrder = 99
 blackScreenGui.Enabled = false
 blackScreenGui.Parent = targetUI
 
@@ -143,7 +142,6 @@ local function ClearMemoryCache()
     end)
 end
 
--- AUTO MEMORY CLEANER
 task.spawn(function()
     while task.wait(180) do
         ClearMemoryCache()
@@ -270,8 +268,8 @@ local path = {
     {pos = {-16519.88, 10.92, 12115.18}, rot = 169.55}   
 }
 
--- KOORDINAT TELEPORT US-1
-local us1TargetPos = Vector3.new(2109.11, 7.95, 3633.01)[cite: 1]
+-- KOORDINAT TELEPORT US-1 (DIPERBAIKI)
+local us1TargetPos = Vector3.new(2109.11, 7.95, 3633.01)
 
 -- [[ UI SYSTEM ]]
 local sg = Instance.new("ScreenGui", targetUI); sg.Name = "DeltaAutoFarm"; sg.ResetOnSpawn = false; sg.IgnoreGuiInset = true
@@ -282,7 +280,6 @@ local clr_stroke = Color3.fromRGB(40, 40, 40)
 local clr_accent = Color3.fromRGB(255, 215, 0)
 local clr_btn_off = Color3.fromRGB(35, 35, 35)
 
--- Tinggi frame diperbesar ke 260px agar semua 5 tombol muat sempurna
 local frame = Instance.new("Frame", sg)   
 frame.Size = UDim2.new(0, 240, 0, 260); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
@@ -296,7 +293,6 @@ task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = 
 
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 
--- Tinggi Content diperbesar ke 210px
 local content = Instance.new("Frame", frame); 
 content.Size = UDim2.new(1, -20, 0, 210); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
 local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -307,9 +303,8 @@ local function createBtn(txt, color, parent)
     return b
 end
 
--- DIBUAT DENGAN URUTAN TERBARU: US-1 TEPAT DI BAWAH AUTO RACE
 local farmBtn = createBtn("AUTO RACE", clr_btn_off, content)
-local us1Btn = createBtn("US-1", clr_btn_off, content) -- Tombol US-1 dipindah tepat di bawah AUTO RACE
+local us1Btn = createBtn("US-1", clr_btn_off, content) 
 local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dailyBtn = createBtn("AUTO DAILY REWARD", clr_btn_off, content)
@@ -537,7 +532,6 @@ farmBtn.MouseButton1Click:Connect(function()
     end 
 end)
 
--- LOGIKA TELEPORT US-1
 us1Btn.MouseButton1Click:Connect(function()
     task.spawn(function()
         SendNotification("TELEPORT US-1", "Teleporting to US-1 in 3s...", 3, Color3.fromRGB(255, 215, 0))
