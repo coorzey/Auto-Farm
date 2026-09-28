@@ -1,6 +1,6 @@
 -- ==========================================  
 -- V58.8 FINAL REBORN - RGB CORRZEY HUB EDITION
--- UPDATE: AUTO FARM 2 (FORMERLY US-1) WITH PROFIT TRACKING
+-- UPDATE: UNCAP FPS & PURGE ASSETS MERGED, KEYBIND MINIMIZE
 -- ==========================================  
 local Players = game:GetService("Players")   
 local LP = Players.LocalPlayer   
@@ -11,6 +11,7 @@ local PlayerGui = LP:WaitForChild("PlayerGui")
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 local TweenService = game:GetService("TweenService") 
+local UserInputService = game:GetService("UserInputService")
 
 -- [[ TARGET UI SYSTEM ]]
 local targetUI = (gethui and gethui()) or game:GetService("CoreGui") or PlayerGui
@@ -114,12 +115,14 @@ bsText.Parent = bsBg
 
 -- OPTIMIZATION GLOBALS
 local renderingEnabled = true
+local isUncapped = false
+
 local function toggle3DRender(mode)
     renderingEnabled = mode
     pcall(function() RunService:Set3dRenderingEnabled(mode) end)
     blackScreenGui.Enabled = not mode 
     pcall(function()
-        setfpscap(60)
+        setfpscap(isUncapped and 999 or 60)
     end)
 end
 
@@ -170,7 +173,7 @@ local farm2Running = false
 local autoDaily = false
 local sessionStartTime = os.time()
 
--- FUNGSI SUPER LOW GRAPHIC + PURGE
+-- FUNGSI SUPER LOW GRAPHIC + PURGE (Purge Assets)
 local function applyDeepClean()
     pcall(function()
         settings().Rendering.QualityLevel = 1
@@ -294,7 +297,7 @@ local clr_accent = Color3.fromRGB(255, 215, 0)
 local clr_btn_off = Color3.fromRGB(35, 35, 35)
 
 local frame = Instance.new("Frame", sg)   
-frame.Size = UDim2.new(0, 240, 0, 260); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
+frame.Size = UDim2.new(0, 240, 0, 302); frame.Position = UDim2.new(0.5, -120, 0.4, 0); frame.BackgroundColor3 = clr_bg; frame.Active = true; frame.Draggable = true; frame.BorderSizePixel = 0; frame.ClipsDescendants = true
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke", frame); mainStroke.Color = clr_stroke; mainStroke.Thickness = 1.8; mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
@@ -307,7 +310,7 @@ task.spawn(function() while true do for i = 0, 1, 0.01 do rgbLabel.TextColor3 = 
 local toggleBtn = Instance.new("TextButton", header); toggleBtn.Size = UDim2.new(0, 24, 0, 24); toggleBtn.Position = UDim2.new(1, -30, 0, 5); toggleBtn.Text = "−"; toggleBtn.TextColor3 = Color3.new(1,1,1); toggleBtn.Font = Enum.Font.GothamBold; toggleBtn.BackgroundColor3 = Color3.fromRGB(30,30,30); Instance.new("UICorner", toggleBtn)
 
 local content = Instance.new("Frame", frame); 
-content.Size = UDim2.new(1, -20, 0, 210); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
+content.Size = UDim2.new(1, -20, 0, 252); content.Position = UDim2.new(0, 10, 0, 40); content.BackgroundTransparency = 1; content.ZIndex = 2
 local layout = Instance.new("UIListLayout", content); layout.Padding = UDim.new(0, 6); layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local function createBtn(txt, color, parent)
@@ -318,9 +321,10 @@ end
 
 local farmBtn = createBtn("AUTO RACE", clr_btn_off, content)
 local farm2Btn = createBtn("AUTO FARM 2", clr_btn_off, content) 
-local purgeBtn = createBtn("PURGE ASSETS (LAG FIX)", clr_btn_off, content)
 local cpuBtn = createBtn("NEON DARK: OFF", clr_btn_off, content)
 local dailyBtn = createBtn("AUTO DAILY REWARD", clr_btn_off, content)
+local uncapBtn = createBtn("UNCAP FPS & PURGE: OFF", clr_btn_off, content)
+local keybindBtn = createBtn("HIDE UI KEY: LEFTCONTROL", Color3.fromRGB(20, 20, 20), content)
 
 -- MINI HUD
 local miniHud = Instance.new("Frame", sg)
@@ -519,6 +523,40 @@ openStroke.Color = clr_stroke
 openStroke.Thickness = 1.8
 openStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
+-- UI MINIMIZE KEYBIND LOGIC
+local toggleKey = Enum.KeyCode.LeftControl
+local isBinding = false
+
+keybindBtn.MouseButton1Click:Connect(function()
+    isBinding = true
+    keybindBtn.Text = "PRESS ANY KEY..."
+    keybindBtn.TextColor3 = clr_accent
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if isBinding then
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            if input.KeyCode ~= Enum.KeyCode.Unknown and input.KeyCode ~= Enum.KeyCode.Escape then
+                toggleKey = input.KeyCode
+                keybindBtn.Text = "HIDE UI KEY: " .. toggleKey.Name:upper()
+                keybindBtn.TextColor3 = Color3.new(1, 1, 1)
+                isBinding = false
+            end
+        end
+    else
+        -- Mengeksekusi sembunyi/munculkan UI jika menekan tombol yang telah diset
+        if not gameProcessed and input.KeyCode == toggleKey then
+            if frame.Visible then
+                frame.Visible = false
+                openBtn.Visible = true
+            else
+                frame.Visible = true
+                openBtn.Visible = false
+            end
+        end
+    end
+end)
+
 toggleBtn.MouseButton1Click:Connect(function()   
     frame.Visible = false
     openBtn.Visible = true
@@ -554,7 +592,6 @@ farm2Btn.MouseButton1Click:Connect(function()
     
     if farm2Running then
         task.spawn(function()
-            -- Delay kecil untuk mematikan sisa proses sebelumnya (jika ada)
             task.wait(0.2) 
             
             while farm2Running do
@@ -600,7 +637,7 @@ farm2Btn.MouseButton1Click:Connect(function()
                 -- Mencatat Uang Sebelum Balapan Dimulai
                 moneyBeforeRace = getPlayerMoney()
 
-                -- 3. Countdown 18 detik (TIDAK BISA DIBATALKAN KECUALI DITEKAN STOP)
+                -- 3. Countdown 18 detik
                 for i = 18, 1, -1 do
                     if not farm2Running then break end
                     
@@ -614,7 +651,7 @@ farm2Btn.MouseButton1Click:Connect(function()
 
                 if not farm2Running then break end
 
-                -- 4. Launch ke Koordinat Waypoint 1 (Posisi presisi asli)
+                -- 4. Launch ke Koordinat Waypoint 1
                 status.Text = "● LAUNCHING WAYPOINT 1"
                 local cf1 = CFrame.lookAt(farm2Point1 + Vector3.new(0,5,0), farm2Point2 + Vector3.new(0,5,0))
                 seat.AssemblyLinearVelocity = Vector3.new(0,0,0)
@@ -643,14 +680,12 @@ farm2Btn.MouseButton1Click:Connect(function()
 
                 status.Text = "● FINISHING FARM 2..."
                 
-                -- Menunggu 8 detik
                 local t2 = 0
                 while t2 < 7 and farm2Running do
                     task.wait(0.1)
                     t2 = t2 + 0.1
                 end
                 
-                -- Sistem UI (Money, Race Count, dan Webhook)
                 if farm2Running then
                     local currentMoney = getPlayerMoney()
                     local gain = currentMoney - moneyBeforeRace
@@ -675,7 +710,6 @@ farm2Btn.MouseButton1Click:Connect(function()
             status.Text = "● READY"
         end)
     else
-        -- Jika tombol dimatikan (STOP), script akan langsung Force Break ke laju mobil 
         pcall(function()
             local char = LP.Character
             local hum = char and char:FindFirstChildOfClass("Humanoid")
@@ -695,12 +729,28 @@ cpuBtn.MouseButton1Click:Connect(function()
     cpuBtn.Text = renderingEnabled and "NEON DARK: OFF" or "NEON DARK: ON"
 end)
 
-purgeBtn.MouseButton1Click:Connect(function() applyDeepClean() end)
-
 dailyBtn.MouseButton1Click:Connect(function()
     autoDaily = not autoDaily
     dailyBtn.Text = autoDaily and "STOP AUTO DAILY" or "AUTO DAILY REWARD"
     dailyBtn.BackgroundColor3 = autoDaily and Color3.fromRGB(180, 0, 0) or clr_btn_off
+end)
+
+-- LOGIKA TOMBOL UNCAP FPS & PURGE
+uncapBtn.MouseButton1Click:Connect(function()
+    isUncapped = not isUncapped
+    uncapBtn.Text = isUncapped and "UNCAP FPS & PURGE: ON" or "UNCAP FPS & PURGE: OFF"
+    uncapBtn.BackgroundColor3 = isUncapped and Color3.fromRGB(0, 180, 100) or clr_btn_off
+    
+    pcall(function()
+        setfpscap(isUncapped and 999 or 60)
+    end)
+    
+    if isUncapped then
+        applyDeepClean() -- Memanggil fungsi purge assets
+        SendNotification("UNCAP & PURGE", "FPS Uncapped & Assets Purged!", 3, Color3.fromRGB(0, 255, 150))
+    else
+        SendNotification("UNCAP FPS", "FPS Limited Back to 60 FPS", 3, Color3.fromRGB(255, 100, 100))
+    end
 end)
 
 -- ANALYTICS LIVE UPDATER LOOP
