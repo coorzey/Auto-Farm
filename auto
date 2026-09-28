@@ -479,6 +479,7 @@ task.spawn(function()
                         
                         status.Text = "● FINISHING..."
                         task.wait(3)
+                        closePrizePopup()
                         
                         local currentMoney = getPlayerMoney()
                         local gain = currentMoney - moneyBeforeRace
@@ -680,7 +681,10 @@ farm2Btn.MouseButton1Click:Connect(function()
 
                 status.Text = "● FINISHING FARM 2..."
                 
-                local t2 = 0
+                task.wait(3)
+                closePrizePopup()
+                
+                local t2 = 3
                 while t2 < 7 and farm2Running do
                     task.wait(0.1)
                     t2 = t2 + 0.1
